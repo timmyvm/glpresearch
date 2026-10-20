@@ -55,10 +55,10 @@ export default async function AdminDashboard() {
       db.contactMessage.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
     ]);
 
-  // Daily chart series for the last 90 days.
+  // Daily chart series for the last 90 days, ending with today.
   const days = new Map<string, DayPoint>();
-  for (let i = 0; i < 90; i++) {
-    const key = dayKey(new Date(d90.getTime() + i * DAY));
+  for (let i = 89; i >= 0; i--) {
+    const key = dayKey(new Date(now.getTime() - i * DAY));
     days.set(key, { date: key, revenue: 0, orders: 0 });
   }
   for (const o of chartOrders) {
@@ -91,7 +91,7 @@ export default async function AdminDashboard() {
     <>
       <PageHeader title="Dashboard" description={`Store performance overview · ${formatDate(now, { weekday: "long" })}`} />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-6">
         <StatCard label="Revenue · 30d" value={formatMoney(revenue)} change={percentChange(revenue, prevRevenue)} hint="vs prior 30d" icon={DollarSign} />
         <StatCard label="Orders · 30d" value={orders30} change={percentChange(orders30, ordersPrev30)} hint="vs prior 30d" icon={ShoppingCart} />
         <StatCard label="Avg order value" value={formatMoney(aov)} change={percentChange(aov, prevAov)} hint="paid orders" icon={TrendingUp} />

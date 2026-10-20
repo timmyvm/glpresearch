@@ -136,7 +136,7 @@ export function StatCard({
   tone?: "default" | "warning";
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">{label}</p>
         {Icon ? (
@@ -145,7 +145,7 @@ export function StatCard({
           </span>
         ) : null}
       </div>
-      <p className="mt-2 text-2xl font-semibold tracking-tight text-ink-900 tabular-nums">{value}</p>
+      <p className="mt-2 text-xl font-semibold tracking-tight text-ink-900 tabular-nums sm:text-2xl">{value}</p>
       <div className="mt-1 flex items-center gap-2 text-xs">
         {typeof change === "number" ? (
           <span className={cn("font-semibold", change >= 0 ? "text-emerald-600" : "text-rose-600")}>

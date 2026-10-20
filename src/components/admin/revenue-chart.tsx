@@ -18,7 +18,7 @@ export function RevenueChart({ data }: { data: DayPoint[] }) {
   );
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-xs">
+    <div className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-xs">
       <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-sm font-semibold text-ink-900">Revenue & orders</h3>
@@ -42,7 +42,7 @@ export function RevenueChart({ data }: { data: DayPoint[] }) {
           ))}
         </div>
       </div>
-      <div className="h-72 px-2 py-4">
+      <div className="h-72 min-h-72 flex-1 px-2 py-4">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={series} margin={{ top: 8, right: 12, bottom: 0, left: 4 }}>
             <defs>
