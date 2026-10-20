@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { formatDate } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { splitTitle } from "@/components/store/article-title";
 import { Markdown, extractHeadings } from "@/components/store/markdown";
 
@@ -16,7 +16,21 @@ async function getArticle(slug: string) {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const article = await getArticle((await params).slug);
   if (!article) return {};
-  return { title: article.title, description: article.excerpt, openGraph: { type: "article" } };
+  return {
+    title: article.title,
+    description: article.excerpt,
+    // Replaces the layout's openGraph object, so it repeats the site fields.
+    openGraph: {
+      type: "article",
+      siteName: "GLP Research",
+      locale: "en_AU",
+      title: article.title,
+      description: article.excerpt,
+      publishedTime: article.publishedAt.toISOString(),
+      modifiedTime: article.updatedAt.toISOString(),
+      section: article.category,
+    },
+  };
 }
 
 export default async function ArticlePage({ params }: Params) {
@@ -66,7 +80,8 @@ export default async function ArticlePage({ params }: Params) {
             {article.category}
           </Link>
         </nav>
-        <h1 className="lines text-head md:col-span-8">
+        {/* A long title without a "?" or ":" to split on takes the full width. */}
+        <h1 className={cn("lines text-head", head.length > 40 ? "md:col-span-12" : "md:col-span-8")}>
           <span className="line">
             <span data-line>{head}</span>
           </span>

@@ -1,5 +1,10 @@
-/** Shown while a store page's data loads: the page's frame in quiet blocks, no shimmer. */
-export default function Loading() {
+/**
+ * A store page's frame in quiet blocks, no shimmer: the fallback for a (store)/loading.tsx.
+ * Not mounted: a (store)/loading.tsx makes streamed pages that call notFound() answer 200, so the
+ * store keeps real 404s instead. RevealObserver does handle streamed [data-reveal] nodes, so this can
+ * be re-exported from a loading.tsx on any route that never calls notFound().
+ */
+export function PageSkeleton() {
   return (
     <div className="frame pt-12 pb-24 md:pt-20" aria-busy="true">
       <p className="sr-only" role="status">

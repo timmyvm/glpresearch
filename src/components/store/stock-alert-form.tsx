@@ -29,7 +29,7 @@ export function StockAlertForm({ variantId, label }: { variantId: string; label:
               spellCheck={false}
               placeholder="you@institution.edu…"
               aria-invalid={state.error ? true : undefined}
-              className="h-14 min-w-0 flex-1 bg-white px-4 text-body placeholder:text-muted/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+              className="h-14 min-w-0 sm:flex-1 bg-white px-4 text-body placeholder:text-muted/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink"
             />
             <SubmitButton variant="ink" size="lg" pendingText="Saving…">
               Email Me When It&apos;s Back

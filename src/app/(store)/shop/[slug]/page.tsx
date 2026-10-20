@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { formatMoney } from "@/lib/money";
 import { categoryLabel } from "@/lib/orders";
 import { parseHalfLife, timesNative } from "@/lib/half-life";
 import { formatDate } from "@/lib/utils";
 import { Formula } from "@/components/store/formula";
 import { Markdown } from "@/components/store/markdown";
 import { ProductPurchase } from "@/components/store/product-purchase";
-import { halfLifeText, receptorLongNames, receptorPhrase } from "@/components/store/receptors";
+import { halfLifeText, receptorLongNames, receptorPhrase, sizePhrase } from "@/components/store/receptors";
 import { SpecimenTile } from "@/components/store/specimen-tile";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -142,11 +143,18 @@ export default async function ProductPage({ params }: Params) {
               <p className="mt-3 text-lead" data-load style={{ "--d": "260ms" } as React.CSSProperties}>
                 {product.subtitle}
               </p>
-              <p className="mt-5 max-w-[48ch] text-lead lg:max-w-[56ch] lg:text-body">{product.shortDescription}</p>
+              {/* Phones get the facts that decide a purchase first; the summary moves below the buy panel. */}
+              {product.variants.length ? (
+                <p className="tabular mt-3 max-w-[40ch] text-lead text-muted lg:hidden">
+                  {`Lyophilised powder in ${sizePhrase(product.variants.map((v) => v.label))} vials, from ${formatMoney(Math.min(...product.variants.map((v) => v.price)))}.`}
+                </p>
+              ) : null}
+              <p className="mt-5 hidden max-w-[56ch] lg:block">{product.shortDescription}</p>
             </div>
           }
           footer={
             <div className="mt-6 space-y-6">
+              <p className="max-w-[48ch] text-lead lg:hidden">{product.shortDescription}</p>
               <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
                 {[
                   ["Acts on", receptorPhrase(product.receptorTargets)],

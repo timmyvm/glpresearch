@@ -54,7 +54,7 @@ export default async function CoaPage({ searchParams }: { searchParams: Promise<
                 autoComplete="off"
                 spellCheck={false}
                 placeholder="e.g. SEM-2609-100…"
-                className="h-14 min-w-0 flex-1 bg-white px-4 text-body uppercase placeholder:normal-case placeholder:text-muted/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+                className="h-14 min-w-0 sm:flex-1 bg-white px-4 text-body uppercase placeholder:normal-case placeholder:text-muted/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink"
               />
               <Button type="submit" variant="ink" size="lg">
                 Find Certificate
@@ -141,13 +141,9 @@ export default async function CoaPage({ searchParams }: { searchParams: Promise<
           against the peptide&apos;s theoretical mass. Choose a compound to see only its batches.
         </p>
         <nav aria-label="Filter by compound" className="mt-8 grid grid-cols-4 gap-1.5 sm:grid-cols-8">
-          <Link
-            href="/coa"
-            aria-current={!product ? "page" : undefined}
-            className={cn("press flex aspect-[4/5] flex-col justify-end p-3", !product ? "bg-ink text-on-navy" : "bg-surface text-ink hover:bg-surface-2")}
-          >
-            <span className="font-medium">All</span>
-            <span className="tabular text-small">{products.reduce((n, p) => n + p._count.batches, 0)} batches</span>
+          <Link href="/coa" aria-current={!product ? "page" : undefined} className="group block">
+            <span className={cn("flex aspect-[4/5] items-end p-3 text-lead font-medium", !product ? "bg-ink text-on-navy" : "bg-surface text-ink group-hover:bg-surface-2")}>All</span>
+            <span className="tabular mt-1.5 block truncate text-small text-muted">{products.reduce((n, p) => n + p._count.batches, 0)} batches</span>
           </Link>
           {products.map((p) => {
             const active = product === p.slug;
@@ -157,9 +153,9 @@ export default async function CoaPage({ searchParams }: { searchParams: Promise<
                   className={cn("relative block aspect-[4/5] overflow-clip transition-[outline-color] duration-200", active ? "outline-4 -outline-offset-4 outline-ink" : "")}
                   style={{ backgroundColor: p.accentColor, color: plateInk(p.accentColor) }}
                 >
-                  <Image src={specimenImage(p.image) ?? p.image} alt="" fill sizes="(min-width: 640px) 12vw, 25vw" className="object-contain px-[16%] pt-[14%] pb-[22%] transition-transform duration-500 ease-[var(--ease-out)] group-hover:-translate-y-1" />
-                  <span className="absolute inset-x-3 bottom-2 text-small font-medium">{p.name}</span>
+                  <Image src={specimenImage(p.image) ?? p.image} alt="" fill sizes="(min-width: 640px) 12vw, 25vw" className="object-contain px-[14%] pt-[12%] pb-[6%] transition-transform duration-500 ease-[var(--ease-out)] group-hover:-translate-y-1" />
                 </span>
+                <span className={cn("mt-1.5 block truncate text-small", active ? "font-medium text-ink" : "text-muted group-hover:text-ink")}>{p.name}</span>
               </Link>
             );
           })}

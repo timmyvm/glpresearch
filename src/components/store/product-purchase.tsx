@@ -70,7 +70,7 @@ export function ProductPurchase({
       {/* Phones read the title first; wide screens put it beside the plate. */}
       <div className="lg:col-span-5 lg:col-start-8 lg:row-start-1">{header}</div>
       <div className="lg:sticky lg:top-16 lg:col-span-7 lg:row-span-2 lg:row-start-1 lg:self-start">
-        <div className="relative aspect-[4/5] overflow-clip sm:aspect-[5/4] lg:aspect-auto lg:h-[min(calc(100svh-9rem),56rem)] lg:min-h-[32rem]" style={{ backgroundColor: product.accentColor, color: ink }}>
+        <div className="relative aspect-[5/4] overflow-clip lg:aspect-auto lg:h-[min(calc(100svh-9rem),56rem)] lg:min-h-[32rem]" style={{ backgroundColor: product.accentColor, color: ink }}>
           {variants.map((v) => (
             <Image
               key={v.id}
@@ -80,7 +80,7 @@ export function ProductPurchase({
               priority={v.id === selected?.id}
               sizes="(min-width: 1024px) 58vw, 100vw"
               className={cn(
-                "object-contain px-[12%] pt-[9%] pb-[6%] transition-[opacity,transform] duration-300 ease-[var(--ease-out)]",
+                "object-contain px-[12%] pt-[5%] pb-[3%] lg:pt-[9%] lg:pb-[6%] transition-[opacity,transform] duration-300 ease-[var(--ease-out)]",
                 v.id === selected?.id ? "opacity-100" : "translate-y-3 opacity-0",
               )}
             />

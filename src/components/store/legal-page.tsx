@@ -34,8 +34,8 @@ export function LegalPage({ title, lead, updated, content, path }: { title: stri
           ) : null}
         </nav>
         <div className="md:col-span-8 md:col-start-5">
-          {lead ? <p className="mb-8 text-small text-muted">Last updated {updated}.</p> : null}
           <Markdown className="max-w-[68ch]">{content}</Markdown>
+          {lead ? <p className="mt-12 text-muted">Last updated {updated}.</p> : null}
         </div>
       </div>
 

@@ -22,7 +22,7 @@ export const FAQS: FaqGroup[] = [
       },
       {
         q: "Why do you only sell GLP-class compounds?",
-        a: "Focus. We specialise in incretin-receptor research compounds — GLP-1, GIP/GLP-1 and glucagon co-agonists — so we can go deep on sourcing, testing and documentation for one pharmacological family rather than spread thin across hundreds of unrelated peptides.",
+        a: "Focus. We specialise in incretin-receptor research compounds (GLP-1, GIP/GLP-1 and glucagon co-agonists), so we can go deep on sourcing, testing and documentation for one pharmacological family rather than spread thin across hundreds of unrelated peptides.",
       },
     ],
   },
@@ -35,7 +35,7 @@ export const FAQS: FaqGroup[] = [
       },
       {
         q: "Does my order need to be refrigerated on arrival?",
-        a: "Yes — move vials to a freezer (−20 °C) or at minimum a refrigerator (2–8 °C) as soon as practical after delivery. Every order ships insulated with a cold pack as an extra precaution.",
+        a: "Yes. Move vials to a freezer (−20 °C) or at minimum a refrigerator (2–8 °C) as soon as practical after delivery. Every order ships insulated with a cold pack as an extra precaution.",
       },
       {
         q: "What is the shelf life?",
@@ -60,7 +60,7 @@ export const FAQS: FaqGroup[] = [
       },
       {
         q: "Do I need an account to order?",
-        a: "No — guest checkout is available. An account lets you track every order, save multiple lab addresses, reorder in one click and view your history at any time.",
+        a: "No. Guest checkout is available. An account lets you track every order, save multiple lab addresses, reorder in one click and view your history at any time.",
       },
     ],
   },

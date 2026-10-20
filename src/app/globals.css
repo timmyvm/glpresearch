@@ -210,7 +210,7 @@
     transition-delay: calc(var(--i, 0) * var(--stagger-item));
   }
 
-  .js [data-reveal].is-in {
+  .js [data-reveal][data-revealed] {
     opacity: 1;
     transform: none;
   }

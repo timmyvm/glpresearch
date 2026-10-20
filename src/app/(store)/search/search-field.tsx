@@ -23,7 +23,7 @@ export function SearchField({ defaultValue }: { defaultValue?: string }) {
       spellCheck={false}
       enterKeyHint="search"
       placeholder="Try tirzepatide, half-life or SEM-2609-100…"
-      className="h-14 min-w-0 flex-1 bg-surface px-4 text-body placeholder:text-muted/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+      className="h-14 min-w-0 sm:flex-1 bg-surface px-4 text-body placeholder:text-muted/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink"
     />
   );
 }

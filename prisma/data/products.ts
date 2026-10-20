@@ -40,12 +40,12 @@ export const products: SeedProduct[] = [
     accentColor: "#2DD4BF",
     featured: true,
     shortDescription:
-      "Acylated GLP-1 analogue with 94% homology to native GLP-1 and an elimination half-life of about one week — the most extensively studied molecule in the incretin class.",
-    description: `Semaglutide is a synthetic analogue of human glucagon-like peptide-1 (GLP-1) engineered for once-weekly pharmacokinetics. Two backbone substitutions — **Aib at position 8**, which protects against DPP-4 cleavage, and **Arg at position 34** — are combined with a **C18 fatty diacid** attached to **Lys26** through a γGlu–2×OEG linker, which drives strong, reversible binding to serum albumin.
+      "Acylated GLP-1 analogue with 94% homology to native GLP-1 and an elimination half-life of about one week, the most extensively studied molecule in the incretin class.",
+    description: `Semaglutide is a synthetic analogue of human glucagon-like peptide-1 (GLP-1) engineered for once-weekly pharmacokinetics. Two backbone substitutions (**Aib at position 8**, which protects against DPP-4 cleavage, and **Arg at position 34**) are combined with a **C18 fatty diacid** attached to **Lys26** through a γGlu–2×OEG linker, which drives strong, reversible binding to serum albumin.
 
 The result is a molecule whose elimination half-life is measured in days rather than minutes. Semaglutide was engineered at Novo Nordisk as the once-weekly successor to liraglutide, and it is now the reference compound for the GLP-1 receptor agonist class and the comparator in most head-to-head incretin research.
 
-Supplied as a sterile-filtered, lyophilized powder. Every batch is verified for identity by ESI-MS and for purity by RP-HPLC — find the certificate for your batch under **Lab testing** below.`,
+Supplied as a sterile-filtered, lyophilized powder. Every batch is verified for identity by ESI-MS and for purity by RP-HPLC. Find the certificate for your batch under **Lab testing** below.`,
     aliases: "NN9535, NNC 0113-0217",
     developer: "Novo Nordisk",
     receptorTargets: "GLP-1R",
@@ -64,7 +64,7 @@ Supplied as a sterile-filtered, lyophilized powder. Every batch is verified for 
 - **Stomach:** slowing of gastric emptying.
 - **Central nervous system:** activation of GLP-1R populations in the hypothalamus and hindbrain associated with reduced appetite and energy intake.
 
-Albumin binding via the C18 diacid side chain reduces renal clearance and shields the peptide from proteolysis, while the Aib8 substitution blocks DPP-4 degradation — together giving a half-life of about one week.`,
+Albumin binding via the C18 diacid side chain reduces renal clearance and shields the peptide from proteolysis, while the Aib8 substitution blocks DPP-4 degradation, together giving a half-life of about one week.`,
     research: `- **SUSTAIN-6 (NEJM, 2016):** in type 2 diabetes, the primary MACE outcome occurred in 6.6% with semaglutide vs 8.9% with placebo over 104 weeks (HR 0.74).
 - **STEP 1 (NEJM, 2021):** mean body-weight change of −14.9% with semaglutide 2.4 mg vs −2.4% with placebo at 68 weeks.
 - **SELECT (NEJM, 2023):** in 17,604 adults with cardiovascular disease and overweight/obesity without diabetes, MACE occurred in 6.5% vs 8.0% (HR 0.80) over a mean 39.8 months.
@@ -114,12 +114,12 @@ Supplied as a lyophilized powder; identity by ESI-MS and purity by RP-HPLC on ev
 - **GIP receptor (GIPR):** agonism comparable to native GIP. GIPR is expressed in pancreatic islets, adipose tissue and the CNS.
 - **GLP-1 receptor (GLP-1R):** lower-potency, cAMP-biased agonism with reduced β-arrestin recruitment, which in cell models is associated with less receptor internalisation.
 
-At clinically studied exposures it engages GIPR to a greater degree than GLP-1R. How much each receptor contributes to the overall effect profile is still an active research question — one of the main reasons tirzepatide is studied alongside selective GLP-1R agonists such as semaglutide.`,
+At clinically studied exposures it engages GIPR to a greater degree than GLP-1R. How much each receptor contributes to the overall effect profile is still an active research question, and one of the main reasons tirzepatide is studied alongside selective GLP-1R agonists such as semaglutide.`,
     research: `- **SURPASS-2 (NEJM, 2021):** HbA1c change of −2.01, −2.24 and −2.30 points with 5, 10 and 15 mg vs −1.86 with semaglutide 1 mg at 40 weeks; all doses superior.
 - **SURMOUNT-1 (NEJM, 2022):** mean body-weight change of −15.0%, −19.5% and −20.9% with 5, 10 and 15 mg vs −3.1% with placebo at 72 weeks.
 - **SURMOUNT-OSA (NEJM, 2024):** apnoea–hypopnoea index fell by 25.3 vs 5.3 events/h (no PAP) and 29.3 vs 5.5 events/h (on PAP) vs placebo at 52 weeks.
 - **SURMOUNT-5 (NEJM, 2025):** head-to-head in obesity without diabetes, −20.2% with tirzepatide vs −13.7% with semaglutide at 72 weeks.
-- **SURPASS-CVOT (NEJM, 2025):** in 13,299 people with type 2 diabetes and atherosclerotic CVD, MACE 12.2% vs 13.1% with dulaglutide (HR 0.92) — non-inferior but not superior.`,
+- **SURPASS-CVOT (NEJM, 2025):** in 13,299 people with type 2 diabetes and atherosclerotic CVD, MACE 12.2% vs 13.1% with dulaglutide (HR 0.92): non-inferior but not superior.`,
     references: [
       { label: "Frías JP et al. N Engl J Med 2021;385:503–515 (SURPASS-2)", url: doi("10.1056/NEJMoa2107519") },
       { label: "Jastreboff AM et al. N Engl J Med 2022;387:205–216 (SURMOUNT-1)", url: doi("10.1056/NEJMoa2206038") },
@@ -142,8 +142,8 @@ At clinically studied exposures it engages GIPR to a greater degree than GLP-1R.
     accentColor: "#F59E0B",
     featured: true,
     shortDescription:
-      "Investigational single-molecule tri-agonist of the GIP, GLP-1 and glucagon receptors, with a completed Phase 3 programme — the frontier of multi-receptor incretin research.",
-    description: `Retatrutide is an investigational 39-residue peptide that activates **three receptors**: GIPR, GLP-1R and the glucagon receptor (GCGR). Like tirzepatide it is built on a GIP-derived backbone — with Aib at positions 2 and 20 and α-methyl-leucine at 13 — and carries a **C20 fatty diacid on Lys17** for albumin binding and an approximately six-day half-life.
+      "Investigational single-molecule tri-agonist of the GIP, GLP-1 and glucagon receptors, with a completed Phase 3 programme: the frontier of multi-receptor incretin research.",
+    description: `Retatrutide is an investigational 39-residue peptide that activates **three receptors**: GIPR, GLP-1R and the glucagon receptor (GCGR). Like tirzepatide it is built on a GIP-derived backbone (Aib at positions 2 and 20, α-methyl-leucine at 13) and carries a **C20 fatty diacid on Lys17** for albumin binding and an approximately six-day half-life.
 
 Adding glucagon-receptor agonism is thought to increase energy expenditure and hepatic fat oxidation, complementing the appetite and insulinotropic effects of incretin agonism. All four registrational TRIUMPH trials have now read out, making retatrutide one of the most closely watched compounds in metabolic research.
 
@@ -158,11 +158,11 @@ Supplied as a lyophilized powder; identity by ESI-MS and purity by RP-HPLC on ev
     aminoAcidCount: 39,
     halfLife: "~6 days",
     regulatoryStatus:
-      "Investigational — Phase 3 (TRIUMPH) complete; not approved anywhere. Sponsor has stated plans for a US submission in 2027.",
+      "Investigational, Phase 3 (TRIUMPH) complete; not approved anywhere. Sponsor has stated plans for a US submission in 2027.",
     mechanism: `In vitro, retatrutide is most potent at **GIPR**, with lower and roughly balanced activity at **GLP-1R** and **GCGR** relative to the native hormones (Coskun et al., *Cell Metab* 2022):
 
-- **GIPR and GLP-1R agonism** — insulinotropic and satiety-related incretin signalling that reduces food intake.
-- **GCGR agonism** — increased energy expenditure (shown in obese mice) and hepatic lipid effects. Glucagon's hyperglycaemic action is counterbalanced by concurrent incretin agonism.
+- **GIPR and GLP-1R agonism**: insulinotropic and satiety-related incretin signalling that reduces food intake.
+- **GCGR agonism**: increased energy expenditure (shown in obese mice) and hepatic lipid effects. Glucagon's hyperglycaemic action is counterbalanced by concurrent incretin agonism.
 
 Researchers use retatrutide to study how the balance of these three signals shapes metabolic outcomes compared with single and dual agonists.`,
     research: `- **Phase 2 obesity trial (NEJM, 2023):** body-weight change of −24.2% with 12 mg vs −2.1% with placebo at 48 weeks.
@@ -188,7 +188,7 @@ Researchers use retatrutide to study how the balance of these three signals shap
     category: "GLP1",
     accentColor: "#38BDF8",
     shortDescription:
-      "The first fatty-acid-acylated GLP-1 analogue — 97% homologous to native GLP-1, with a palmitoyl side chain giving a ~13-hour half-life.",
+      "The first fatty-acid-acylated GLP-1 analogue, 97% homologous to native GLP-1, with a palmitoyl side chain giving a ~13-hour half-life.",
     description: `Liraglutide is a GLP-1(7-37) analogue with a single amino-acid substitution (**Lys34→Arg**) and a **C16 palmitic acid** attached to **Lys26** via a γ-glutamic acid spacer. The fatty acid promotes self-association at the injection site and reversible albumin binding in circulation, extending the half-life from minutes to about 13 hours.
 
 As the first acylated GLP-1 analogue to reach the clinic, liraglutide established the albumin-binding strategy later refined in semaglutide. It was the first human GLP-1 analogue approved for type 2 diabetes and the first GLP-1 receptor agonist approved for chronic weight management, and it remains a widely used reference compound for once-daily GLP-1R agonism.
@@ -230,10 +230,10 @@ Its protraction comes from two mechanisms: heptamer formation at the injection s
     category: "GLP1",
     accentColor: "#10B981",
     shortDescription:
-      "Synthetic exendin-4, first isolated from Gila monster venom — the first GLP-1 receptor agonist ever approved and a classic receptor-research tool.",
+      "Synthetic exendin-4, first isolated from Gila monster venom, the first GLP-1 receptor agonist ever approved and a classic receptor-research tool.",
     description: `Exenatide is the synthetic form of **exendin-4**, a 39-residue peptide amide discovered in the venom of the Gila monster (*Heloderma suspectum*) by John Eng and colleagues in 1992. Its sequence partially overlaps human GLP-1, and **glycine at position 2** makes it naturally resistant to DPP-4 degradation.
 
-Exenatide carries no fatty-acid side chain. It is cleared mainly by glomerular filtration, giving a short half-life of about 2.4 hours — which, along with its high receptor affinity, makes it a staple reference ligand in receptor-binding, signalling and islet research.
+Exenatide carries no fatty-acid side chain. It is cleared mainly by glomerular filtration, giving a short half-life of about 2.4 hours, which, along with its high receptor affinity, makes it a staple reference ligand in receptor-binding, signalling and islet research.
 
 Supplied as a lyophilized powder; identity by ESI-MS and purity by RP-HPLC on every batch.`,
     aliases: "Exendin-4 (synthetic), AC2993, LY2148568",
@@ -251,7 +251,7 @@ Supplied as a lyophilized powder; identity by ESI-MS and purity by RP-HPLC on ev
 The N-terminally truncated fragment **exendin(9-39)** is a widely used GLP-1R antagonist, which makes the exendin family central to receptor pharmacology research.`,
     research: `- **First-in-class approval (2005):** exenatide (Byetta) became the first GLP-1 receptor agonist approved for type 2 diabetes.
 - **DURATION-1 (Lancet, 2008):** once-weekly exenatide reduced HbA1c by 1.9% vs 1.5% with twice-daily exenatide at 30 weeks.
-- **EXSCEL (NEJM, 2017):** in 14,752 people with type 2 diabetes, MACE occurred in 11.4% with weekly exenatide vs 12.2% with placebo (HR 0.91) — non-inferior but not superior.
+- **EXSCEL (NEJM, 2017):** in 14,752 people with type 2 diabetes, MACE occurred in 11.4% with weekly exenatide vs 12.2% with placebo (HR 0.91): non-inferior but not superior.
 - **Exenatide-PD3 (Lancet, 2025):** a Phase 3 trial in 194 people with Parkinson's disease found no disease-modifying benefit at 96 weeks, despite an encouraging earlier Phase 2 signal.`,
     references: [
       { label: "Eng J et al. J Biol Chem 1992;267:7402–7405 (isolation of exendin-4)", url: "https://pubmed.ncbi.nlm.nih.gov/?term=Eng+J+1992+exendin-4+Heloderma+suspectum" },
@@ -282,8 +282,8 @@ Supplied as a lyophilized powder; identity by ESI-MS and purity by RP-HPLC on ev
     casNumber: "2805997-46-8",
     sequence: "H-Ac4c-QGTFTSDYSKYLDERAAKDFI-K(GGSGSG-γGlu-C18 diacid)-WLESA-NH2",
     aminoAcidCount: 29,
-    regulatoryStatus: "Investigational — Phase 3 (SYNCHRONIZE programme). Not approved for any indication.",
-    mechanism: `Survodutide pairs **GLP-1R agonism**, which reduces food intake and slows gastric emptying, with **GCGR agonism**, which acts directly on the liver — affecting hepatic lipid metabolism, FGF21 and amino-acid turnover — and increases energy expenditure.
+    regulatoryStatus: "Investigational, Phase 3 (SYNCHRONIZE programme). Not approved for any indication.",
+    mechanism: `Survodutide pairs **GLP-1R agonism**, which reduces food intake and slows gastric emptying, with **GCGR agonism**, which acts directly on the liver (hepatic lipid metabolism, FGF21 and amino-acid turnover) and increases energy expenditure.
 
 In mice, its greater weight loss than semaglutide reflected both reduced intake and increased energy expenditure (Zimmermann et al., *Mol Metab* 2022). Its receptor balance differs from the GIP-based tri-agonist retatrutide, which makes the two useful comparators in research on the role of glucagon signalling.`,
     research: `- **Phase 2 obesity trial (Lancet Diabetes Endocrinol, 2024):** body-weight change of up to −14.9% with 4.8 mg vs −2.8% with placebo at 46 weeks.
@@ -305,7 +305,7 @@ In mice, its greater weight loss than semaglutide reflected both reduced intake 
     category: "DUAL",
     accentColor: "#2563EB",
     shortDescription:
-      "A lipidated oxyntomodulin analogue — the first glucagon/GLP-1 dual agonist to reach regulatory approval anywhere.",
+      "A lipidated oxyntomodulin analogue, the first glucagon/GLP-1 dual agonist to reach regulatory approval anywhere.",
     description: `Mazdutide is a long-acting analogue of **oxyntomodulin**, the endogenous gut hormone that naturally activates both the GLP-1 and glucagon receptors. The 34-residue backbone carries Aib at position 2 and a C-terminal amide, and **Lys20** bears a **C20 fatty diacid** through a γGlu–2×AEEA linker for once-weekly pharmacokinetics.
 
 Discovered at Eli Lilly and developed in China by Innovent Biologics, it became the world's first approved glucagon/GLP-1 dual receptor agonist in June 2025. Its combined GLP-1R/GCGR activity makes it a valuable comparator for survodutide and retatrutide in studies of how glucagon-receptor engagement contributes to metabolic and hepatic outcomes.
@@ -319,9 +319,9 @@ Supplied as a lyophilized powder; identity by ESI-MS and purity by RP-HPLC on ev
     casNumber: "2259884-03-0",
     sequence: "H-Aib-QGTFTSDYSKYLDEKKA-K(AEEA-AEEA-γGlu-C20 diacid)-EFVEWLLEGGPSSG-NH2",
     aminoAcidCount: 34,
-    halfLife: "Variable — ~6 to 28 days in Phase 1b studies",
+    halfLife: "Variable, ~6 to 28 days in Phase 1b studies",
     regulatoryStatus: "Approved in China (Xinermei, 2025) for chronic weight management and type 2 diabetes; investigational elsewhere.",
-    mechanism: `Mazdutide mimics the dual receptor profile of oxyntomodulin. **GLP-1R agonism** drives glucose-dependent insulin secretion and appetite suppression, while **GCGR agonism** is expected to raise energy expenditure and promote hepatic fat oxidation — consistent with the large liver-fat reductions reported in GLORY-1.
+    mechanism: `Mazdutide mimics the dual receptor profile of oxyntomodulin. **GLP-1R agonism** drives glucose-dependent insulin secretion and appetite suppression, while **GCGR agonism** is expected to raise energy expenditure and promote hepatic fat oxidation, consistent with the large liver-fat reductions reported in GLORY-1.
 
 Phase 1b pharmacokinetic studies reported unusually wide between-subject variation in half-life, which still supports once-weekly dosing.`,
     research: `- **GLORY-1 (NEJM, 2025):** in 610 Chinese adults with obesity or overweight, body-weight change of −11.00% (4 mg) and −14.01% (6 mg) vs +0.30% with placebo at 48 weeks.

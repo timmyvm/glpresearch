@@ -182,7 +182,7 @@ export default async function ComparePage() {
 
         {/* Wide screens: one table, compounds across. */}
         <div className="mt-10 hidden overflow-x-auto lg:block" data-reveal style={{ "--i": 1 } as React.CSSProperties}>
-          <table className="w-full min-w-[72rem] text-left">
+          <table className="w-full min-w-[72rem] table-fixed text-left">
             <caption className="sr-only">Data sheet for every compound</caption>
             <thead>
               <tr>

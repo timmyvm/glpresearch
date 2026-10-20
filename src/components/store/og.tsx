@@ -47,6 +47,8 @@ export function OgWordmark({ logo, color, tile = "#ffffff" }: { logo: string | n
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 64, height: 64, background: tile }}>
+        {/* Satori renders plain <img>; next/image has no meaning inside an ImageResponse. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         {logo ? <img src={logo} width={42} height={42} alt="" /> : null}
       </div>
       <div style={{ fontSize: 34, fontWeight: 500, color }}>GLP Research</div>

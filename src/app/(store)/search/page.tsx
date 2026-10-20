@@ -9,6 +9,7 @@ import { formatDate, slugify } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { TitleLines } from "@/components/store/page-intro";
 import { splitTitle } from "@/components/store/article-title";
+import { Browse } from "@/components/store/browse";
 import { FAQS } from "../faq/faqs";
 import { SearchField } from "./search-field";
 import { BATCH_PATTERN, escapeRegExp, hasAll, hasTerm, plain, snippet, toTerms } from "./search";
@@ -172,7 +173,7 @@ export default async function SearchPage({ searchParams }: Props) {
             </ul>
           </div>
         ) : total ? (
-          <div className="flex flex-col gap-3 md:flex-row md:items-baseline md:justify-between">
+          <div className="flex flex-col gap-3 md:flex-row md:items-baseline md:justify-between" data-load style={{ "--d": "380ms" } as React.CSSProperties}>
             <p className="text-lead">
               <span className="tabular">{total}</span> {total === 1 ? "result" : "results"} for “{q}”
             </p>
@@ -213,6 +214,8 @@ export default async function SearchPage({ searchParams }: Props) {
           </div>
         )}
       </div>
+
+      {!searching ? <Browse /> : null}
 
       {exact ? (
         <section className="frame pt-10" aria-label="Batch found">
@@ -271,9 +274,9 @@ export default async function SearchPage({ searchParams }: Props) {
               const t = splitTitle(a.title);
               return (
                 <li key={a.slug} data-reveal style={{ "--i": i % 4 } as React.CSSProperties}>
-                  <Link href={`/research/${a.slug}`} className="group grid gap-5 sm:grid-cols-[12rem_1fr]">
-                    <span className="relative block aspect-[3/2] overflow-clip bg-ink">
-                      {a.coverImage ? <Image src={a.coverImage} alt="" fill sizes="(min-width: 640px) 12rem, 100vw" className="object-cover transition-transform duration-700 ease-[var(--ease-out)] group-hover:scale-[1.03]" /> : null}
+                  <Link href={`/research/${a.slug}`} className="group grid grid-cols-[6.5rem_1fr] gap-4 sm:grid-cols-[12rem_1fr] sm:gap-5">
+                    <span className="relative block aspect-[3/2] self-start overflow-clip bg-ink">
+                      {a.coverImage ? <Image src={a.coverImage} alt="" fill sizes="(min-width: 640px) 12rem, 6.5rem" className="object-cover transition-transform duration-700 ease-[var(--ease-out)] group-hover:scale-[1.03]" /> : null}
                     </span>
                     <span className="min-w-0">
                       <span className="block text-lead font-medium group-hover:underline">

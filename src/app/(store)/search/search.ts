@@ -33,7 +33,9 @@ export function plain(markdown: string) {
     .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
     .replace(/^\s*\|.*\|\s*$/gm, " ")
-    .replace(/^#+\s+/gm, "")
+    // Headings and list items become sentences of their own, so snippets don't run them together.
+    .replace(/^#+\s+(.+?)[.:]?\s*$/gm, "$1.")
+    .replace(/^\s*(?:[-*+]|\d+\.)\s+(.+?)[.;]?\s*$/gm, "$1.")
     .replace(/[*_`>]/g, "")
     .replace(/\s+/g, " ")
     .trim();

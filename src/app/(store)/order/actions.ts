@@ -7,6 +7,7 @@ import { str, type ActionState } from "@/lib/actions";
 import { canAccessOrder } from "./access";
 import { sendCancellationEmail, sendPaymentClaimNotice } from "@/lib/order-emails";
 import { getSettings } from "@/lib/settings";
+import { notifyBackInStock } from "@/lib/admin/stock-alerts";
 
 const input = z.object({ number: z.string().trim().min(3).max(40), token: z.string().max(64).optional() });
 
@@ -76,6 +77,10 @@ export async function cancelOrder(_prev: ActionState, form: FormData): Promise<A
   });
 
   if (!cancelled) return { error: "This order changed while you were viewing it. Refresh the page to see its status." };
+  // Anyone waiting on a sold-out variant hears about the returned stock.
+  for (const variantId of new Set(order.items.map((i) => i.variantId).filter((id): id is string => !!id))) {
+    await notifyBackInStock(variantId).catch((error) => console.error("[order] back-in-stock notice failed", error));
+  }
   const settings = await getSettings();
   await sendCancellationEmail(order, settings).catch((error) => console.error("[order] cancellation email failed", error));
   revalidateOrder(order.number);

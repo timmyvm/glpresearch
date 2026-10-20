@@ -75,7 +75,13 @@ export default async function OrderConfirmationPage({
           settings={settings}
           action={
             <div className="flex flex-col items-start gap-4">
-              {order.paymentClaimedAt ? null : <ClaimPaymentButton number={order.number} token={guestToken} />}
+              {order.paymentClaimedAt ? (
+                <p role="status" className="bg-white px-4 py-3 text-small">
+                  You reported the payment as sent on {formatDateTime(order.paymentClaimedAt)}. We&apos;ll email you once it&apos;s matched.
+                </p>
+              ) : (
+                <ClaimPaymentButton number={order.number} token={guestToken} />
+              )}
               <CancelOrderButton number={order.number} token={guestToken} />
             </div>
           }
