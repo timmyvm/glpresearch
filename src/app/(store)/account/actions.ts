@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { hashPassword, requireUser, startSession, verifyPassword } from "@/lib/auth";
+import { endSession, hashPassword, requireUser, startSession, verifyPassword } from "@/lib/auth";
 import { bool, str, zodErrors, type ActionState } from "@/lib/actions";
 import { AU_STATES } from "@/components/checkout/au-states";
 
@@ -173,4 +174,48 @@ export async function changeEmail(_prev: ActionState, form: FormData): Promise<A
   await startSession(updated);
   revalidatePath("/account", "layout");
   return { ok: true, message: `Email changed to ${updated.email}.` };
+}
+
+/**
+ * Closes the signed-in account. Orders are kept for the store's records, but the account's name,
+ * contact details, addresses and reset links are removed and its email is released for reuse.
+ */
+export async function closeAccount(_prev: ActionState, form: FormData): Promise<ActionState> {
+  const user = await requireUser("/account/settings");
+  const parsed = z
+    .object({ password: z.string().min(1, "Enter your password"), confirmEmail: z.string() })
+    .refine((d) => d.confirmEmail.trim().toLowerCase() === user.email, {
+      path: ["confirmEmail"],
+      message: "Type your email address exactly as shown",
+    })
+    .safeParse({ password: str(form, "password"), confirmEmail: str(form, "confirmEmail") });
+  if (!parsed.success) return zodErrors(parsed.error);
+  if (user.role === "ADMIN") return { error: "Store administrator accounts can't be closed here. Ask another administrator." };
+
+  const record = await db.user.findUniqueOrThrow({ where: { id: user.id } });
+  if (!(await verifyPassword(parsed.data.password, record.passwordHash))) {
+    return { error: "Your password is incorrect.", fieldErrors: { password: ["Incorrect password"] } };
+  }
+
+  await db.$transaction([
+    db.address.deleteMany({ where: { userId: user.id } }),
+    db.passwordResetToken.deleteMany({ where: { userId: user.id } }),
+    db.subscriber.deleteMany({ where: { email: user.email } }),
+    db.stockAlert.deleteMany({ where: { email: user.email } }),
+    db.user.update({
+      where: { id: user.id },
+      data: {
+        status: "CLOSED",
+        firstName: "Closed",
+        lastName: "account",
+        email: `closed+${user.id}@invalid.local`,
+        phone: null,
+        institution: null,
+        marketingOptIn: false,
+        passwordHash: await hashPassword(crypto.randomUUID()),
+      },
+    }),
+  ]);
+  await endSession();
+  redirect("/?account=closed");
 }

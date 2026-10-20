@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ExternalLink, MapPin, Truck } from "lucide-react";
 import { formatMoney } from "@/lib/money";
 import { PAYMENT_METHODS, SHIPPING_METHODS, type PaymentMethod, type ShippingMethod } from "@/lib/orders";
+import { specimenImage } from "@/lib/plates";
+import { cn } from "@/lib/utils";
 
 type Item = {
   id: string;
@@ -17,32 +18,32 @@ type Item = {
 
 export function OrderItems({ items, productSlugs = {} }: { items: Item[]; productSlugs?: Record<string, string> }) {
   return (
-    <ul className="divide-y divide-slate-100">
+    <ul className="space-y-4">
       {items.map((item) => {
         const slug = productSlugs[item.id];
-        const name = <span className="font-semibold text-ink-900">{item.productName}</span>;
+        const img = specimenImage(item.image) ?? item.image;
         return (
-          <li key={item.id} className="flex gap-4 py-4 first:pt-0 last:pb-0">
-            <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200">
-              {item.image ? <Image src={item.image} alt={item.productName} fill sizes="64px" className="object-cover" /> : null}
+          <li key={item.id} className="flex gap-4">
+            <div className="relative h-20 w-16 shrink-0 bg-surface">
+              {img ? <Image src={img} alt={`${item.productName} ${item.variantLabel}`} fill sizes="64px" className="object-contain p-1" /> : null}
             </div>
-            <div className="flex min-w-0 flex-1 justify-between gap-3">
-              <div className="min-w-0 text-sm">
+            <div className="flex min-w-0 flex-1 justify-between gap-4">
+              <div className="min-w-0">
                 {slug ? (
-                  <Link href={`/shop/${slug}`} className="hover:underline">
-                    {name}
+                  <Link href={`/shop/${slug}`} className="link font-medium decoration-transparent hover:decoration-ink">
+                    {item.productName}
                   </Link>
                 ) : (
-                  name
+                  <p className="font-medium">{item.productName}</p>
                 )}
-                <p className="text-slate-500">
-                  {item.variantLabel} · <span className="font-mono text-xs">{item.sku}</span>
+                <p className="text-small text-muted">
+                  {item.variantLabel}, SKU {item.sku}
                 </p>
-                <p className="text-slate-500">
+                <p className="tabular text-small text-muted">
                   {item.quantity} × {formatMoney(item.unitPrice)}
                 </p>
               </div>
-              <p className="text-sm font-semibold text-ink-900">{formatMoney(item.lineTotal)}</p>
+              <p className="tabular shrink-0 font-medium">{formatMoney(item.lineTotal)}</p>
             </div>
           </li>
         );
@@ -58,24 +59,24 @@ export function OrderTotals({
 }) {
   const shipping = SHIPPING_METHODS[order.shippingMethod as ShippingMethod];
   return (
-    <dl className="space-y-2 text-sm">
-      <div className="flex justify-between">
-        <dt className="text-slate-500">Subtotal</dt>
-        <dd className="font-medium">{formatMoney(order.subtotal)}</dd>
+    <dl className="tabular space-y-2 text-small">
+      <div className="flex justify-between gap-4">
+        <dt className="text-muted">Subtotal</dt>
+        <dd>{formatMoney(order.subtotal)}</dd>
       </div>
       {order.discount > 0 ? (
-        <div className="flex justify-between text-mint-700">
-          <dt>Discount{order.couponCode ? ` (${order.couponCode})` : ""}</dt>
-          <dd className="font-medium">−{formatMoney(order.discount)}</dd>
+        <div className="flex justify-between gap-4">
+          <dt className="text-muted">Discount{order.couponCode ? ` (${order.couponCode})` : ""}</dt>
+          <dd>−{formatMoney(order.discount)}</dd>
         </div>
       ) : null}
-      <div className="flex justify-between">
-        <dt className="text-slate-500">Shipping{shipping ? ` · ${shipping.label}` : ""}</dt>
-        <dd className="font-medium">{order.shipping ? formatMoney(order.shipping) : "Free"}</dd>
+      <div className="flex justify-between gap-4">
+        <dt className="text-muted">Shipping{shipping ? `, ${shipping.label.toLowerCase()}` : ""}</dt>
+        <dd>{order.shipping ? formatMoney(order.shipping) : "Free"}</dd>
       </div>
-      <div className="flex justify-between border-t border-slate-200 pt-3 text-base">
-        <dt className="font-semibold text-ink-900">Total</dt>
-        <dd className="font-semibold text-ink-900">{formatMoney(order.total)}</dd>
+      <div className="flex items-baseline justify-between gap-4 pt-2 text-body">
+        <dt className="font-medium">Total</dt>
+        <dd className="text-lead font-medium">{formatMoney(order.total)}</dd>
       </div>
     </dl>
   );
@@ -106,73 +107,72 @@ export function trackingUrl(carrier: string | null, tracking: string | null) {
   return null;
 }
 
+export function ShippingAddress({
+  order,
+  className,
+}: {
+  order: Omit<ShippingOrder, "shippingMethod" | "paymentMethod" | "carrier" | "trackingNumber">;
+  className?: string;
+}) {
+  return (
+    <address className={cn("leading-normal not-italic", className)}>
+      {order.shipFirstName} {order.shipLastName}
+      <br />
+      {order.shipCompany ? (
+        <>
+          {order.shipCompany}
+          <br />
+        </>
+      ) : null}
+      {order.shipLine1}
+      <br />
+      {order.shipLine2 ? (
+        <>
+          {order.shipLine2}
+          <br />
+        </>
+      ) : null}
+      {order.shipCity} {order.shipState} {order.shipPostcode}
+      <br />
+      {order.shipCountry}
+      {order.shipPhone ? (
+        <>
+          <br />
+          <span className="text-muted">{order.shipPhone}</span>
+        </>
+      ) : null}
+    </address>
+  );
+}
+
 export function OrderShippingInfo({ order }: { order: ShippingOrder }) {
   const url = trackingUrl(order.carrier, order.trackingNumber);
   const shipping = SHIPPING_METHODS[order.shippingMethod as ShippingMethod];
   return (
-    <div className="grid gap-6 text-sm sm:grid-cols-2">
+    <div className="grid gap-6 sm:grid-cols-3">
       <div>
-        <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-          <MapPin className="size-3.5" /> Shipping address
-        </p>
-        <address className="leading-relaxed text-ink-800 not-italic">
-          {order.shipFirstName} {order.shipLastName}
-          <br />
-          {order.shipCompany ? (
-            <>
-              {order.shipCompany}
-              <br />
-            </>
-          ) : null}
-          {order.shipLine1}
-          <br />
-          {order.shipLine2 ? (
-            <>
-              {order.shipLine2}
-              <br />
-            </>
-          ) : null}
-          {order.shipCity} {order.shipState} {order.shipPostcode}
-          <br />
-          {order.shipCountry}
-          {order.shipPhone ? (
-            <>
-              <br />
-              <span className="text-slate-500">{order.shipPhone}</span>
-            </>
-          ) : null}
-        </address>
+        <p className="mb-2 text-small text-muted">Ship to</p>
+        <ShippingAddress order={order} />
       </div>
-      <div className="space-y-4">
-        <div>
-          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-slate-500 uppercase">
-            <Truck className="size-3.5" /> Delivery
-          </p>
-          <p className="text-ink-800">
-            {shipping?.label ?? order.shippingMethod}
-            {shipping ? <span className="text-slate-500"> · {shipping.eta}</span> : null}
-          </p>
-          {order.trackingNumber ? (
-            <div className="mt-2 rounded-lg bg-ink-50 p-3">
-              <p className="text-xs text-slate-500">{order.carrier ?? "Tracking number"}</p>
-              <p className="font-mono text-sm font-semibold text-ink-900">{order.trackingNumber}</p>
-              {url ? (
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-mint-700 hover:underline"
-                >
-                  Track with {order.carrier ?? "Australia Post"} <ExternalLink className="size-3" />
-                </a>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
-        <div>
-          <p className="mb-1 text-xs font-semibold tracking-wider text-slate-500 uppercase">Payment</p>
-          <p className="text-ink-800">{PAYMENT_METHODS[order.paymentMethod as PaymentMethod]?.label ?? order.paymentMethod}</p>
-        </div>
+      <div>
+        <p className="mb-2 text-small text-muted">Delivery</p>
+        <p>{shipping?.label ?? order.shippingMethod}</p>
+        {shipping ? <p className="text-small text-muted">{shipping.eta} after dispatch</p> : null}
+        {order.trackingNumber ? (
+          <div className="mt-3 bg-surface px-4 py-3">
+            <p className="text-small text-muted">{order.carrier ?? "Tracking number"}</p>
+            <p className="tabular font-medium break-all">{order.trackingNumber}</p>
+            {url ? (
+              <a href={url} target="_blank" rel="noopener noreferrer" className="link mt-1 inline-block text-small">
+                Track with {order.carrier ?? "Australia Post"}
+              </a>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+      <div>
+        <p className="mb-2 text-small text-muted">Payment</p>
+        <p>{PAYMENT_METHODS[order.paymentMethod as PaymentMethod]?.label ?? order.paymentMethod}</p>
       </div>
     </div>
   );

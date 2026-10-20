@@ -6,8 +6,9 @@ export const metadata: Metadata = { title: "Terms of sale" };
 export default function TermsPage() {
   return (
     <LegalPage
-      eyebrow="Policy"
+      path="/terms"
       title="Terms of sale"
+      lead="The conditions that apply to every order placed with GLP Research, read together with the research use policy."
       updated="October 2026"
       content={`These terms apply to all orders placed with GLP Research ("we", "us"). By placing an order you agree to them. Please also read our [Research use policy](/disclaimer), which forms part of these terms.
 

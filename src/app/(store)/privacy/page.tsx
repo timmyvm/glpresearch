@@ -6,8 +6,9 @@ export const metadata: Metadata = { title: "Privacy policy" };
 export default function PrivacyPage() {
   return (
     <LegalPage
-      eyebrow="Policy"
+      path="/privacy"
       title="Privacy policy"
+      lead="What personal information we collect, why we collect it, who we share it with and the choices you have."
       updated="October 2026"
       content={`We respect your privacy and handle personal information in line with the Australian Privacy Principles.
 
@@ -20,7 +21,7 @@ export default function PrivacyPage() {
 
 ## How we use it
 
-To process and ship orders, provide customer support, maintain your account, send transactional emails (order confirmations, payment and shipping updates, password resets), prevent fraud and misuse, and — only if you opt in — send research and product updates.
+To process and ship orders, provide customer support, maintain your account, send transactional emails (order confirmations, payment and shipping updates, password resets), prevent fraud and misuse, and, only if you opt in, send research and product updates.
 
 ## Sharing
 

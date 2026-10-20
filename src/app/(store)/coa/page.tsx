@@ -1,175 +1,228 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, Download, FileSearch, Search } from "lucide-react";
 import { db } from "@/lib/db";
-import { formatDate } from "@/lib/utils";
-import { Alert } from "@/components/ui/alert";
+import { plateInk, specimenImage } from "@/lib/plates";
+import { cn, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/form";
-import { PageHero } from "@/components/store/page-hero";
+import { TitleLines } from "@/components/store/page-intro";
 
 export const metadata: Metadata = {
-  title: "Lab testing & certificates of analysis",
-  description: "Search independent HPLC purity and mass-spectrometry identity results for every GLP Research batch.",
+  title: "Lab results and certificates of analysis",
+  description: "Look up the independent HPLC purity and mass-spectrometry identity results for any GLP Research batch.",
 };
 
 export default async function CoaPage({ searchParams }: { searchParams: Promise<{ batch?: string; product?: string }> }) {
   const { batch, product } = await searchParams;
-  const query = batch?.trim().toUpperCase();
+  const query = batch?.trim().toUpperCase().slice(0, 40);
 
   const [match, batches, products] = await Promise.all([
     query ? db.batch.findFirst({ where: { batchNumber: query, published: true }, include: { product: true } }) : null,
     db.batch.findMany({
       where: { published: true, product: { active: true, ...(product ? { slug: product } : {}) } },
-      include: { product: { select: { name: true, slug: true, accentColor: true, molecularWeight: true } } },
+      include: { product: { select: { name: true, slug: true, accentColor: true } } },
       orderBy: { testedAt: "desc" },
     }),
-    db.product.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" }, select: { slug: true, name: true } }),
+    db.product.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+      select: { slug: true, name: true, image: true, accentColor: true, _count: { select: { batches: { where: { published: true } } } } },
+    }),
   ]);
 
   return (
     <>
-      <PageHero
-        eyebrow="Quality control"
-        title="Lab testing & certificates of analysis"
-        description="Every batch is tested by an independent analytical laboratory before release. Enter the batch number printed on your vial to see its results."
-        image="/images/hplc-analysis.webp"
-      >
-        <form className="mt-8 flex max-w-lg gap-2" action="/coa">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
-            <Input name="batch" defaultValue={batch} placeholder="e.g. SEM-2609-100" className="h-12 pl-9 font-mono uppercase" aria-label="Batch number" />
+      <section className="bg-field-mint text-ink" aria-labelledby="coa-title">
+        <div className="frame grid gap-6 pt-12 pb-14 md:grid-cols-12 md:items-end md:gap-x-[var(--gutter)] md:pt-20 md:pb-20">
+          <h1 id="coa-title" className="lines text-display md:col-span-7">
+            <TitleLines lines={["Lab results for", "every batch"]} />
+          </h1>
+          <div className="md:col-span-5" data-load style={{ "--d": "300ms" } as React.CSSProperties}>
+            <p className="max-w-[40ch] text-lead">
+              An independent laboratory tests every batch before it is sold. Enter the number printed on your vial.
+            </p>
           </div>
-          <Button type="submit" variant="accent" size="lg">Look up</Button>
-        </form>
-      </PageHero>
+          <form action="/coa" className="md:col-span-7" role="search" aria-label="Find a batch">
+            <label htmlFor="batch" className="block text-small font-medium">
+              Batch number
+            </label>
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+              <input
+                id="batch"
+                name="batch"
+                defaultValue={batch}
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="e.g. SEM-2609-100…"
+                className="h-14 min-w-0 flex-1 bg-white px-4 text-body uppercase placeholder:normal-case placeholder:text-muted/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+              />
+              <Button type="submit" variant="ink" size="lg">
+                Find Certificate
+              </Button>
+            </div>
+          </form>
+        </div>
 
-      <section className="container-page py-12">
         {query ? (
-          match ? (
-            <div className="overflow-hidden rounded-3xl border border-slate-200">
-              <div className="flex flex-col gap-4 border-b border-slate-200 bg-emerald-50/60 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="grid size-11 place-items-center rounded-full bg-emerald-100 text-emerald-700">
-                    <BadgeCheck className="size-6" />
+          <div className="frame pb-16 md:pb-24" aria-live="polite">
+            {match ? (
+              <article className="bg-white p-6 md:-rotate-[0.6deg] md:p-12" aria-labelledby="certificate-title">
+                <div className="grid gap-8 md:grid-cols-12 md:gap-x-[var(--gutter)]">
+                  <div className="md:col-span-7">
+                    <h2 id="certificate-title" className="tabular text-head" translate="no">
+                      <span className="sr-only">Certificate of analysis for </span>
+                      {match.batchNumber}
+                    </h2>
+                    <p className="mt-4 flex items-center gap-3 text-lead">
+                      <span className="size-4 shrink-0" style={{ backgroundColor: match.product.accentColor }} aria-hidden="true" />
+                      <Link href={`/shop/${match.product.slug}`} className="link">
+                        {match.product.name}
+                        {match.variantLabel ? `, ${match.variantLabel}` : ""}
+                      </Link>
+                    </p>
                   </div>
-                  <div>
-                    <p className="text-xs font-semibold tracking-wide text-emerald-700 uppercase">Verified batch</p>
-                    <p className="font-mono text-lg font-semibold">{match.batchNumber}</p>
+                  <div className="md:col-span-5 md:text-right">
+                    <p className="tabular text-display">{match.purity.toFixed(2)}%</p>
+                    <p className="mt-1 text-body text-muted">purity by HPLC</p>
                   </div>
                 </div>
+                <dl className="mt-10 grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {[
+                    ["Identity by mass spectrometry", match.massSpec ?? "Not recorded"],
+                    ["Method", match.testMethod],
+                    ["Laboratory", match.laboratory],
+                    ["Tested", formatDate(match.testedAt)],
+                    ["Retest date", match.expiresAt ? formatDate(match.expiresAt) : "Not set"],
+                    ["Notes", match.notes ?? "None"],
+                  ].map(([label, value]) => (
+                    <div key={label}>
+                      <dt className="text-small text-muted">{label}</dt>
+                      <dd className="mt-1">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
                 {match.coaUrl ? (
-                  <a href={match.coaUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-ink-800">
-                    <Download className="size-4" /> Download certificate
+                  <a href={match.coaUrl} target="_blank" rel="noopener noreferrer" className="link mt-8 inline-block font-medium">
+                    Download the full certificate
                   </a>
                 ) : null}
+              </article>
+            ) : (
+              <div className="bg-white p-6 md:p-8">
+                <h2 className="text-lead font-medium">
+                  No published batch matches “<span className="tabular">{query}</span>”
+                </h2>
+                <p className="mt-3 max-w-[60ch]">
+                  Check the number on the vial label: three letters, the year and month, then a number, for example{" "}
+                  <span className="tabular">TIR-2609-107</span>. If it still doesn&apos;t appear,{" "}
+                  <Link href="/contact" className="link font-medium">
+                    contact us
+                  </Link>{" "}
+                  and we&apos;ll send the certificate directly.
+                </p>
               </div>
-              <dl className="grid gap-px bg-slate-200 sm:grid-cols-2 lg:grid-cols-4">
-                {[
-                  ["Compound", <Link key="p" href={`/shop/${match.product.slug}`} className="hover:text-mint-700">{match.product.name}{match.variantLabel ? ` · ${match.variantLabel}` : ""}</Link>],
-                  ["Purity (HPLC)", <span key="u" className="font-mono text-emerald-700">{match.purity.toFixed(2)}%</span>],
-                  ["Tested", formatDate(match.testedAt)],
-                  ["Retest date", match.expiresAt ? formatDate(match.expiresAt) : "—"],
-                ].map(([label, value]) => (
-                  <div key={String(label)} className="bg-white px-6 py-5">
-                    <dt className="text-xs tracking-wide text-slate-500 uppercase">{label}</dt>
-                    <dd className="mt-1 text-lg font-semibold text-ink-900">{value}</dd>
-                  </div>
-                ))}
-              </dl>
-              <dl className="divide-y divide-slate-100 text-sm">
-                {[
-                  ["Identity (mass spectrometry)", match.massSpec ?? "—"],
-                  ["Test method", match.testMethod],
-                  ["Testing laboratory", match.laboratory],
-                  ["Theoretical molecular weight", match.product.molecularWeight ?? "—"],
-                  ["Notes", match.notes ?? "—"],
-                ].map(([label, value]) => (
-                  <div key={label} className="grid gap-1 px-6 py-3.5 sm:grid-cols-[260px_1fr]">
-                    <dt className="text-slate-500">{label}</dt>
-                    <dd className="text-ink-900">{value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          ) : (
-            <Alert tone="warning" title={`No published batch found for “${query}”`}>
-              Check the batch number on your vial label (letters and numbers, e.g. <span className="font-mono">TIR-2609-107</span>).
-              If it still can&apos;t be found, <Link href="/contact" className="font-semibold underline">contact us</Link> and
-              we&apos;ll send the certificate directly.
-            </Alert>
-          )
-        ) : null}
-
-        <div className="mt-12 grid gap-12 lg:grid-cols-[1fr_340px]">
-          <div>
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-semibold tracking-tight">All published batches</h2>
-                <p className="mt-1 text-sm text-slate-600">{batches.length} results</p>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                <Link href="/coa" className={`rounded-full px-3 py-1.5 text-xs font-medium ${!product ? "bg-ink-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>All</Link>
-                {products.map((p) => (
-                  <Link key={p.slug} href={`/coa?product=${p.slug}`} className={`rounded-full px-3 py-1.5 text-xs font-medium ${product === p.slug ? "bg-ink-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>
-                    {p.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-            <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead className="bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold">Batch</th>
-                    <th className="px-4 py-3 font-semibold">Compound</th>
-                    <th className="px-4 py-3 font-semibold">Purity</th>
-                    <th className="px-4 py-3 font-semibold">Identity</th>
-                    <th className="px-4 py-3 font-semibold">Tested</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {batches.map((b) => (
-                    <tr key={b.id} className="hover:bg-slate-50/60">
-                      <td className="px-4 py-3">
-                        <Link href={`/coa?batch=${encodeURIComponent(b.batchNumber)}`} className="font-mono text-xs font-semibold text-mint-700 hover:underline">
-                          {b.batchNumber}
-                        </Link>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-2">
-                          <span className="size-2 rounded-full" style={{ backgroundColor: b.product.accentColor }} />
-                          {b.product.name}
-                          {b.variantLabel ? <span className="text-slate-400">· {b.variantLabel}</span> : null}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-mono font-semibold text-emerald-700">{b.purity.toFixed(2)}%</td>
-                      <td className="px-4 py-3 text-xs text-slate-600">{b.massSpec ? "MS confirmed" : "—"}</td>
-                      <td className="px-4 py-3 text-slate-600">{formatDate(b.testedAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            )}
           </div>
+        ) : null}
+      </section>
 
-          <aside className="space-y-6">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">
-              <Image src="/images/lab-bench.webp" alt="Analyst preparing a sample" fill sizes="340px" className="object-cover" />
-            </div>
-            <div className="rounded-3xl border border-slate-200 p-6">
-              <FileSearch className="size-5 text-mint-600" />
-              <p className="mt-3 font-semibold text-ink-900">How to read a COA</p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                Purity is the area of the main peak as a percentage of all detected peaks on the HPLC chromatogram.
-                Identity is confirmed when the observed mass matches the theoretical mass of the peptide.
-              </p>
-              <Link href="/research/understanding-certificates-of-analysis" className="mt-3 inline-block text-sm font-semibold text-mint-700 hover:underline">
-                Full guide to certificates of analysis →
+      <section className="frame pt-20 md:pt-28" aria-labelledby="all-title">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <h2 id="all-title" className="text-head" data-reveal>
+            All published batches
+          </h2>
+          <p className="tabular text-muted" aria-live="polite">
+            {batches.length} {batches.length === 1 ? "batch" : "batches"}
+            {product ? `, ${products.find((p) => p.slug === product)?.name ?? ""}` : ""}
+          </p>
+        </div>
+        <p className="mt-4 max-w-[62ch]" data-reveal>
+          Purity is reported to two decimal places from the HPLC trace, and identity is confirmed by mass spectrometry
+          against the peptide&apos;s theoretical mass. Choose a compound to see only its batches.
+        </p>
+        <nav aria-label="Filter by compound" className="mt-8 grid grid-cols-4 gap-1.5 sm:grid-cols-8">
+          <Link
+            href="/coa"
+            aria-current={!product ? "page" : undefined}
+            className={cn("press flex aspect-[4/5] flex-col justify-end p-3", !product ? "bg-ink text-on-navy" : "bg-surface text-ink hover:bg-surface-2")}
+          >
+            <span className="font-medium">All</span>
+            <span className="tabular text-small">{products.reduce((n, p) => n + p._count.batches, 0)} batches</span>
+          </Link>
+          {products.map((p) => {
+            const active = product === p.slug;
+            return (
+              <Link key={p.slug} href={`/coa?product=${p.slug}`} aria-current={active ? "page" : undefined} className="group block">
+                <span
+                  className={cn("relative block aspect-[4/5] overflow-clip transition-[outline-color] duration-200", active ? "outline-4 -outline-offset-4 outline-ink" : "")}
+                  style={{ backgroundColor: p.accentColor, color: plateInk(p.accentColor) }}
+                >
+                  <Image src={specimenImage(p.image) ?? p.image} alt="" fill sizes="(min-width: 640px) 12vw, 25vw" className="object-contain px-[16%] pt-[14%] pb-[22%] transition-transform duration-500 ease-[var(--ease-out)] group-hover:-translate-y-1" />
+                  <span className="absolute inset-x-3 bottom-2 text-small font-medium">{p.name}</span>
+                </span>
               </Link>
-            </div>
-          </aside>
+            );
+          })}
+        </nav>
+        <div className="mt-8 overflow-x-auto" data-reveal style={{ "--i": 1 } as React.CSSProperties}>
+          <table className="tabular w-full text-left">
+            <caption className="sr-only">Published batch results</caption>
+            <thead className="text-small text-muted">
+              <tr>
+                <th scope="col" className="pr-4 pb-3 font-medium">Batch</th>
+                <th scope="col" className="px-3 pb-3 font-medium">Compound</th>
+                <th scope="col" className="hidden px-3 pb-3 font-medium md:table-cell">Size</th>
+                <th scope="col" className="px-3 pb-3 text-right font-medium">Purity</th>
+                <th scope="col" className="hidden px-3 pb-3 font-medium sm:table-cell">Identity</th>
+                <th scope="col" className="hidden px-3 pb-3 font-medium md:table-cell">Tested</th>
+              </tr>
+            </thead>
+            <tbody>
+              {batches.map((b) => (
+                <tr key={b.id} className="border-t border-ink/10" data-reveal>{/* taste-skill-ignore: real table rows */}
+                  <td className="py-3.5 pr-4">
+                    <Link href={`/coa?batch=${encodeURIComponent(b.batchNumber)}`} className="link font-medium" translate="no">
+                      {b.batchNumber}
+                    </Link>
+                  </td>
+                  <td className="px-3 py-3.5">
+                    <span className="inline-flex items-center gap-2.5">
+                      <span className="size-3 shrink-0" style={{ backgroundColor: b.product.accentColor }} aria-hidden="true" />
+                      {b.product.name}
+                    </span>
+                  </td>
+                  <td className="hidden px-3 py-3.5 md:table-cell">{b.variantLabel ?? "All sizes"}</td>
+                  <td className="px-3 py-3.5 text-right">{b.purity.toFixed(2)}%</td>
+                  <td className="hidden px-3 py-3.5 sm:table-cell">{b.massSpec ? "Confirmed" : "Not recorded"}</td>
+                  <td className="hidden px-3 py-3.5 md:table-cell">{formatDate(b.testedAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="frame grid items-center gap-10 pt-28 md:grid-cols-12 md:gap-x-[var(--gutter)] md:pt-40" aria-labelledby="reading-title">
+        <div className="grid grid-cols-2 gap-1.5 md:col-span-6" data-reveal>
+          <div className="relative aspect-[3/4] overflow-clip">
+            <Image src="/images/hplc-analysis.webp" alt="An analyst holds a sample vial beside an HPLC chromatogram with one sharp peak" fill sizes="(min-width: 768px) 25vw, 50vw" className="drift object-cover" />
+          </div>
+          <div className="relative aspect-[3/4] overflow-clip">
+            <Image src="/images/lab-bench.webp" alt="An analyst pipettes a sample into a vial at a laboratory bench" fill sizes="(min-width: 768px) 25vw, 50vw" className="object-cover" />
+          </div>
+        </div>
+        <div className="md:col-span-5 md:col-start-8" data-reveal style={{ "--i": 1 } as React.CSSProperties}>
+          <h2 id="reading-title" className="text-index font-medium">
+            Reading a certificate
+          </h2>
+          <p className="mt-5 max-w-[46ch]">
+            Purity is the main peak&apos;s share of everything the HPLC detects at 214 nm. Identity is confirmed when the
+            mass spectrometer finds the peptide&apos;s theoretical mass. Neither tells you the peptide content by weight,
+            which also counts water and counter-ions.
+          </p>
+          <Link href="/research/understanding-certificates-of-analysis" className="link mt-6 inline-block font-medium">
+            The full guide to certificates of analysis
+          </Link>
         </div>
       </section>
     </>

@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Clock } from "lucide-react";
 import { db } from "@/lib/db";
 import { cn, formatDate } from "@/lib/utils";
-import { PageHero } from "@/components/store/page-hero";
+import { splitTitle } from "@/components/store/article-title";
+import { PageIntro, TitleLines } from "@/components/store/page-intro";
 import { TIMELINE } from "@/content/timeline";
 
 export const metadata: Metadata = {
   title: "Research library",
   description:
-    "In-depth explainers on GLP-1 and incretin biology, receptor pharmacology, landmark clinical trials, analytical testing and laboratory handling of peptides.",
+    "Referenced articles on GLP-1 and incretin biology, receptor pharmacology, the landmark clinical trials, analytical testing and laboratory handling of peptides.",
 };
 
 const CATEGORIES = ["Fundamentals", "Compounds", "Clinical Research", "Lab Practice", "Reference"];
@@ -22,93 +22,116 @@ export default async function ResearchPage({ searchParams }: { searchParams: Pro
   const articles = await db.article.findMany({
     where: { published: true, ...(active ? { category: active } : {}) },
     orderBy: [{ featured: "desc" }, { publishedAt: "desc" }],
+    select: { slug: true, title: true, excerpt: true, category: true, coverImage: true, readingMinutes: true, publishedAt: true },
   });
   const [lead, ...rest] = articles;
+  const leadTitle = lead ? splitTitle(lead.title) : null;
 
   return (
     <>
-      <PageHero
-        eyebrow="Research library"
-        title="The science of incretins, explained properly"
-        description="Long-form, referenced articles on GLP-1 biology, receptor pharmacology, the clinical literature and good laboratory practice — written for researchers, not marketers."
-        image="/images/peptide-helix.webp"
-      />
-
-      <section className="container-page py-12">
-        <nav className="flex flex-wrap gap-2 border-b border-slate-200 pb-6" aria-label="Filter articles">
+      <PageIntro
+        title={<TitleLines lines={["The research", "library"]} />}
+        lead="Referenced articles on GLP-1 biology, receptor pharmacology, the clinical trials and good laboratory practice, written for researchers."
+      >
+        <nav aria-label="Filter by topic" className="mt-8 flex flex-wrap gap-x-6 gap-y-2">
           {[undefined, ...CATEGORIES].map((c) => (
             <Link
               key={c ?? "all"}
               href={c ? `/research?category=${encodeURIComponent(c)}` : "/research"}
-              className={cn(
-                "rounded-full px-4 py-2 text-sm font-medium transition-colors",
-                active === c ? "bg-ink-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200",
-              )}
+              aria-current={active === c ? "page" : undefined}
+              className={cn("link", active === c ? "text-ink decoration-ink" : "text-muted decoration-transparent hover:text-ink")}
             >
-              {c ?? "All articles"}
+              {c ?? "All topics"}
             </Link>
           ))}
         </nav>
+      </PageIntro>
 
-        {lead ? (
-          <Link href={`/research/${lead.slug}`} className="group mt-10 grid overflow-hidden rounded-3xl border border-slate-200 bg-white transition-shadow hover:shadow-xl lg:grid-cols-2">
-            <div className="relative aspect-[16/10] bg-ink-950 lg:aspect-auto">
+      {lead && leadTitle ? (
+        <section className="frame pt-10" aria-labelledby="lead-title">
+          <Link href={`/research/${lead.slug}`} className="group grid gap-6 md:grid-cols-12 md:gap-x-[var(--gutter)]">
+            <div className="relative aspect-[16/10] overflow-clip bg-ink md:col-span-7" data-reveal>
               {lead.coverImage ? (
-                <Image src={lead.coverImage} alt="" fill priority sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                <Image src={lead.coverImage} alt="" fill priority sizes="(min-width: 768px) 58vw, 100vw" className="object-cover transition-transform duration-700 ease-[var(--ease-out)] group-hover:scale-[1.02]" />
               ) : null}
             </div>
-            <div className="flex flex-col justify-center p-8 lg:p-12">
-              <p className="eyebrow">{lead.featured ? "Featured · " : ""}{lead.category}</p>
-              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-balance text-ink-900 group-hover:text-mint-800">{lead.title}</h2>
-              <p className="mt-4 text-base leading-relaxed text-slate-600">{lead.excerpt}</p>
-              <div className="mt-6 flex items-center gap-4 text-sm text-slate-500">
-                <span className="inline-flex items-center gap-1.5"><Clock className="size-4" /> {lead.readingMinutes} min read</span>
-                <span>{formatDate(lead.publishedAt)}</span>
-              </div>
-              <span className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-mint-700">
-                Read article <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-              </span>
+            <div className="flex flex-col justify-end md:col-span-5" data-reveal style={{ "--i": 1 } as React.CSSProperties}>
+              <h2 id="lead-title" className="text-index font-medium group-hover:underline group-hover:decoration-[0.06em] group-hover:underline-offset-[0.15em]">
+                {leadTitle.head}
+              </h2>
+              <p className="mt-4 max-w-[44ch] text-lead">{leadTitle.rest ?? lead.excerpt}</p>
+              {leadTitle.rest ? <p className="mt-4 max-w-[52ch] text-muted">{lead.excerpt}</p> : null}
+              <p className="mt-6 text-small text-muted">
+                {lead.category}, {lead.readingMinutes} minute read
+              </p>
             </div>
           </Link>
-        ) : (
-          <p className="py-20 text-center text-slate-500">No articles in this category yet.</p>
-        )}
-
-        {rest.length ? (
-          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {rest.map((a) => (
-              <Link key={a.slug} href={`/research/${a.slug}`} className="group flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white transition-shadow hover:shadow-lg">
-                <div className="relative aspect-[16/9] overflow-hidden bg-ink-950">
-                  {a.coverImage ? (
-                    <Image src={a.coverImage} alt="" fill sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
-                  ) : (
-                    <div className="grid-bg grid h-full place-items-center"><BookOpen className="size-8 text-mint-300" /></div>
-                  )}
-                </div>
-                <div className="flex flex-1 flex-col p-6">
-                  <p className="text-xs font-semibold text-mint-700">{a.category}</p>
-                  <h3 className="mt-2 text-lg font-semibold tracking-tight text-ink-900 group-hover:text-mint-800">{a.title}</h3>
-                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-slate-600">{a.excerpt}</p>
-                  <p className="mt-auto pt-5 text-xs text-slate-500">{formatDate(a.publishedAt)} · {a.readingMinutes} min read</p>
-                </div>
-              </Link>
-            ))}
+        </section>
+      ) : (
+        <section className="frame pt-10">
+          <div className="bg-surface p-8">
+            <p className="text-lead">No articles on this topic yet.</p>
+            <Link href="/research" className="link mt-3 inline-block">
+              Show every article
+            </Link>
           </div>
-        ) : null}
-      </section>
+        </section>
+      )}
+
+      {rest.length ? (
+        <section className="frame pt-20 md:pt-28" aria-labelledby="index-title">
+          <h2 id="index-title" className="text-head" data-reveal>
+            {active ? active : "Every article"}
+          </h2>
+          <ol className="mt-10">
+            {rest.map((a, i) => {
+              const t = splitTitle(a.title);
+              return (
+                <li key={a.slug} data-reveal style={{ "--i": i % 4 } as React.CSSProperties}>
+                  <Link
+                    href={`/research/${a.slug}`}
+                    className={cn("group grid grid-cols-[5.5rem_1fr] gap-4 p-3 transition-colors duration-200 md:grid-cols-12 md:gap-x-[var(--gutter)] md:p-4", i % 2 ? "" : "bg-surface", "hover:bg-surface-2")}
+                  >
+                    <div className="relative aspect-[4/3] overflow-clip bg-ink md:col-span-2">
+                      {a.coverImage ? <Image src={a.coverImage} alt="" fill sizes="(min-width: 768px) 16vw, 88px" className="object-cover" /> : null}
+                    </div>
+                    <div className="min-w-0 md:col-span-7">
+                      <p className="text-lead font-medium group-hover:underline group-hover:decoration-[0.07em] group-hover:underline-offset-[0.2em]">{t.head}</p>
+                      <p className="mt-1 line-clamp-2 max-w-[62ch] text-muted">{t.rest ?? a.excerpt}</p>
+                    </div>
+                    <p className="col-start-2 text-small text-muted md:col-span-3 md:col-start-auto md:text-right">
+                      {a.category}, {a.readingMinutes} min
+                      <br className="hidden md:block" />
+                      <span className="md:hidden">, </span>
+                      {formatDate(a.publishedAt)}
+                    </p>
+                  </Link>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      ) : null}
 
       {!active ? (
-        <section id="timeline" className="grid-bg scroll-mt-16 bg-ink-950 py-24 text-white">
-          <div className="container-page">
-            <p className="eyebrow text-mint-300">Timeline</p>
-            <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">Four decades of incretin science</h2>
-            <p className="mt-4 max-w-2xl text-ink-200">From a hormone predicted in proglucagon to one of the most studied drug classes in history.</p>
-            <ol className="relative mt-14 space-y-10 border-l border-white/15 pl-8">
-              {TIMELINE.map((t) => (
-                <li key={t.year + t.event} className="relative">
-                  <span className="absolute top-1.5 -left-[37px] size-3 rounded-full bg-mint-400 ring-4 ring-ink-950" />
-                  <p className="font-mono text-sm font-semibold text-mint-300">{t.year}</p>
-                  <p className="mt-1 max-w-3xl text-base leading-relaxed text-ink-100">{t.event}</p>
+        <section id="timeline" className="mt-28 bg-field-navy py-20 text-on-navy md:mt-40 md:py-28" aria-labelledby="timeline-title">
+          <div className="frame grid gap-10 lg:grid-cols-12 lg:gap-x-[var(--gutter)]">
+            <div className="lg:col-span-4" data-reveal>
+              <h2 id="timeline-title" className="text-head">
+                Six decades of incretin science
+              </h2>
+              <p className="mt-5 max-w-[36ch] text-on-navy-muted">
+                From a hormone predicted in the proglucagon gene to one of the most studied classes of medicine.
+              </p>
+              <Link href="/research/history-of-glp-1" className="link mt-5 inline-block">
+                Read the history
+              </Link>
+            </div>
+            <ol className="space-y-6 lg:col-span-8">
+              {TIMELINE.map((t, i) => (
+                <li key={t.year + t.event} className="grid gap-1 sm:grid-cols-[7rem_1fr] sm:gap-6" data-reveal style={{ "--i": i % 3 } as React.CSSProperties}>
+                  <p className="tabular text-index font-medium">{t.year}</p>
+                  <p className="max-w-[62ch] sm:pt-1.5">{t.event}</p>
                 </li>
               ))}
             </ol>

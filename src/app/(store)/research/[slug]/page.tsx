@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ChevronRight, Clock, FlaskConical } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/utils";
+import { splitTitle } from "@/components/store/article-title";
 import { Markdown, extractHeadings } from "@/components/store/markdown";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -16,24 +16,21 @@ async function getArticle(slug: string) {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const article = await getArticle((await params).slug);
   if (!article) return {};
-  return {
-    title: article.title,
-    description: article.excerpt,
-    openGraph: { type: "article", images: article.coverImage ? [{ url: article.coverImage }] : undefined },
-  };
+  return { title: article.title, description: article.excerpt, openGraph: { type: "article" } };
 }
 
 export default async function ArticlePage({ params }: Params) {
   const article = await getArticle((await params).slug);
   if (!article) notFound();
 
+  const { head, rest } = splitTitle(article.title);
   const headings = extractHeadings(article.content);
-  const [related, products] = await Promise.all([
+  const [others, products] = await Promise.all([
     db.article.findMany({
       where: { published: true, id: { not: article.id } },
       orderBy: { publishedAt: "desc" },
       take: 3,
-      select: { slug: true, title: true, category: true, readingMinutes: true },
+      select: { slug: true, title: true, category: true, readingMinutes: true, coverImage: true },
     }),
     db.product.findMany({
       where: { active: true },
@@ -41,7 +38,8 @@ export default async function ArticlePage({ params }: Params) {
       select: { slug: true, name: true, subtitle: true, accentColor: true },
     }),
   ]);
-  const mentioned = products.filter((p) => article.content.toLowerCase().includes(p.name.toLowerCase())).slice(0, 4);
+  const lower = article.content.toLowerCase();
+  const mentioned = products.filter((p) => lower.includes(p.name.toLowerCase())).slice(0, 5);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -57,97 +55,114 @@ export default async function ArticlePage({ params }: Params) {
   return (
     <article>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <header className="relative isolate overflow-hidden bg-ink-950 text-white">
-        {article.coverImage ? (
-          <Image src={article.coverImage} alt="" fill priority sizes="100vw" className="-z-10 object-cover opacity-35" />
-        ) : null}
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-ink-950 via-ink-950/80 to-ink-950/40" />
-        <div className="container-page py-16 sm:py-24">
-          <Link href="/research" className="inline-flex items-center gap-1.5 text-sm text-ink-200 hover:text-white">
-            <ArrowLeft className="size-4" /> Research library
+
+      <header className="frame grid gap-6 pt-8 md:grid-cols-12 md:gap-x-[var(--gutter)] md:pt-14">
+        <nav aria-label="Breadcrumb" className="text-small text-muted md:col-span-12">
+          <Link href="/research" className="link">
+            Research library
+          </Link>{" "}
+          <span aria-hidden="true">/</span>{" "}
+          <Link href={`/research?category=${encodeURIComponent(article.category)}`} className="link">
+            {article.category}
           </Link>
-          <div className="mt-8 max-w-3xl animate-fade-up">
-            <p className="eyebrow text-mint-300">{article.category}</p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">{article.title}</h1>
-            <p className="mt-5 text-lg leading-relaxed text-pretty text-ink-200">{article.excerpt}</p>
-            <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink-300">
-              <span>{article.author}</span>
-              <span>{formatDate(article.publishedAt)}</span>
-              <span className="inline-flex items-center gap-1.5"><Clock className="size-4" /> {article.readingMinutes} min read</span>
-            </div>
-          </div>
+        </nav>
+        <h1 className="lines text-head md:col-span-8">
+          <span className="line">
+            <span data-line>{head}</span>
+          </span>
+        </h1>
+        <div className="md:col-span-8" data-load style={{ "--d": "280ms" } as React.CSSProperties}>
+          {rest ? <p className="max-w-[40ch] text-lead font-medium">{rest}</p> : null}
+          <p className="mt-3 max-w-[50ch] text-lead text-muted">{article.excerpt}</p>
+          <p className="mt-6 text-small text-muted">
+            {article.author}, {formatDate(article.publishedAt, { day: "numeric", month: "long", year: "numeric" })}, {article.readingMinutes} minute read
+          </p>
         </div>
       </header>
 
-      <div className="container-page grid gap-12 py-14 lg:grid-cols-[220px_minmax(0,1fr)_260px]">
-        <aside className="hidden lg:block">
+      {article.coverImage ? (
+        <div className="frame mt-10 md:mt-14">
+          <div className="relative aspect-[4/3] overflow-clip bg-ink sm:aspect-[21/9]" data-load style={{ "--d": "450ms" } as React.CSSProperties}>
+            <Image src={article.coverImage} alt="" fill priority sizes="100vw" className="object-cover" />
+          </div>
+        </div>
+      ) : null}
+
+      <div className="frame grid gap-12 pt-14 md:pt-20 lg:grid-cols-12 lg:gap-x-[var(--gutter)]">
+        <nav className="hidden lg:col-span-3 lg:block" aria-label="In this article">
           {headings.length > 1 ? (
-            <nav className="sticky top-24" aria-label="Table of contents">
-              <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">On this page</p>
-              <ul className="mt-4 space-y-2 border-l border-slate-200">
+            <div className="sticky top-24" data-reveal>
+              <p className="text-small text-muted">In this article</p>
+              <ol className="mt-3 space-y-2">
                 {headings.map((h) => (
                   <li key={h.id}>
-                    <a href={`#${h.id}`} className="-ml-px block border-l border-transparent pl-4 text-sm text-slate-600 hover:border-mint-500 hover:text-ink-900">
+                    <a href={`#${h.id}`} className="link text-small decoration-transparent hover:decoration-ink">
                       {h.text}
                     </a>
                   </li>
                 ))}
-              </ul>
-            </nav>
+              </ol>
+            </div>
           ) : null}
-        </aside>
+        </nav>
 
-        <div className="min-w-0">
-          <Markdown>{article.content}</Markdown>
-          <div className="mt-12 flex gap-3 rounded-2xl bg-slate-50 p-5 text-xs leading-relaxed text-slate-600 ring-1 ring-slate-200">
-            <FlaskConical className="mt-0.5 size-4 shrink-0 text-mint-600" />
-            <p>
-              This article summarises published scientific literature for educational and research purposes. It is not
-              medical advice. Products sold by GLP Research are for laboratory research use only and are not for human
-              or veterinary use.
-            </p>
-          </div>
+        <div className="min-w-0 lg:col-span-6">
+          <Markdown className="max-w-[68ch]">{article.content}</Markdown>
+          <p className="mt-14 max-w-[62ch] text-muted" data-reveal>
+            This article summarises published scientific literature for research and education. It is not medical advice.
+            Products sold by GLP Research are for laboratory research only and are not for human or veterinary use.
+          </p>
         </div>
 
-        <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+        <aside className="space-y-10 lg:col-span-3">
           {mentioned.length ? (
-            <div className="rounded-3xl border border-slate-200 p-5">
-              <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Compounds in this article</p>
+            <section aria-labelledby="mentioned-title" className="lg:sticky lg:top-24">
+              <h2 id="mentioned-title" className="text-small text-muted">
+                Compounds in this article
+              </h2>
               <ul className="mt-3 space-y-1">
-                {mentioned.map((p) => (
-                  <li key={p.slug}>
-                    <Link href={`/shop/${p.slug}`} className="flex items-center gap-3 rounded-xl p-2 hover:bg-ink-50">
-                      <span className="size-2 rounded-full" style={{ backgroundColor: p.accentColor }} />
+                {mentioned.map((p, i) => (
+                  <li key={p.slug} data-reveal style={{ "--i": i } as React.CSSProperties}>
+                    <Link href={`/shop/${p.slug}`} className="group flex items-start gap-3 py-2">
+                      <span className="mt-1.5 size-3 shrink-0" style={{ backgroundColor: p.accentColor }} aria-hidden="true" />
                       <span className="min-w-0">
-                        <span className="block text-sm font-semibold text-ink-900">{p.name}</span>
-                        <span className="block truncate text-xs text-slate-500">{p.subtitle}</span>
+                        <span className="block font-medium group-hover:underline">{p.name}</span>
+                        <span className="block text-small text-muted">{p.subtitle}</span>
                       </span>
                     </Link>
                   </li>
                 ))}
               </ul>
-            </div>
-          ) : null}
-          {related.length ? (
-            <div className="rounded-3xl bg-ink-950 p-5 text-white">
-              <p className="text-xs font-semibold tracking-wide text-mint-300 uppercase">Keep reading</p>
-              <ul className="mt-3 space-y-3">
-                {related.map((r) => (
-                  <li key={r.slug}>
-                    <Link href={`/research/${r.slug}`} className="group block">
-                      <span className="block text-sm font-medium text-white group-hover:text-mint-200">{r.title}</span>
-                      <span className="text-xs text-ink-300">{r.category} · {r.readingMinutes} min</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-              <Link href="/research" className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-mint-300">
-                All articles <ChevronRight className="size-3.5" />
-              </Link>
-            </div>
+            </section>
           ) : null}
         </aside>
       </div>
+
+      {others.length ? (
+        <section className="frame pt-28 md:pt-40" aria-labelledby="next-title">
+          <h2 id="next-title" className="text-index font-medium" data-reveal>
+            Keep reading
+          </h2>
+          <ul className="mt-8 grid gap-x-3 gap-y-10 md:grid-cols-3">
+            {others.map((o, i) => {
+              const t = splitTitle(o.title);
+              return (
+                <li key={o.slug} data-reveal style={{ "--i": i } as React.CSSProperties}>
+                  <Link href={`/research/${o.slug}`} className="group block">
+                    <div className="relative aspect-[3/2] overflow-clip bg-ink">
+                      {o.coverImage ? <Image src={o.coverImage} alt="" fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover transition-transform duration-700 ease-[var(--ease-out)] group-hover:scale-[1.02]" /> : null}
+                    </div>
+                    <p className="mt-3 text-lead font-medium group-hover:underline group-hover:decoration-[0.07em] group-hover:underline-offset-[0.2em]">{t.head}</p>
+                    <p className="mt-1 text-small text-muted">
+                      {o.category}, {o.readingMinutes} min
+                    </p>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
     </article>
   );
 }

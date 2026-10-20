@@ -7,10 +7,10 @@ import { db } from "@/lib/db";
 import { endSession, hashPassword, startSession, verifyPassword } from "@/lib/auth";
 import { bool, str, zodErrors, type ActionState } from "@/lib/actions";
 import { sendEmail } from "@/lib/email";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { getSettings } from "@/lib/settings";
 import { siteUrl } from "@/lib/utils";
 import { safeNext } from "./safe-next";
-
 
 const password = z
   .string()
@@ -45,6 +45,10 @@ export async function register(_prev: ActionState, form: FormData): Promise<Acti
   });
   if (!parsed.success) return zodErrors(parsed.error);
   const data = parsed.data;
+
+  if (!(await rateLimit("register", await clientIp(), 5, 60 * 60))) {
+    return { error: "Too many accounts have been created from this connection. Please try again in an hour." };
+  }
 
   const existing = await db.user.findUnique({ where: { email: data.email } });
   if (existing) {
@@ -97,12 +101,19 @@ export async function login(_prev: ActionState, form: FormData): Promise<ActionS
   const parsed = loginSchema.safeParse({ email: str(form, "email").toLowerCase(), password: str(form, "password") });
   if (!parsed.success) return zodErrors(parsed.error);
 
+  if (!(await rateLimit("login", `${parsed.data.email}|${await clientIp()}`, 10, 15 * 60))) {
+    return { error: "Too many sign-in attempts. Please wait 15 minutes, or reset your password." };
+  }
+
   const user = await db.user.findUnique({ where: { email: parsed.data.email } });
   if (!user || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
-    return { error: "Incorrect email or password." };
+    return { error: "Incorrect email or password. Check both and try again." };
+  }
+  if (user.status === "SUSPENDED") {
+    return { error: "This account is suspended. Contact support if you think this is a mistake." };
   }
   if (user.status !== "ACTIVE") {
-    return { error: "This account has been suspended. Please contact support if you think this is a mistake." };
+    return { error: "This account has been closed. Create a new account to order again." };
   }
 
   await db.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
@@ -120,6 +131,12 @@ const RESET_MESSAGE = "If an account exists for that email, we've sent a link to
 export async function forgotPassword(_prev: ActionState, form: FormData): Promise<ActionState> {
   const parsed = z.object({ email: z.email("Enter a valid email address") }).safeParse({ email: str(form, "email").toLowerCase() });
   if (!parsed.success) return zodErrors(parsed.error);
+
+  const ip = await clientIp();
+  const allowed = (await rateLimit("forgot-ip", ip, 10, 60 * 60)) && (await rateLimit("forgot", parsed.data.email, 3, 60 * 60));
+  if (!allowed) {
+    return { error: "Too many reset requests. Please check your inbox for an earlier link, or try again in an hour." };
+  }
 
   const user = await db.user.findUnique({ where: { email: parsed.data.email } });
   if (user && user.status === "ACTIVE") {

@@ -11,13 +11,14 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <AuthHeading
-        title="Create your account"
+        title="Create an account"
         subtitle={
           <>
-            Already registered?{" "}
-            <Link href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"} className="font-semibold text-mint-700 hover:underline">
+            Save lab addresses, follow every order and reorder in one step. Already registered?{" "}
+            <Link href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"} className="link text-ink">
               Sign in
             </Link>
+            .
           </>
         }
       />

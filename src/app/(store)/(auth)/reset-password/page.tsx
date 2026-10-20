@@ -16,16 +16,16 @@ export default async function ResetPasswordPage({ searchParams }: { searchParams
 
   return (
     <>
-      <AuthHeading title="Choose a new password" subtitle="Pick something you haven't used here before." />
+      <AuthHeading title="Choose a new password" subtitle="Use at least 8 characters with a letter and a number." />
       {valid && token ? (
         <ResetPasswordForm token={token} />
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-6">
           <Alert tone="error" title="This reset link is invalid or has expired">
-            Reset links can only be used once and expire after 1 hour.
+            Reset links work once and expire after 1 hour. Request a new one to continue.
           </Alert>
-          <Link href="/forgot-password" className="inline-block text-sm font-semibold text-mint-700 hover:underline">
-            Request a new link →
+          <Link href="/forgot-password" className="link inline-block font-medium">
+            Request a new link
           </Link>
         </div>
       )}

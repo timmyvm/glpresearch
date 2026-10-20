@@ -1,19 +1,20 @@
 import { requireUser } from "@/lib/auth";
-import { EmailForm, PasswordForm, ProfileForm } from "@/components/account/settings-forms";
+import { CloseAccountForm, EmailForm, PasswordForm, ProfileForm } from "@/components/account/settings-forms";
+import { PageTitle } from "@/components/account/account-ui";
 
-export const metadata = { title: "Profile & security" };
+export const metadata = { title: "Profile and security" };
 
 export default async function SettingsPage() {
   const user = await requireUser("/account/settings");
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">Profile & security</h1>
-        <p className="mt-1 text-sm text-slate-600">Manage your details, sign-in email and password.</p>
-      </div>
+    <div>
+      <PageTitle title="Profile and security" className="mb-6">
+        Your details, the email you sign in with, and your password.
+      </PageTitle>
       <ProfileForm user={user} />
       <EmailForm key={user.email} email={user.email} />
       <PasswordForm />
+      {user.role === "ADMIN" ? null : <CloseAccountForm email={user.email} />}
     </div>
   );
 }

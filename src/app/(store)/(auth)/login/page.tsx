@@ -11,23 +11,25 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <>
       <AuthHeading
-        title="Welcome back"
+        title="Sign in to your account"
         subtitle={
           <>
-            New to GLP Research?{" "}
-            <Link href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"} className="font-semibold text-mint-700 hover:underline">
+            Track orders, see payment details and reorder. New here?{" "}
+            <Link href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"} className="link text-ink">
               Create an account
             </Link>
+            .
           </>
         }
       />
       <LoginForm next={next} />
       {next === "/checkout" ? (
-        <p className="mt-6 text-center text-sm text-slate-500">
+        <p className="mt-10 text-muted">
           Prefer not to sign in?{" "}
-          <Link href="/checkout?guest=1" className="font-semibold text-ink-800 hover:underline">
-            Continue as guest
+          <Link href="/checkout?guest=1" className="link text-ink">
+            Check out as a guest
           </Link>
+          .
         </p>
       ) : null}
     </>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { RotateCcw } from "lucide-react";
 import { useCart, type CartItem } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
 
@@ -15,13 +14,13 @@ export function ReorderButton({ lines, unavailable = 0 }: { lines: ReorderLine[]
   if (lines.length === 0) {
     return (
       <Button variant="outline" size="sm" disabled title="These items are no longer available">
-        <RotateCcw className="size-3.5" /> Reorder unavailable
+        Items No Longer Available
       </Button>
     );
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-start gap-1">
       <Button
         variant="outline"
         size="sm"
@@ -30,10 +29,10 @@ export function ReorderButton({ lines, unavailable = 0 }: { lines: ReorderLine[]
           setDone(true);
         }}
       >
-        <RotateCcw className="size-3.5" /> {done ? "Added to cart" : "Reorder"}
+        <span aria-live="polite">{done ? "Added to Cart" : "Order Again"}</span>
       </Button>
       {unavailable > 0 ? (
-        <span className="text-xs text-slate-500">
+        <span className="text-small text-muted">
           {unavailable} item{unavailable === 1 ? " is" : "s are"} no longer available
         </span>
       ) : null}

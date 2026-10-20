@@ -11,10 +11,11 @@ export default function ForgotPasswordPage() {
         title="Reset your password"
         subtitle={
           <>
-            Enter the email on your account and we&apos;ll send you a reset link.{" "}
-            <Link href="/login" className="font-semibold text-mint-700 hover:underline">
+            Enter the email on your account and we&apos;ll send a link to choose a new password.{" "}
+            <Link href="/login" className="link text-ink">
               Back to sign in
             </Link>
+            .
           </>
         }
       />

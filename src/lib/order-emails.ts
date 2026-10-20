@@ -101,3 +101,62 @@ export async function sendOrderConfirmation(order: EmailOrder, settings: StoreSe
 
   return sendEmail({ to: order.email, subject: `Order ${order.number} received — payment instructions`, text });
 }
+
+type NoticeOrder = { id: string; number: string; accessToken: string; email: string; total: number; paymentMethod: string; shipFirstName: string; shipLastName: string };
+
+const methodLabel = (m: string) => PAYMENT_METHODS[m as PaymentMethod]?.label ?? m;
+
+/** Tells the store a new order has been placed. */
+export async function sendNewOrderNotification(order: NoticeOrder & { items: { quantity: number; productName: string; variantLabel: string }[] }, settings: StoreSettings) {
+  return sendEmail({
+    to: settings.supportEmail,
+    subject: `New order ${order.number} — ${formatMoney(order.total)}, ${methodLabel(order.paymentMethod)}`,
+    text: [
+      `New order ${order.number} from ${order.shipFirstName} ${order.shipLastName} (${order.email}).`,
+      "",
+      ...order.items.map((i) => `  ${i.quantity} × ${i.productName} ${i.variantLabel}`),
+      "",
+      `Total: ${formatMoney(order.total)}`,
+      `Payment method: ${methodLabel(order.paymentMethod)} (awaiting payment)`,
+      "",
+      `Open in admin: ${siteUrl(`/admin/orders/${order.id}`)}`,
+    ].join("\n"),
+  });
+}
+
+/** Tells the store a customer has reported sending payment. */
+export async function sendPaymentClaimNotice(order: NoticeOrder, settings: StoreSettings) {
+  return sendEmail({
+    to: settings.supportEmail,
+    subject: `Payment reported for ${order.number} — ${formatMoney(order.total)}`,
+    text: [
+      `${order.shipFirstName} ${order.shipLastName} (${order.email}) says they have sent payment for order ${order.number}.`,
+      "",
+      `Amount due: ${formatMoney(order.total)}`,
+      `Method: ${methodLabel(order.paymentMethod)}`,
+      `Reference to look for: ${order.number}`,
+      "",
+      `Mark it paid once matched: ${siteUrl(`/admin/orders/${order.id}`)}`,
+    ].join("\n"),
+  });
+}
+
+/** Confirms to the customer that their unpaid order was cancelled. */
+export async function sendCancellationEmail(order: NoticeOrder, settings: StoreSettings) {
+  return sendEmail({
+    to: order.email,
+    subject: `Order ${order.number} cancelled`,
+    text: [
+      `Hi ${order.shipFirstName},`,
+      "",
+      `Your order ${order.number} has been cancelled as you asked. It hadn't been paid, so nothing is owed and nothing will ship.`,
+      "",
+      "If you already sent a payment, reply to this email with the date and amount and we'll refund it.",
+      "",
+      `Browse the catalogue again: ${siteUrl("/shop")}`,
+      "",
+      `— The ${settings.storeName} team`,
+      settings.supportEmail,
+    ].join("\n"),
+  });
+}

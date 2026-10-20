@@ -6,9 +6,9 @@ export const metadata: Metadata = { title: "Research use policy" };
 export default function DisclaimerPage() {
   return (
     <LegalPage
-      eyebrow="Policy"
+      path="/disclaimer"
       title="Research use policy"
-      description="The conditions under which GLP Research supplies its products."
+      lead="The conditions under which GLP Research supplies its products."
       updated="October 2026"
       content={`## For laboratory research use only
 

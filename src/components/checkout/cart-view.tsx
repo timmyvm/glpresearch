@@ -2,63 +2,58 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, Lock, Minus, Plus, ShieldCheck, ShoppingBag, Trash2, Truck } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { cartSubtotal, MAX_LINE_QTY, useCart } from "@/lib/cart";
 import { formatMoney } from "@/lib/money";
+import { plateInk, specimenImage } from "@/lib/plates";
 import { cn } from "@/lib/utils";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { useCartSync } from "./use-cart-sync";
 
 export function QuantityStepper({
   value,
   onChange,
   max = MAX_LINE_QTY,
+  label,
 }: {
   value: number;
   onChange: (value: number) => void;
   max?: number;
+  label: string;
 }) {
+  const step = "grid size-11 place-items-center text-ink transition-colors duration-150 hover:bg-surface-2 disabled:opacity-40";
   return (
-    <div className="inline-flex items-center rounded-lg border border-slate-200 bg-white">
-      <button
-        type="button"
-        className="grid size-8 place-items-center text-slate-500 hover:text-ink-900 disabled:opacity-40"
-        onClick={() => onChange(value - 1)}
-        aria-label="Decrease quantity"
-      >
-        <Minus className="size-3.5" />
+    <div className="inline-flex items-center bg-surface" role="group" aria-label={`Quantity of ${label}`}>
+      <button type="button" className={step} onClick={() => onChange(value - 1)} aria-label={value <= 1 ? `Remove ${label}` : "Decrease quantity"}>
+        <Minus className="size-4" aria-hidden="true" />
       </button>
-      <span className="w-8 text-center text-sm font-medium tabular-nums">{value}</span>
-      <button
-        type="button"
-        className="grid size-8 place-items-center text-slate-500 hover:text-ink-900 disabled:opacity-40"
-        onClick={() => onChange(value + 1)}
-        disabled={value >= max}
-        aria-label="Increase quantity"
-      >
-        <Plus className="size-3.5" />
+      <span className="tabular w-8 text-center font-medium" aria-live="polite">
+        {value}
+      </span>
+      <button type="button" className={step} onClick={() => onChange(value + 1)} disabled={value >= max} aria-label="Increase quantity">
+        <Plus className="size-4" aria-hidden="true" />
       </button>
     </div>
   );
 }
 
+/** The final layout with flat grey blocks in place of each value, so nothing shifts when the cart loads. */
 function CartSkeleton() {
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_360px]" aria-busy="true">
-      <Card className="space-y-4 p-5">
+    <div className="grid gap-12 lg:grid-cols-12 lg:gap-8" aria-busy="true" aria-label="Loading your cart">
+      <div className="space-y-8 lg:col-span-7">
         {[0, 1].map((i) => (
-          <div key={i} className="flex animate-pulse gap-4">
-            <div className="size-24 rounded-xl bg-slate-100" />
-            <div className="flex-1 space-y-2 py-1">
-              <div className="h-4 w-1/3 rounded bg-slate-100" />
-              <div className="h-3 w-1/4 rounded bg-slate-100" />
+          <div key={i} className="flex gap-5">
+            <div className="h-32 w-26 shrink-0 bg-surface" />
+            <div className="flex-1 space-y-3 py-1">
+              <div className="h-6 w-1/3 bg-surface" />
+              <div className="h-4 w-1/4 bg-surface" />
             </div>
           </div>
         ))}
-      </Card>
-      <Card className="h-56 animate-pulse bg-slate-50" />
+      </div>
+      <div className="h-72 bg-surface lg:col-span-4 lg:col-start-9" />
     </div>
   );
 }
@@ -72,16 +67,18 @@ export function CartView({ freeShippingThreshold }: { freeShippingThreshold: num
 
   if (items.length === 0) {
     return (
-      <Card className="flex flex-col items-center gap-4 px-6 py-16 text-center">
-        <span className="grid size-14 place-items-center rounded-full bg-ink-50">
-          <ShoppingBag className="size-6 text-ink-400" />
-        </span>
-        <div>
-          <p className="text-lg font-semibold text-ink-900">Your cart is empty</p>
-          <p className="mt-1 text-sm text-slate-500">Browse our catalogue of third-party tested incretin peptides.</p>
+      <div className="max-w-xl">
+        <p className="text-lead font-medium">Nothing in your cart yet.</p>
+        <p className="mt-2 text-muted">Every compound ships with the certificate of analysis for its batch, and orders over the free-shipping line go tracked at no cost.</p>
+        <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <ButtonLink href="/shop" variant="ink">
+            Shop Peptides
+          </ButtonLink>
+          <Link href="/coa" className="link text-small">
+            Look up a batch result
+          </Link>
         </div>
-        <ButtonLink href="/shop">Browse peptides</ButtonLink>
-      </Card>
+      </div>
     );
   }
 
@@ -89,12 +86,13 @@ export function CartView({ freeShippingThreshold }: { freeShippingThreshold: num
   const remaining = freeShippingThreshold > 0 ? Math.max(0, freeShippingThreshold - subtotal) : 0;
   const progress = freeShippingThreshold > 0 ? Math.min(100, (subtotal / freeShippingThreshold) * 100) : 100;
   const blocked = problems.length > 0;
+  const count = items.reduce((s, i) => s + i.quantity, 0);
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-      <div className="space-y-4">
+    <div className="grid gap-12 lg:grid-cols-12 lg:gap-8">
+      <section aria-label="Items in your cart" className="lg:col-span-7">
         {problems.length > 0 ? (
-          <Alert tone="warning" title="Some items need your attention">
+          <Alert tone="warning" title="Some items need your attention" className="mb-8">
             <ul className="list-inside list-disc">
               {problems.map((p) => (
                 <li key={p.variantId}>{p.message}</li>
@@ -102,106 +100,112 @@ export function CartView({ freeShippingThreshold }: { freeShippingThreshold: num
             </ul>
           </Alert>
         ) : null}
-        <Card>
-          <ul className="divide-y divide-slate-100">
-            {items.map((item) => {
-              const q = quotes[item.variantId];
-              const unavailable = q && !q.available;
-              return (
-                <li key={item.variantId} className={cn("flex gap-4 p-5", unavailable && "bg-rose-50/40")}>
-                  <Link
-                    href={item.productSlug ? `/shop/${item.productSlug}` : "/shop"}
-                    className="relative size-24 shrink-0 overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200"
-                  >
-                    {item.image ? <Image src={item.image} alt={item.productName} fill sizes="96px" className="object-cover" /> : null}
-                  </Link>
-                  <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <ul className="space-y-8">
+          {items.map((item) => {
+            const q = quotes[item.variantId];
+            const unavailable = q && !q.available;
+            const plate = q?.plate || undefined;
+            const href = item.productSlug ? `/shop/${item.productSlug}` : "/shop";
+            const label = `${item.productName} ${item.variantLabel}`;
+            return (
+              <li key={item.variantId} className="flex gap-5">
+                <Link
+                  href={href}
+                  className={cn("relative h-32 w-26 shrink-0 overflow-clip", !plate && "bg-surface")}
+                  style={plate ? { backgroundColor: plate, color: plateInk(plate) } : undefined}
+                  tabIndex={-1}
+                  aria-hidden="true"
+                >
+                  {item.image ? (
+                    <Image src={specimenImage(item.image) ?? item.image} alt="" fill sizes="104px" className="object-contain px-2 pt-3 pb-1" />
+                  ) : null}
+                </Link>
+                <div className="flex min-w-0 flex-1 flex-col justify-between gap-3">
+                  <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <Link href={item.productSlug ? `/shop/${item.productSlug}` : "/shop"} className="font-semibold text-ink-900 hover:underline">
+                      <Link href={href} className="link text-lead font-medium decoration-transparent hover:decoration-current">
                         {item.productName}
                       </Link>
-                      <p className="text-sm text-slate-500">
-                        {item.variantLabel} · <span className="font-mono text-xs">{item.sku}</span>
+                      <p className="text-small text-muted">
+                        {item.variantLabel}, {formatMoney(item.price)} each
                       </p>
-                      <p className="mt-1 text-sm text-slate-500">{formatMoney(item.price)} each</p>
-                      {unavailable ? (
-                        <p className="mt-1 flex items-center gap-1 text-xs font-medium text-rose-600">
-                          <AlertTriangle className="size-3.5" /> No longer available
-                        </p>
-                      ) : null}
+                      {unavailable ? <p className="mt-1 text-small font-medium text-danger">No longer available. Remove it to check out.</p> : null}
                     </div>
-                    <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
-                      <p className="font-semibold text-ink-900 sm:order-first">{formatMoney(item.price * item.quantity)}</p>
-                      <div className="flex items-center gap-2">
-                        <QuantityStepper
-                          value={item.quantity}
-                          max={Math.min(MAX_LINE_QTY, q?.stock ?? MAX_LINE_QTY)}
-                          onChange={(v) => setQuantity(item.variantId, v)}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => remove(item.variantId)}
-                          className="grid size-8 place-items-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600"
-                          aria-label={`Remove ${item.productName}`}
-                        >
-                          <Trash2 className="size-4" />
-                        </button>
-                      </div>
-                    </div>
+                    <p className="tabular shrink-0 text-lead font-medium">{formatMoney(item.price * item.quantity)}</p>
                   </div>
-                </li>
-              );
-            })}
-          </ul>
-        </Card>
-        <Link href="/shop" className="inline-block text-sm font-medium text-mint-700 hover:underline">
-          ← Continue shopping
+                  <div className="flex items-center gap-4">
+                    <QuantityStepper
+                      label={label}
+                      value={item.quantity}
+                      max={Math.min(MAX_LINE_QTY, q?.stock ?? MAX_LINE_QTY)}
+                      onChange={(v) => setQuantity(item.variantId, v)}
+                    />
+                    <button type="button" onClick={() => remove(item.variantId)} className="link text-small text-muted hover:text-ink">
+                      Remove<span className="sr-only"> {label}</span>
+                    </button>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+        <Link href="/shop" className="link mt-10 inline-block text-small">
+          Continue shopping
         </Link>
-      </div>
+      </section>
 
-      <aside className="lg:sticky lg:top-24 lg:self-start">
-        <Card className="space-y-5 p-6">
-          <h2 className="text-base font-semibold text-ink-900">Order summary</h2>
-          {freeShippingThreshold > 0 ? (
-            <div className="rounded-xl bg-ink-50/70 p-3">
-              <p className="flex items-center gap-2 text-xs text-ink-700">
-                <Truck className="size-3.5 text-mint-600" />
-                {remaining > 0 ? (
-                  <span>
-                    Add <span className="font-semibold">{formatMoney(remaining)}</span> for free standard shipping
-                  </span>
-                ) : (
-                  <span className="font-semibold text-mint-700">Free standard shipping unlocked</span>
-                )}
-              </p>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-100">
-                <div className="h-full rounded-full bg-mint-500 transition-all" style={{ width: `${progress}%` }} />
-              </div>
+      <aside aria-labelledby="summary-title" className="lg:sticky lg:top-24 lg:col-span-4 lg:col-start-9 lg:self-start">
+        <div className="bg-surface p-6">
+          <h2 id="summary-title" className="text-lead font-medium">
+            Summary
+          </h2>
+          <dl className="tabular mt-5 space-y-2 text-small">
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">
+                Subtotal, {count} {count === 1 ? "vial" : "vials"}
+              </dt>
+              <dd>{formatMoney(subtotal)}</dd>
             </div>
-          ) : null}
-          <dl className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-slate-500">Subtotal</dt>
-              <dd className="font-semibold">{formatMoney(subtotal)}</dd>
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted">Shipping</dt>
+              <dd className="text-muted">{remaining === 0 && freeShippingThreshold > 0 ? "Free standard" : "Chosen at checkout"}</dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-slate-500">Shipping</dt>
-              <dd className="text-slate-500">Calculated at checkout</dd>
+            <div className="flex items-baseline justify-between gap-4 pt-3 text-body">
+              <dt className="font-medium">{remaining === 0 && freeShippingThreshold > 0 ? "Total" : "Total before shipping"}</dt>
+              <dd className="text-lead font-medium">{formatMoney(subtotal)}</dd>
             </div>
           </dl>
+
+          {freeShippingThreshold > 0 ? (
+            <div className="mt-6">
+              <div className="h-1 bg-white" aria-hidden="true">
+                <div className="h-full bg-ink" style={{ width: `${progress}%` }} />
+              </div>
+              <p className="mt-2 text-small text-muted">
+                {remaining > 0 ? (
+                  <>
+                    <span className="tabular text-ink">{formatMoney(remaining)}</span> more for free standard shipping
+                  </>
+                ) : (
+                  "Free standard shipping applies to this order."
+                )}
+              </p>
+            </div>
+          ) : null}
+
           <ButtonLink
             href="/checkout"
             size="lg"
-            className={cn("w-full", blocked && "pointer-events-none opacity-50")}
-            aria-disabled={blocked}
+            className={cn("mt-6 w-full", blocked && "pointer-events-none opacity-50")}
+            aria-disabled={blocked || undefined}
+            tabIndex={blocked ? -1 : undefined}
           >
-            <Lock className="size-4" /> Secure checkout <ArrowRight className="size-4" />
+            Checkout
           </ButtonLink>
-          <p className="flex items-start gap-2 text-xs text-slate-500">
-            <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-mint-600" />
-            All products are supplied strictly for laboratory research use only. Discount codes are applied at checkout.
+          <p className="mt-4 text-small text-muted">
+            Discount codes go in at checkout. Every compound is sold for laboratory research use only.
           </p>
-        </Card>
+        </div>
       </aside>
     </div>
   );

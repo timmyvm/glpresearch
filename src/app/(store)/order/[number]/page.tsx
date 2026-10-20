@@ -1,28 +1,20 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { timingSafeEqual } from "node:crypto";
-import { CheckCircle2, ClipboardCheck, CreditCard, Mail, PackageCheck, Truck } from "lucide-react";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getSettings } from "@/lib/settings";
 import { formatDateTime } from "@/lib/utils";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { OrderProgress } from "@/components/account/order-progress";
 import { OrderTimeline } from "@/components/account/order-timeline";
 import { PaymentInstructions } from "@/components/account/payment-instructions";
 import { OrderItems, OrderShippingInfo, OrderTotals } from "@/components/account/order-details";
+import { CancelOrderButton, ClaimPaymentButton } from "@/components/account/order-actions";
+import { tokenMatches } from "../access";
 
 export const metadata: Metadata = { title: "Your order", robots: { index: false, follow: false } };
-
-function tokenMatches(expected: string, given: string | undefined) {
-  if (!given) return false;
-  const a = Buffer.from(expected);
-  const b = Buffer.from(given);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
 
 function placedWithinADay(createdAt: Date) {
   return Date.now() - createdAt.getTime() < 1000 * 60 * 60 * 24;
@@ -44,137 +36,130 @@ export default async function OrderConfirmationPage({
 
   const user = await getCurrentUser();
   const isOwner = !!user && order.userId === user.id;
-  if (!isOwner && !tokenMatches(order.accessToken, token)) notFound();
+  const hasToken = tokenMatches(order.accessToken, token);
+  if (!isOwner && !hasToken) notFound();
 
   const settings = await getSettings();
   const pending = order.status === "PENDING_PAYMENT";
   const justPlaced = pending && placedWithinADay(order.createdAt);
+  const guestToken = hasToken ? token : undefined;
+  const invoiceHref = `/order/${order.number}/invoice${guestToken ? `?token=${encodeURIComponent(guestToken)}` : ""}`;
 
-  const steps = [
-    { icon: CreditCard, title: "Make your payment", text: `Use the details above with ${order.number} as the reference.` },
-    { icon: ClipboardCheck, title: "We confirm payment", text: "You'll get an email as soon as your payment is matched." },
-    { icon: PackageCheck, title: "Packed & dispatched", text: settings.dispatchCutoff + "." },
-    { icon: Truck, title: "Tracked delivery", text: "Your tracking number is emailed and shown on this page." },
+  const next = [
+    { title: "We match your payment", text: "Usually within one business day. You get an email the moment it lands." },
+    { title: "We pack and dispatch", text: `${settings.dispatchCutoff}.` },
+    { title: "Tracked delivery", text: "The tracking number is emailed to you and shown on this page." },
   ];
 
   return (
-    <div className="bg-slate-50/60">
-      <div className="container-page max-w-5xl py-10 sm:py-14">
-        <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-          <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-mint-400/15 ring-1 ring-mint-400/40">
-            <CheckCircle2 className="size-7 text-mint-600" />
-          </span>
-          <div>
-            <p className="eyebrow">{justPlaced ? "Order received" : "Order details"}</p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink-900 sm:text-3xl">
-              {justPlaced ? `Thank you, ${order.shipFirstName}!` : <>Order <span className="font-mono">{order.number}</span></>}
-            </h1>
-            <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
-              {justPlaced ? (
-                <>
-                  Your order <span className="font-mono font-semibold text-ink-900">{order.number}</span> has been placed.
-                </>
-              ) : (
-                <>Placed {formatDateTime(order.createdAt)}</>
-              )}
-              <StatusBadge status={order.status} />
-            </p>
-          </div>
-        </div>
+    <div className="frame pt-10 pb-24 md:pt-16 md:pb-32">
+      <header className="max-w-[60ch]">
+        <h1 className="text-head">{justPlaced ? `Thank you, ${order.shipFirstName}` : `Order ${order.number}`}</h1>
+        <p className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-muted">
+          {justPlaced ? (
+            <span>
+              Order <span className="tabular text-ink">{order.number}</span> is placed. A copy is on its way to{" "}
+              <span className="text-ink">{order.email}</span>.
+            </span>
+          ) : (
+            <span>Placed {formatDateTime(order.createdAt)}</span>
+          )}
+          <StatusBadge status={order.status} />
+        </p>
+      </header>
 
-        <div className="space-y-6">
-          {pending ? <PaymentInstructions order={order} settings={settings} /> : null}
-
-          <Card>
-            <CardBody className="py-6">
-              <OrderProgress status={order.status} events={order.events} createdAt={order.createdAt} />
-            </CardBody>
-          </Card>
-
-          {pending ? (
-            <Card>
-              <CardHeader title="What happens next" />
-              <CardBody>
-                <ol className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                  {steps.map(({ icon: Icon, title, text }, i) => (
-                    <li key={title} className="flex gap-3">
-                      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-ink-50 text-ink-700">
-                        <Icon className="size-4" />
-                      </span>
-                      <span>
-                        <span className="block text-sm font-semibold text-ink-900">
-                          {i + 1}. {title}
-                        </span>
-                        <span className="block text-xs leading-relaxed text-slate-500">{text}</span>
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              </CardBody>
-            </Card>
-          ) : null}
-
-          <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-            <div className="space-y-6">
-              <Card>
-                <CardHeader title="Items" />
-                <CardBody className="space-y-6">
-                  <OrderItems items={order.items} />
-                  <div className="border-t border-slate-100 pt-5">
-                    <OrderTotals order={order} />
-                  </div>
-                </CardBody>
-              </Card>
-              <Card>
-                <CardHeader title="Shipping & payment" />
-                <CardBody>
-                  <OrderShippingInfo order={order} />
-                </CardBody>
-              </Card>
+      {pending ? (
+        <PaymentInstructions
+          className="mt-10"
+          order={order}
+          settings={settings}
+          action={
+            <div className="flex flex-col items-start gap-4">
+              {order.paymentClaimedAt ? null : <ClaimPaymentButton number={order.number} token={guestToken} />}
+              <CancelOrderButton number={order.number} token={guestToken} />
             </div>
-            <div className="space-y-6">
-              <Card>
-                <CardHeader title="Order updates" />
-                <CardBody>
-                  <OrderTimeline events={order.events} />
-                </CardBody>
-              </Card>
-              <Card className="p-5 text-sm">
-                <p className="flex items-center gap-2 font-semibold text-ink-900">
-                  <Mail className="size-4 text-mint-600" /> Confirmation sent
-                </p>
-                <p className="mt-1 text-slate-600">
-                  We&apos;ve emailed a copy of this order and payment details to{" "}
-                  <span className="font-medium text-ink-800">{order.email}</span>. Bookmark this page to check your order
-                  status any time.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {isOwner ? (
-                    <ButtonLink href={`/account/orders/${order.number}`} variant="outline" size="sm">
-                      View in my account
-                    </ButtonLink>
-                  ) : (
-                    <ButtonLink href="/register" variant="outline" size="sm">
-                      Create an account
-                    </ButtonLink>
-                  )}
-                  <ButtonLink href="/shop" variant="ghost" size="sm">
-                    Continue shopping
-                  </ButtonLink>
-                </div>
-              </Card>
-            </div>
-          </div>
+          }
+        />
+      ) : null}
 
-          <p className="text-center text-sm text-slate-500">
-            Need help?{" "}
-            <Link href={`/contact?order=${order.number}`} className="font-medium text-mint-700 hover:underline">
-              Contact support
-            </Link>{" "}
-            and quote <span className="font-mono">{order.number}</span>.
-          </p>
-        </div>
+      <section aria-labelledby="progress-title" className="mt-14">
+        <h2 id="progress-title" className="sr-only">
+          Order progress
+        </h2>
+        <OrderProgress status={order.status} events={order.events} createdAt={order.createdAt} />
+      </section>
+
+      {pending ? (
+        <section aria-labelledby="next-title" className="mt-16">
+          <h2 id="next-title" className="text-lead font-medium">
+            What happens next
+          </h2>
+          <ul className="mt-6 grid gap-x-8 gap-y-5 sm:grid-cols-3">
+            {next.map((step) => (
+              <li key={step.title} className="max-w-[36ch]">
+                <p className="font-medium">{step.title}</p>
+                <p className="mt-1 text-small text-muted">{step.text}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <div className="mt-16 grid gap-14 lg:grid-cols-12 lg:gap-8">
+        <section aria-labelledby="items-title" className="lg:col-span-7">
+          <h2 id="items-title" className="text-lead font-medium">
+            Items
+          </h2>
+          <div className="mt-6">
+            <OrderItems items={order.items} />
+          </div>
+          <div className="mt-8 bg-surface p-5">
+            <OrderTotals order={order} />
+          </div>
+        </section>
+
+        <aside className="space-y-12 lg:col-span-4 lg:col-start-9">
+          <section aria-labelledby="updates-title">
+            <h2 id="updates-title" className="text-lead font-medium">
+              Updates
+            </h2>
+            <div className="mt-6">
+              <OrderTimeline events={order.events} />
+            </div>
+          </section>
+          <div className="flex flex-col items-start gap-3">
+            <ButtonLink href={invoiceHref} variant="outline">
+              {order.paymentStatus === "PAID" ? "View Receipt" : "View Invoice"}
+            </ButtonLink>
+            {isOwner ? (
+              <Link href={`/account/orders/${order.number}`} className="link text-small">
+                See this order in your account
+              </Link>
+            ) : user ? null : (
+              <Link href="/register" className="link text-small">
+                Create an account to keep your orders in one place
+              </Link>
+            )}
+          </div>
+        </aside>
       </div>
+
+      <section aria-labelledby="delivery-title" className="mt-16">
+        <h2 id="delivery-title" className="text-lead font-medium">
+          Delivery and payment
+        </h2>
+        <div className="mt-6">
+          <OrderShippingInfo order={order} />
+        </div>
+      </section>
+
+      <p className="mt-16 text-small text-muted">
+        Questions about this order?{" "}
+        <Link href={`/contact?order=${order.number}`} className="link text-ink">
+          Contact support
+        </Link>{" "}
+        and quote <span className="tabular text-ink">{order.number}</span>. Bookmark this page to check on it any time.
+      </p>
     </div>
   );
 }

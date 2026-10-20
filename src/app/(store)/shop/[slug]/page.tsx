@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BadgeCheck, ChevronRight, ExternalLink, FileCheck2, FlaskConical, Snowflake, Truck } from "lucide-react";
 import { db } from "@/lib/db";
 import { categoryLabel } from "@/lib/orders";
-import { formatDate, splitList } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
+import { parseHalfLife, timesNative } from "@/lib/half-life";
+import { formatDate } from "@/lib/utils";
 import { Formula } from "@/components/store/formula";
 import { Markdown } from "@/components/store/markdown";
-import { ProductCard } from "@/components/store/product-card";
 import { ProductPurchase } from "@/components/store/product-purchase";
-import { ReceptorChips } from "@/components/store/receptor-chips";
+import { halfLifeText, receptorLongNames, receptorPhrase } from "@/components/store/receptors";
+import { SpecimenTile } from "@/components/store/specimen-tile";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -27,18 +26,26 @@ async function getProduct(slug: string) {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const product = await getProduct((await params).slug);
   if (!product) return {};
-  return {
-    title: `${product.name} — ${product.subtitle}`,
-    description: product.shortDescription,
-    openGraph: { images: [{ url: product.image }] },
-  };
+  return { title: `${product.name}, ${product.subtitle.toLowerCase()}`, description: product.shortDescription };
 }
 
-const RECEPTOR_NAMES: Record<string, string> = {
-  "GLP-1R": "Glucagon-like peptide-1 receptor",
-  GIPR: "Glucose-dependent insulinotropic polypeptide receptor",
-  GCGR: "Glucagon receptor",
-};
+const nf = new Intl.NumberFormat("en-AU");
+
+/** One monograph section: heading in the left third, content in the right two-thirds. */
+function Row({ id, title, children, className }: { id: string; title: string; children: React.ReactNode; className?: string }) {
+  return (
+    <section id={id} className={className} aria-labelledby={`${id}-title`}>
+      <div className="frame grid gap-6 lg:grid-cols-12 lg:gap-x-[var(--gutter)]">
+        <h2 id={`${id}-title`} className="text-index font-medium lg:col-span-4" data-reveal>
+          {title}
+        </h2>
+        <div className="lg:col-span-8" data-reveal style={{ "--i": 1 } as React.CSSProperties}>
+          {children}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default async function ProductPage({ params }: Params) {
   const product = await getProduct((await params).slug);
@@ -46,54 +53,45 @@ export default async function ProductPage({ params }: Params) {
 
   const related = await db.product.findMany({
     where: { active: true, id: { not: product.id } },
-    orderBy: [{ sortOrder: "asc" }],
-    take: 3,
+    orderBy: { sortOrder: "asc" },
     select: {
       slug: true,
       name: true,
       subtitle: true,
       image: true,
       accentColor: true,
-      receptorTargets: true,
       regulatoryStatus: true,
       category: true,
       variants: { where: { active: true }, select: { price: true, stock: true, label: true } },
     },
   });
-  related.sort((a, b) => Number(b.category === product.category) - Number(a.category === product.category));
+  const relatedPicks = [...related.filter((p) => p.category === product.category), ...related.filter((p) => p.category !== product.category)].slice(0, 3);
 
   let references: { label: string; url: string }[] = [];
   try {
     references = product.references ? JSON.parse(product.references) : [];
   } catch {}
 
+  const hl = parseHalfLife(product.halfLife);
+  const halfLifeLine = hl.hours
+    ? `${halfLifeText(product.halfLife)}, roughly ${nf.format(timesNative(hl.hours))} times as long as native GLP-1.`
+    : (halfLifeText(product.halfLife) ?? "Not established in published sources.");
+
   const specs: [string, React.ReactNode][] = [
-    ["Compound", product.name],
     ["Research codes", product.aliases],
     ["Class", categoryLabel(product.category)],
-    ["Receptor targets", splitList(product.receptorTargets).map((r) => RECEPTOR_NAMES[r] ?? r).join("; ")],
+    ["Receptor targets", receptorLongNames(product.receptorTargets)],
     ["Molecular formula", product.molecularFormula ? <Formula value={product.molecularFormula} /> : null],
     ["Molecular weight", product.molecularWeight],
-    ["CAS number", product.casNumber ? <span className="font-mono">{product.casNumber}</span> : null],
+    ["CAS number", product.casNumber ? <span className="tabular">{product.casNumber}</span> : null],
     ["Length", product.aminoAcidCount ? `${product.aminoAcidCount} amino acids` : null],
-    ["Reported half-life", product.halfLife],
+    ["Reported half-life", halfLifeLine],
     ["Originator", product.developer],
     ["Development status", product.regulatoryStatus],
     ["Form", product.form],
     ["Purity specification", product.purity],
     ["Container", "3 mL borosilicate glass vial, butyl stopper, flip-off crimp seal"],
   ];
-  const specRows = specs.filter(([, v]) => v);
-
-  const sections = [
-    { id: "overview", label: "Overview" },
-    product.mechanism ? { id: "mechanism", label: "Mechanism" } : null,
-    product.research ? { id: "research", label: "Published research" } : null,
-    { id: "specifications", label: "Specifications" },
-    { id: "testing", label: "Lab testing" },
-    { id: "storage", label: "Storage" },
-    references.length ? { id: "references", label: "References" } : null,
-  ].filter(Boolean) as { id: string; label: string }[];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -116,17 +114,13 @@ export default async function ProductPage({ params }: Params) {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <div className="border-b border-slate-200 bg-slate-50/60">
-        <nav className="container-page flex items-center gap-1.5 py-3 text-xs text-slate-500" aria-label="Breadcrumb">
-          <Link href="/" className="hover:text-ink-900">Home</Link>
-          <ChevronRight className="size-3" />
-          <Link href="/shop" className="hover:text-ink-900">Peptides</Link>
-          <ChevronRight className="size-3" />
-          <span className="font-medium text-ink-900">{product.name}</span>
+      <div className="frame pt-6 pb-16 md:pb-24">
+        <nav aria-label="Breadcrumb" className="mb-6 text-small text-muted">
+          <Link href="/shop" className="link">
+            Catalogue
+          </Link>{" "}
+          <span aria-hidden="true">/</span> <span className="text-ink">{product.name}</span>
         </nav>
-      </div>
-
-      <section className="container-page py-10 lg:py-14">
         <ProductPurchase
           product={{ slug: product.slug, name: product.name, image: product.image, accentColor: product.accentColor }}
           variants={product.variants.map((v) => ({
@@ -140,229 +134,183 @@ export default async function ProductPage({ params }: Params) {
           }))}
           header={
             <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge className="bg-ink-900 text-white ring-0">{categoryLabel(product.category)}</Badge>
-                {product.regulatoryStatus?.toLowerCase().startsWith("investigational") ? (
-                  <Badge className="bg-amber-50 text-amber-800 ring-amber-600/20">Investigational compound</Badge>
-                ) : null}
-                <Badge className="bg-mint-50 text-mint-800 ring-mint-600/20">
-                  <BadgeCheck className="size-3" /> {product.purity}
-                </Badge>
-              </div>
-              <h1 className="mt-4 text-4xl font-semibold tracking-tight text-ink-900 sm:text-5xl">{product.name}</h1>
-              <p className="mt-2 text-lg text-slate-600">{product.subtitle}</p>
-              <ReceptorChips targets={product.receptorTargets} className="mt-4" />
-              <p className="mt-6 text-base leading-relaxed text-slate-700">{product.shortDescription}</p>
-
-              <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 sm:grid-cols-4">
-                {[
-                  ["Mol. weight", product.molecularWeight?.replace(" g/mol", "") ?? "—", product.molecularWeight ? "g/mol" : ""],
-                  ["Half-life", product.halfLife?.split("(")[0].trim() ?? "—", "reported"],
-                  ["Length", product.aminoAcidCount ? String(product.aminoAcidCount) : "—", product.aminoAcidCount ? "residues" : ""],
-                  ["Batches", String(product.batches.length), "published"],
-                ].map(([label, value, unit]) => (
-                  <div key={label} className="bg-white px-4 py-3">
-                    <dt className="text-[10.5px] tracking-wide text-slate-500 uppercase">{label}</dt>
-                    <dd className="mt-0.5 font-mono text-base font-semibold text-ink-900">{value}</dd>
-                    <dd className="text-[10.5px] text-slate-400">{unit}</dd>
-                  </div>
-                ))}
-              </dl>
+              <h1 className="lines text-head break-words" translate="no">
+                <span className="line">
+                  <span data-line>{product.name}</span>
+                </span>
+              </h1>
+              <p className="mt-3 text-lead" data-load style={{ "--d": "260ms" } as React.CSSProperties}>
+                {product.subtitle}
+              </p>
+              <p className="mt-5 max-w-[48ch] text-lead lg:max-w-[56ch] lg:text-body">{product.shortDescription}</p>
             </div>
           }
           footer={
-            <div className="mt-6 space-y-4">
-              <div className="grid gap-3 sm:grid-cols-3">
+            <div className="mt-6 space-y-6">
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
                 {[
-                  { icon: FileCheck2, text: "COA published for every batch" },
-                  { icon: Snowflake, text: "Insulated cold-pack shipping" },
-                  { icon: Truck, text: "Tracked, discreet delivery" },
-                ].map((f) => (
-                  <div key={f.text} className="flex items-center gap-2.5 rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-medium text-slate-700">
-                    <f.icon className="size-4 shrink-0 text-mint-600" />
-                    {f.text}
+                  ["Acts on", receptorPhrase(product.receptorTargets)],
+                  ["Half-life", halfLifeText(product.halfLife) ?? "Not published"],
+                  ["Molecular weight", product.molecularWeight ?? "See certificate"],
+                  ["Published batches", String(product.batches.length)],
+                ].map(([label, value]) => (
+                  <div key={label}>
+                    <dt className="text-small text-muted">{label}</dt>
+                    <dd className="tabular mt-0.5 font-medium">{value}</dd>
                   </div>
                 ))}
-              </div>
-              <div className="flex gap-3 rounded-xl bg-amber-50 p-4 text-xs leading-relaxed text-amber-900 ring-1 ring-amber-200">
-                <FlaskConical className="mt-0.5 size-4 shrink-0 text-amber-600" />
-                <p>
-                  <strong>For laboratory research use only.</strong> Not for human or veterinary use. This product is
-                  not a medicine and is not intended to diagnose, treat, cure or prevent any disease. Information on
-                  this page summarises published literature for research context only.
-                </p>
-              </div>
+              </dl>
+              <p className="text-small text-muted">
+                For laboratory research use only. Not for human or veterinary use, and not a medicine. Information here
+                summarises published literature.
+              </p>
             </div>
           }
         />
-      </section>
-
-      {/* Section nav */}
-      <div className="sticky top-16 z-30 border-y border-slate-200 bg-white/90 backdrop-blur-xl">
-        <nav className="container-page flex gap-1 overflow-x-auto py-2" aria-label="Product sections">
-          {sections.map((s) => (
-            <a key={s.id} href={`#${s.id}`} className="shrink-0 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-ink-50 hover:text-ink-900">
-              {s.label}
-            </a>
-          ))}
-        </nav>
       </div>
 
-      <div className="container-page grid gap-16 py-16 lg:grid-cols-[1fr_320px]">
-        <div className="min-w-0 space-y-16">
-          <section id="overview" className="scroll-mt-32">
-            <p className="eyebrow">Overview</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight">About {product.name}</h2>
-            <Markdown className="mt-6">{product.description}</Markdown>
-          </section>
+      <div className="space-y-24 md:space-y-36">
+        <Row id="overview" title={`About ${product.name}`}>
+          <Markdown className="max-w-[68ch]">{product.description}</Markdown>
+        </Row>
 
-          {product.mechanism ? (
-            <section id="mechanism" className="scroll-mt-32">
-              <p className="eyebrow">Pharmacology</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight">Mechanism of action</h2>
-              <Markdown className="mt-6">{product.mechanism}</Markdown>
-            </section>
-          ) : null}
+        {product.mechanism ? (
+          <Row id="mechanism" title="Mechanism of action">
+            <Markdown className="max-w-[68ch]">{product.mechanism}</Markdown>
+          </Row>
+        ) : null}
 
-          {product.research ? (
-            <section id="research" className="scroll-mt-32">
-              <p className="eyebrow">Literature</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight">Key published research</h2>
-              <p className="mt-2 text-sm text-slate-500">
-                Summaries of peer-reviewed studies for research context. Clinical results relate to regulated
-                pharmaceutical products studied under trial conditions.
-              </p>
-              <Markdown className="mt-6">{product.research}</Markdown>
-            </section>
-          ) : null}
-
-          <section id="specifications" className="scroll-mt-32">
-            <p className="eyebrow">Data sheet</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight">Specifications</h2>
-            <dl className="mt-6 divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200">
-              {specRows.map(([label, value]) => (
-                <div key={label} className="grid gap-1 px-5 py-3.5 text-sm sm:grid-cols-[200px_1fr] sm:gap-4">
-                  <dt className="font-medium text-slate-500">{label}</dt>
-                  <dd className="text-ink-900">{value}</dd>
-                </div>
-              ))}
-            </dl>
-            {product.sequence ? (
-              <div className="mt-6 rounded-2xl bg-ink-950 p-5">
-                <p className="text-xs font-semibold tracking-wide text-mint-300 uppercase">Sequence</p>
-                <p className="mt-2 font-mono text-sm leading-relaxed break-all text-ink-100">{product.sequence}</p>
-              </div>
-            ) : null}
-          </section>
-
-          <section id="testing" className="scroll-mt-32">
-            <p className="eyebrow">Quality control</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight">Lab testing &amp; certificates</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Every batch is independently tested before release. Match the batch number on your vial to the results
-              below, or search all batches on the <Link href="/coa" className="font-semibold text-mint-700 hover:underline">Lab Testing</Link> page.
+        {product.research ? (
+          <Row id="research" title="Key published research">
+            <p className="mb-6 max-w-[62ch] text-muted">
+              Peer-reviewed studies of regulated pharmaceutical products under trial conditions, summarised for research
+              context.
             </p>
-            {product.batches.length ? (
-              <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200">
-                <table className="w-full min-w-[560px] text-left text-sm">
-                  <thead className="bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">
-                    <tr>
-                      <th className="px-4 py-3 font-semibold">Batch</th>
-                      <th className="px-4 py-3 font-semibold">Purity (HPLC)</th>
-                      <th className="px-4 py-3 font-semibold">Identity (MS)</th>
-                      <th className="px-4 py-3 font-semibold">Tested</th>
-                      <th className="px-4 py-3 font-semibold" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {product.batches.map((b) => (
-                      <tr key={b.id}>
-                        <td className="px-4 py-3 font-mono text-xs font-semibold">{b.batchNumber}</td>
-                        <td className="px-4 py-3">
-                          <span className="font-mono font-semibold text-emerald-700">{b.purity.toFixed(2)}%</span>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-slate-600">{b.massSpec ? "Confirmed" : "—"}</td>
-                        <td className="px-4 py-3 text-slate-600">{formatDate(b.testedAt)}</td>
-                        <td className="px-4 py-3 text-right">
-                          <Link href={`/coa?batch=${encodeURIComponent(b.batchNumber)}`} className="text-xs font-semibold text-mint-700 hover:underline">
-                            View COA
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="mt-6 rounded-xl bg-slate-50 p-4 text-sm text-slate-500">Batch results will be published here before release.</p>
-            )}
-          </section>
+            <Markdown className="max-w-[68ch]">{product.research}</Markdown>
+          </Row>
+        ) : null}
 
-          <section id="storage" className="scroll-mt-32">
-            <p className="eyebrow">Handling</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight">Storage &amp; handling</h2>
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              {[
-                ["Lyophilized", product.storage],
-                ["On arrival", "Transfer to −20 °C (or 2–8 °C short term) as soon as practical. Keep in the outer carton to protect from light."],
-                ["Before opening", "Equilibrate the sealed vial to room temperature to prevent condensation forming on the powder."],
-              ].map(([title, text]) => (
-                <div key={title} className="rounded-2xl border border-slate-200 p-5">
-                  <p className="text-sm font-semibold text-ink-900">{title}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-600">{text}</p>
+        <Row id="specifications" title="Specifications">
+          <dl>
+            {specs
+              .filter(([, v]) => v)
+              .map(([label, value], i) => (
+                <div key={label} className={`grid gap-1 px-4 py-3 sm:grid-cols-[14rem_1fr] sm:gap-6 ${i % 2 ? "" : "bg-surface"}`}>
+                  <dt className="text-muted">{label}</dt>
+                  <dd>{value}</dd>
                 </div>
               ))}
+          </dl>
+          {product.sequence ? (
+            <div className="mt-8 bg-ink p-6 text-on-navy md:p-8">
+              <h3 className="text-small text-on-navy-muted">Sequence</h3>
+              <p className="tabular mt-3 text-lead break-all" translate="no">
+                {product.sequence}
+              </p>
             </div>
-            <Link href="/research/storing-lyophilized-peptides" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-mint-700 hover:underline">
-              Read the full storage &amp; handling guide <ChevronRight className="size-4" />
-            </Link>
-          </section>
-
-          {references.length ? (
-            <section id="references" className="scroll-mt-32">
-              <p className="eyebrow">Sources</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight">References</h2>
-              <ol className="mt-6 space-y-3">
-                {references.map((r, i) => (
-                  <li key={r.url + i} className="flex gap-3 text-sm">
-                    <span className="font-mono text-xs text-slate-400">[{i + 1}]</span>
-                    <a href={r.url} target="_blank" rel="noopener noreferrer" className="group text-slate-700 hover:text-mint-700">
-                      {r.label} <ExternalLink className="inline size-3 opacity-50 group-hover:opacity-100" />
-                    </a>
-                  </li>
-                ))}
-              </ol>
-            </section>
           ) : null}
-        </div>
+        </Row>
 
-        <aside className="space-y-6 lg:sticky lg:top-36 lg:self-start">
-          <div className="rounded-3xl bg-ink-950 p-6 text-white">
-            <p className="text-xs font-semibold tracking-wide text-mint-300 uppercase">Research library</p>
-            <p className="mt-2 text-lg font-semibold">New to incretin pharmacology?</p>
-            <p className="mt-2 text-sm text-ink-200">Start with our primer on how single, dual and triple agonists differ.</p>
-            <Link href="/research/single-dual-triple-agonists" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-mint-300 hover:text-mint-200">
-              Read the explainer <ChevronRight className="size-4" />
+        <section id="testing" className="bg-field-mint py-20 md:py-28" aria-labelledby="testing-title">
+          <div className="frame grid gap-6 lg:grid-cols-12 lg:gap-x-[var(--gutter)]">
+            <div className="lg:col-span-4" data-reveal>
+              <h2 id="testing-title" className="text-index font-medium">
+                Lab testing
+              </h2>
+              <p className="mt-4 max-w-[36ch]">
+                Match the batch number on your vial to its result, or search every batch on the{" "}
+                <Link href="/coa" className="link font-medium">
+                  lab results page
+                </Link>
+                .
+              </p>
+            </div>
+            <div className="lg:col-span-8" data-reveal style={{ "--i": 1 } as React.CSSProperties}>
+              {product.batches.length ? (
+                <div className="overflow-x-auto bg-white">
+                  <table className="tabular w-full text-left text-small sm:text-body">
+                    <caption className="sr-only">Published batch results for {product.name}</caption>
+                    <thead className="text-small text-muted">
+                      <tr>
+                        <th scope="col" className="px-3 pt-4 pb-3 sm:px-5 font-medium">Batch</th>
+                        <th scope="col" className="hidden px-3 pt-4 pb-3 sm:px-5 font-medium sm:table-cell">Size</th>
+                        <th scope="col" className="px-3 pt-4 pb-3 sm:px-5 text-right font-medium">Purity</th>
+                        <th scope="col" className="px-3 pt-4 pb-3 sm:px-5 font-medium">Tested</th>
+                        <th scope="col" className="px-3 pt-4 pb-3 sm:px-5"><span className="sr-only">Certificate</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {product.batches.map((b) => (
+                        <tr key={b.id} className="border-t border-ink/10">{/* taste-skill-ignore: real table rows */}
+                          <td className="px-3 py-3.5 sm:px-5 font-medium" translate="no">{b.batchNumber}</td>
+                          <td className="hidden px-3 py-3.5 sm:px-5 sm:table-cell">{b.variantLabel ?? "All sizes"}</td>
+                          <td className="px-3 py-3.5 sm:px-5 text-right">{b.purity.toFixed(2)}%</td>
+                          <td className="px-3 py-3.5 sm:px-5">{formatDate(b.testedAt)}</td>
+                          <td className="px-3 py-3.5 sm:px-5 text-right">
+                            <Link href={`/coa?batch=${encodeURIComponent(b.batchNumber)}`} className="link">
+                              View<span className="sr-only"> certificate for {b.batchNumber}</span>
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="bg-white p-5">Batch results are published here before a batch is released.</p>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <Row id="storage" title="Storage and handling">
+          <dl className="grid gap-5 sm:grid-cols-3">
+            {[
+              ["Lyophilised", product.storage],
+              ["On arrival", "Move to −20 °C, or 2–8 °C short term, as soon as practical. Keep in the carton, out of the light."],
+              ["Before opening", "Let the sealed vial reach room temperature so no condensation forms on the powder."],
+            ].map(([title, text]) => (
+              <div key={title}>
+                <dt className="font-medium">{title}</dt>
+                <dd className="mt-2 text-muted">{text}</dd>
+              </div>
+            ))}
+          </dl>
+          <Link href="/research/storing-lyophilized-peptides" className="link mt-8 inline-block font-medium">
+            The full storage and handling guide
+          </Link>
+        </Row>
+
+        {references.length ? (
+          <Row id="references" title="References">
+            <ol className="max-w-[68ch] list-decimal space-y-3 pl-5 marker:text-muted">
+              {references.map((r, i) => (
+                <li key={r.url + i} className="pl-1">
+                  <a href={r.url} target="_blank" rel="noopener noreferrer" className="link">
+                    {r.label}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </Row>
+        ) : null}
+
+        <section className="frame" aria-labelledby="related-title">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <h2 id="related-title" className="text-index font-medium">
+              Related compounds
+            </h2>
+            <Link href="/compare" className="link">
+              Compare all seven side by side
             </Link>
           </div>
-          <div className="rounded-3xl border border-slate-200 p-6">
-            <p className="text-sm font-semibold text-ink-900">Compare with other compounds</p>
-            <p className="mt-1 text-sm text-slate-600">Receptor targets, half-life and status side by side.</p>
-            <Link href="/compare" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-mint-700 hover:underline">
-              Open comparison <ChevronRight className="size-4" />
-            </Link>
+          <div className="mt-8 grid grid-cols-2 gap-x-2 gap-y-10 md:grid-cols-4 md:gap-x-3">
+            {relatedPicks.map((p, i) => (
+              <SpecimenTile key={p.slug} product={p} wide={i === 0} />
+            ))}
           </div>
-        </aside>
+        </section>
       </div>
-
-      <section className="container-page">
-        <h2 className="text-2xl font-semibold tracking-tight">Related compounds</h2>
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {related.map((p) => (
-            <ProductCard key={p.slug} product={p} />
-          ))}
-        </div>
-      </section>
     </>
   );
 }

@@ -101,6 +101,8 @@ export type QuotedLine = {
   variantLabel: string;
   sku: string;
   image: string;
+  /** The compound's plate colour (its vial label stripe), for the cart thumbnail. */
+  plate: string;
 };
 
 /** Current price and availability for cart lines (used to refresh client-side carts). */
@@ -124,6 +126,7 @@ export async function quoteLines(lines: CheckoutLine[]): Promise<QuotedLine[]> {
         variantLabel: "",
         sku: "",
         image: "",
+        plate: "",
       };
     }
     return {
@@ -137,6 +140,7 @@ export async function quoteLines(lines: CheckoutLine[]): Promise<QuotedLine[]> {
       variantLabel: v.label,
       sku: v.sku,
       image: v.image ?? v.product.image,
+      plate: v.product.accentColor,
     };
   });
 }

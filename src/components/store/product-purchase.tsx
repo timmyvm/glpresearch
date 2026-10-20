@@ -2,11 +2,13 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { Check, Minus, Plus, ShoppingBag } from "lucide-react";
+import { Check, Minus, Plus } from "lucide-react";
 import { MAX_LINE_QTY, useCart } from "@/lib/cart";
 import { formatMoney } from "@/lib/money";
+import { plateInk, specimenImage } from "@/lib/plates";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { StockAlertForm } from "./stock-alert-form";
 
 type Variant = {
   id: string;
@@ -18,6 +20,10 @@ type Variant = {
   image: string | null;
 };
 
+/**
+ * The product's specimen plate and its purchase panel. Choosing a vial size swaps the cut-out
+ * on the plate; a sold-out size offers a back-in-stock email instead of Add to Cart.
+ */
 export function ProductPurchase({
   product,
   variants,
@@ -36,9 +42,10 @@ export function ProductPurchase({
   const add = useCart((s) => s.add);
 
   const selected = variants.find((v) => v.id === selectedId) ?? variants[0];
-  const image = selected?.image ?? product.image;
+  const photo = selected?.image ?? product.image;
   const soldOut = !selected || selected.stock <= 0;
   const maxQty = Math.max(1, Math.min(MAX_LINE_QTY, selected?.stock ?? 1));
+  const ink = plateInk(product.accentColor);
 
   const onAdd = () => {
     if (!selected || soldOut) return;
@@ -50,7 +57,7 @@ export function ProductPurchase({
         variantLabel: selected.label,
         sku: selected.sku,
         price: selected.price,
-        image,
+        image: photo,
       },
       qty,
     );
@@ -59,91 +66,111 @@ export function ProductPurchase({
   };
 
   return (
-    <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
-      <div className="lg:sticky lg:top-24 lg:self-start">
-        <div className="relative aspect-square overflow-hidden rounded-3xl border border-slate-200 bg-[#eef0f3]">
-          <Image key={image} src={image} alt={`${product.name} ${selected?.label ?? ""} research vial`} fill priority sizes="(min-width: 1024px) 50vw, 100vw" className="animate-fade-up object-cover" />
+    <div className="grid gap-6 lg:grid-cols-12 lg:gap-x-[var(--gutter)] lg:gap-y-0">
+      {/* Phones read the title first; wide screens put it beside the plate. */}
+      <div className="lg:col-span-5 lg:col-start-8 lg:row-start-1">{header}</div>
+      <div className="lg:sticky lg:top-16 lg:col-span-7 lg:row-span-2 lg:row-start-1 lg:self-start">
+        <div className="relative aspect-[4/5] overflow-clip sm:aspect-[5/4] lg:aspect-auto lg:h-[min(calc(100svh-9rem),56rem)] lg:min-h-[32rem]" style={{ backgroundColor: product.accentColor, color: ink }}>
+          {variants.map((v) => (
+            <Image
+              key={v.id}
+              src={specimenImage(v.image ?? product.image) ?? product.image}
+              alt={v.id === selected?.id ? `${product.name} ${v.label} research vial` : ""}
+              fill
+              priority={v.id === selected?.id}
+              sizes="(min-width: 1024px) 58vw, 100vw"
+              className={cn(
+                "object-contain px-[12%] pt-[9%] pb-[6%] transition-[opacity,transform] duration-300 ease-[var(--ease-out)]",
+                v.id === selected?.id ? "opacity-100" : "translate-y-3 opacity-0",
+              )}
+            />
+          ))}
+          <p className="absolute top-4 left-4 text-small font-medium" aria-hidden="true">
+            {selected?.label}
+          </p>
         </div>
-        {variants.length > 1 ? (
-          <div className="mt-4 grid grid-cols-4 gap-3">
-            {variants.map((v) => (
-              <button
-                key={v.id}
-                type="button"
-                onClick={() => setSelectedId(v.id)}
-                className={cn(
-                  "relative aspect-square overflow-hidden rounded-xl border bg-[#eef0f3] transition-all",
-                  v.id === selected?.id ? "border-ink-900 ring-2 ring-ink-900/10" : "border-slate-200 hover:border-slate-300",
-                )}
-                aria-label={`Show ${v.label}`}
-              >
-                <Image src={v.image ?? product.image} alt="" fill sizes="120px" className="object-cover" />
-              </button>
-            ))}
-          </div>
-        ) : null}
       </div>
 
-      <div>
-        {header}
-
-        <div className="mt-8 rounded-3xl border border-slate-200 bg-slate-50/60 p-6">
+      <div className="lg:col-span-5 lg:col-start-8 lg:row-start-2">
+        <div className="bg-surface p-5 md:p-6 lg:mt-8">
           <div className="flex items-baseline gap-3">
-            <p className="text-3xl font-semibold tracking-tight text-ink-900">{formatMoney(selected?.price ?? 0)}</p>
+            <p className="tabular text-head">{formatMoney(selected?.price ?? 0)}</p>
             {selected?.compareAtPrice && selected.compareAtPrice > selected.price ? (
-              <p className="text-base text-slate-400 line-through">{formatMoney(selected.compareAtPrice)}</p>
+              <p className="tabular text-body text-muted line-through">{formatMoney(selected.compareAtPrice)}</p>
             ) : null}
-            <p className="ml-auto font-mono text-xs text-slate-500">SKU {selected?.sku}</p>
           </div>
 
           <fieldset className="mt-6">
-            <legend className="text-sm font-medium text-ink-800">Vial size</legend>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {variants.map((v) => (
-                <button
-                  key={v.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedId(v.id);
-                    setQty(1);
-                  }}
-                  disabled={v.stock <= 0}
-                  className={cn(
-                    "min-w-20 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40",
-                    v.id === selected?.id
-                      ? "border-ink-900 bg-ink-900 text-white"
-                      : "border-slate-300 bg-white text-ink-900 hover:border-ink-400",
-                  )}
-                  aria-pressed={v.id === selected?.id}
-                >
-                  {v.label}
-                  <span className={cn("block text-[11px] font-normal", v.id === selected?.id ? "text-ink-200" : "text-slate-500")}>
-                    {v.stock > 0 ? formatMoney(v.price) : "Sold out"}
-                  </span>
-                </button>
-              ))}
+            <legend className="text-small font-medium">Vial size</legend>
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              {variants.map((v) => {
+                const active = v.id === selected?.id;
+                return (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedId(v.id);
+                      setQty(1);
+                    }}
+                    aria-pressed={active}
+                    className={cn(
+                      "press px-3 py-3 text-left",
+                      active ? "bg-ink text-on-navy" : "bg-white text-ink hover:bg-surface-2",
+                    )}
+                  >
+                    <span className="block font-medium">{v.label}</span>
+                    <span className={cn("tabular block text-small", active ? "text-on-navy-muted" : "text-muted")}>
+                      {v.stock > 0 ? formatMoney(v.price) : "Sold out"}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </fieldset>
 
-          <div className="mt-6 flex gap-3">
-            <div className="inline-flex h-12 items-center rounded-lg border border-slate-300 bg-white">
-              <button type="button" className="px-3 text-slate-500 hover:text-ink-900 disabled:opacity-40" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1} aria-label="Decrease quantity">
-                <Minus className="size-4" />
-              </button>
-              <span className="w-8 text-center text-sm font-semibold tabular-nums">{qty}</span>
-              <button type="button" className="px-3 text-slate-500 hover:text-ink-900 disabled:opacity-40" onClick={() => setQty((q) => Math.min(maxQty, q + 1))} disabled={qty >= maxQty} aria-label="Increase quantity">
-                <Plus className="size-4" />
-              </button>
-            </div>
-            <Button size="lg" className="flex-1" onClick={onAdd} disabled={soldOut}>
-              {added ? <Check className="size-4" /> : <ShoppingBag className="size-4" />}
-              {soldOut ? "Out of stock" : added ? "Added to cart" : `Add to cart · ${formatMoney((selected?.price ?? 0) * qty)}`}
-            </Button>
+          <div className="mt-6">
+            {soldOut ? (
+              <StockAlertForm key={selected?.id} variantId={selected!.id} label={selected!.label} />
+            ) : (
+              <div className="flex gap-2">
+                <div className="flex h-14 items-center bg-white">
+                  <button
+                    type="button"
+                    className="press grid size-14 place-items-center hover:bg-surface-2 disabled:opacity-40"
+                    onClick={() => setQty((q) => Math.max(1, q - 1))}
+                    disabled={qty <= 1}
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus className="size-4" aria-hidden="true" />
+                  </button>
+                  <span className="tabular w-8 text-center font-medium" aria-live="polite" aria-label={`Quantity ${qty}`}>
+                    {qty}
+                  </span>
+                  <button
+                    type="button"
+                    className="press grid size-14 place-items-center hover:bg-surface-2 disabled:opacity-40"
+                    onClick={() => setQty((q) => Math.min(maxQty, q + 1))}
+                    disabled={qty >= maxQty}
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="size-4" aria-hidden="true" />
+                  </button>
+                </div>
+                <Button size="lg" className="flex-1" onClick={onAdd}>
+                  {added ? <Check className="size-4" aria-hidden="true" /> : null}
+                  {added ? "Added to Cart" : "Add to Cart"}
+                </Button>
+              </div>
+            )}
           </div>
 
-          <p className={cn("mt-3 flex items-center gap-2 text-xs", soldOut ? "text-rose-600" : "text-slate-600")}>
-            <span className={cn("size-2 rounded-full", soldOut ? "bg-rose-500" : selected!.stock < 15 ? "bg-amber-500" : "bg-emerald-500")} />
-            {soldOut ? "Currently out of stock" : selected!.stock < 15 ? `Low stock — ${selected!.stock} vials left` : "In stock · ships within 1 business day of payment"}
+          <p className="mt-4 text-small" aria-live="polite">
+            {soldOut
+              ? "This size is out of stock."
+              : selected!.stock < 15
+                ? `Only ${selected!.stock} vials left. Ships within one business day of payment.`
+                : "In stock. Ships within one business day of payment."}
           </p>
         </div>
 

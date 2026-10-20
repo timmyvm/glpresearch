@@ -10,22 +10,17 @@ export const metadata: Metadata = {
 export default async function AccountLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser("/account");
   return (
-    <div className="bg-slate-50/60">
-      <div className="container-page py-8 sm:py-12">
-        <div className="grid gap-8 lg:grid-cols-[220px_1fr]">
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="mb-4 hidden lg:block">
-              <p className="text-xs font-semibold tracking-[0.16em] text-slate-400 uppercase">Signed in as</p>
-              <p className="mt-1 truncate text-sm font-semibold text-ink-900">
-                {user.firstName} {user.lastName}
-              </p>
-              <p className="truncate text-xs text-slate-500">{user.email}</p>
-            </div>
-            <AccountNav />
-          </aside>
-          <div className="min-w-0">{children}</div>
+    <div className="frame grid gap-8 pt-6 pb-24 lg:grid-cols-[224px_minmax(0,1fr)] lg:gap-12 lg:pt-12 lg:pb-32">
+      <aside className="min-w-0 print:hidden lg:sticky lg:top-24 lg:self-start">
+        <div className="mb-5 hidden px-3 lg:block">
+          <p className="truncate text-small font-medium">
+            {user.firstName} {user.lastName}
+          </p>
+          <p className="truncate text-small text-muted">{user.email}</p>
         </div>
-      </div>
+        <AccountNav />
+      </aside>
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }

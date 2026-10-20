@@ -9,9 +9,9 @@ export default async function ShippingPage() {
   const s = await getSettings();
   return (
     <LegalPage
-      eyebrow="Support"
+      path="/shipping"
       title="Shipping & returns"
-      description="How we pack, ship and handle problems with your order."
+      lead="How we pack, ship and handle problems with your order."
       updated="October 2026"
       content={`## Dispatch
 
@@ -21,7 +21,7 @@ ${s.dispatchCutoff}. Orders are dispatched only after payment has been confirmed
 
 | Service | Estimated delivery | Price |
 |---|---|---|
-| Standard tracked | 2–6 business days | ${formatMoney(s.shippingStandard)}${s.freeShippingThreshold > 0 ? ` — free over ${formatMoney(s.freeShippingThreshold)}` : ""} |
+| Standard tracked | 2–6 business days | ${formatMoney(s.shippingStandard)}${s.freeShippingThreshold > 0 ? `, free over ${formatMoney(s.freeShippingThreshold)}` : ""} |
 | Express tracked | 1–3 business days | ${formatMoney(s.shippingExpress)} |
 
 Delivery estimates are provided by the carrier and are not guaranteed. Remote areas may take longer.
