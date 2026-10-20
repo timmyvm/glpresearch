@@ -19,7 +19,7 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" description="Store-wide configuration. Changes apply immediately." />
+      <PageHeader title="Settings" description="Store-wide configuration. Saved changes are live on the store straight away." />
       <SettingsForm action={updateSettings} values={values} />
     </>
   );

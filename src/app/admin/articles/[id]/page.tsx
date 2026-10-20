@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink } from "lucide-react";
 import { db } from "@/lib/db";
+import { formatDate } from "@/lib/utils";
 import { toDateInput } from "@/lib/admin/format";
 import { Alert } from "@/components/ui/alert";
 import { buttonClass } from "@/components/ui/button";
@@ -28,20 +28,28 @@ export default async function EditArticlePage({
       <PageHeader
         back={{ href: "/admin/articles", label: "Articles" }}
         title={article.title}
+        description={`${article.published ? `Published ${formatDate(article.publishedAt)}` : "Draft"}. ${article.readingMinutes} minute read.`}
         actions={
           <>
-            <Link href={`/research/${article.slug}`} target="_blank" className={buttonClass("ghost", "md")}>
-              <ExternalLink className="size-4" /> View
-            </Link>
-            <ConfirmButton action={deleteArticle.bind(null, article.id)} message={`Delete “${article.title}”?`} size="md">
-              Delete
+            {article.published ? (
+              <Link href={`/research/${article.slug}`} target="_blank" className={buttonClass("ghost", "sm")}>
+                View Article
+              </Link>
+            ) : null}
+            <ConfirmButton
+              action={deleteArticle.bind(null, article.id)}
+              message={`Delete “${article.title}”? It disappears from the research library. This can't be undone.`}
+              variant="ghost"
+              className="text-danger hover:bg-[#ffedea]"
+            >
+              Delete Article
             </ConfirmButton>
           </>
         }
       />
       {sp.created ? (
         <Alert tone="success" className="mb-6">
-          Article created.
+          Article created. Keep editing below.
         </Alert>
       ) : null}
       <ArticleForm action={saveArticle.bind(null, article.id)} initial={{ ...article, publishedAt: toDateInput(article.publishedAt) }} />

@@ -1,61 +1,97 @@
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, Clock, DollarSign, Inbox, ShoppingCart, TrendingUp, UserPlus } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
-import { formatDate, formatDateTime } from "@/lib/utils";
-import { Card, CardHeader } from "@/components/ui/card";
-import { StatusBadge, Badge } from "@/components/ui/badge";
-import { PageHeader, StatCard } from "@/components/admin/ui";
-import { RevenueChart, type DayPoint } from "@/components/admin/revenue-chart";
-import { percentChange } from "@/lib/admin/format";
+import { getSettings } from "@/lib/settings";
+import { PAYMENT_METHODS, type PaymentMethod } from "@/lib/orders";
+import { formatDate } from "@/lib/utils";
+import { StatusBadge } from "@/components/ui/badge";
+import { ConfirmButton } from "@/components/admin/confirm-button";
+import { ActionForm, FormSubmit } from "@/components/admin/action-form";
+import { CHART_RANGES, RevenueChart, type ChartRange, type DayPoint } from "@/components/admin/revenue-chart";
+import { EmptyState, PageHeader, Panel, StatStrip, Swatch, textAction } from "@/components/admin/ui";
+import { cancelExpiredOrders, markOrderPaid } from "./orders/actions";
 
-export const metadata = { title: "Dashboard" };
+export const metadata = { title: "Overview" };
 
 const REVENUE_WHERE = { paymentStatus: "PAID", status: { notIn: ["CANCELLED", "REFUNDED"] } };
-const DAY = 86400000;
+const DAY = 86_400_000;
+const nf = new Intl.NumberFormat("en-AU");
 
-function dayKey(d: Date) {
-  return d.toISOString().slice(0, 10);
+const dayKey = (d: Date) => d.toISOString().slice(0, 10);
+
+/** "+12% vs prior 30 days", grey when there is nothing to compare. */
+function delta(current: number, previous: number, goodWhenUp = true): { note: string; tone: "good" | "bad" | "neutral" } {
+  if (previous === 0) return current === 0 ? { note: "No change vs prior 30 days", tone: "neutral" } : { note: `+${nf.format(current)} (new) vs prior 30 days`, tone: "neutral" };
+  const pct = ((current - previous) / previous) * 100;
+  if (Math.abs(pct) < 0.5) return { note: "No change vs prior 30 days", tone: "neutral" };
+  const up = pct > 0;
+  return { note: `${up ? "+" : "−"}${Math.abs(pct).toFixed(0)}% vs prior 30 days`, tone: up === goodWhenUp ? "good" : "bad" };
 }
 
-export default async function AdminDashboard() {
+function timeLeft(ms: number) {
+  if (ms <= 0) return "Past window";
+  const h = Math.floor(ms / 3_600_000);
+  if (h >= 24) return `${Math.floor(h / 24)} d ${h % 24} h left`;
+  return `${h} h ${Math.floor((ms % 3_600_000) / 60_000)} m left`;
+}
+
+export default async function AdminOverview({ searchParams }: { searchParams: Promise<{ range?: string }> }) {
+  const { range: rangeParam } = await searchParams;
+  const range = (CHART_RANGES.find((r) => String(r) === rangeParam) ?? 30) as ChartRange;
   const now = new Date();
   const d30 = new Date(now.getTime() - 30 * DAY);
   const d60 = new Date(now.getTime() - 60 * DAY);
-  const d90 = new Date(now.getTime() - 89 * DAY);
-  d90.setHours(0, 0, 0, 0);
+  const d90 = new Date(now.getTime() - 90 * DAY);
 
-  const [rev30, rev60, orders30, ordersPrev30, newCustomers, newCustomersPrev, awaiting, lowStock, chartOrders, paidItems, recentOrders, messages] =
+  const settings = await getSettings();
+  const windowMs = settings.paymentWindowHours * 3_600_000;
+
+  const [awaiting, awaitingSum, toPack, toPackCount, rev30, rev60, orders30, ordersPrev30, newCustomers, newCustomersPrev, chartOrders, paidItems, products, lowStock, alertsWaiting, messages] =
     await Promise.all([
+      db.order.findMany({
+        where: { status: "PENDING_PAYMENT" },
+        orderBy: { createdAt: "asc" },
+        select: { id: true, number: true, total: true, createdAt: true, paymentMethod: true, paymentClaimedAt: true, shipFirstName: true, shipLastName: true },
+      }),
+      db.order.aggregate({ where: { status: "PENDING_PAYMENT" }, _sum: { total: true } }),
+      db.order.findMany({
+        where: { status: { in: ["PAID", "PROCESSING"] } },
+        orderBy: { paidAt: "asc" },
+        take: 5,
+        select: { id: true, number: true, status: true, paidAt: true, shippingMethod: true, shipFirstName: true, shipLastName: true, _count: { select: { items: true } } },
+      }),
+      db.order.count({ where: { status: { in: ["PAID", "PROCESSING"] } } }),
       db.order.aggregate({ where: { ...REVENUE_WHERE, createdAt: { gte: d30 } }, _sum: { total: true }, _count: true }),
       db.order.aggregate({ where: { ...REVENUE_WHERE, createdAt: { gte: d60, lt: d30 } }, _sum: { total: true }, _count: true }),
       db.order.count({ where: { createdAt: { gte: d30 } } }),
       db.order.count({ where: { createdAt: { gte: d60, lt: d30 } } }),
       db.user.count({ where: { role: "CUSTOMER", createdAt: { gte: d30 } } }),
       db.user.count({ where: { role: "CUSTOMER", createdAt: { gte: d60, lt: d30 } } }),
-      db.order.aggregate({ where: { status: "PENDING_PAYMENT" }, _count: true, _sum: { total: true } }),
-      db.productVariant.findMany({
-        where: { active: true, stock: { lte: db.productVariant.fields.lowStockThreshold } },
-        include: { product: { select: { name: true, id: true } } },
-        orderBy: { stock: "asc" },
-      }),
-      db.order.findMany({
-        where: { createdAt: { gte: d90 } },
-        select: { createdAt: true, total: true, paymentStatus: true, status: true },
-      }),
+      db.order.findMany({ where: { createdAt: { gte: d90 } }, select: { createdAt: true, total: true, paymentStatus: true, status: true } }),
       db.orderItem.findMany({
         where: { order: { ...REVENUE_WHERE, createdAt: { gte: d90 } } },
         select: { productName: true, lineTotal: true, quantity: true },
       }),
-      db.order.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 8,
-        select: { id: true, number: true, status: true, total: true, createdAt: true, shipFirstName: true, shipLastName: true, email: true },
+      db.product.findMany({ select: { name: true, accentColor: true } }),
+      db.productVariant.findMany({
+        where: { active: true, stock: { lte: db.productVariant.fields.lowStockThreshold } },
+        include: { product: { select: { name: true, id: true, accentColor: true } } },
+        orderBy: { stock: "asc" },
+        take: 5,
       }),
-      db.contactMessage.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
+      db.stockAlert.count({ where: { notifiedAt: null } }),
+      db.contactMessage.findMany({ where: { status: "NEW" }, orderBy: { createdAt: "desc" }, take: 3 }),
     ]);
 
-  // Daily chart series for the last 90 days, ending with today.
+  // Payments queue: customer-reported payments first, then the ones closest to expiry.
+  const queue = awaiting
+    .map((o) => ({ ...o, left: o.createdAt.getTime() + windowMs - now.getTime() }))
+    .sort((a, b) => Number(!!b.paymentClaimedAt) - Number(!!a.paymentClaimedAt) || a.left - b.left);
+  const claimed = queue.filter((o) => o.paymentClaimedAt).length;
+  const expired = queue.filter((o) => !o.paymentClaimedAt && o.left <= 0).length;
+  const soon = queue.filter((o) => !o.paymentClaimedAt && o.left > 0 && o.left < 12 * 3_600_000).length;
+
+  // Chart series: one point per day, ending today.
   const days = new Map<string, DayPoint>();
   for (let i = 89; i >= 0; i--) {
     const key = dayKey(new Date(now.getTime() - i * DAY));
@@ -68,6 +104,7 @@ export default async function AdminDashboard() {
     if (o.paymentStatus === "PAID" && o.status !== "CANCELLED" && o.status !== "REFUNDED") point.revenue += o.total;
   }
 
+  const colour = new Map(products.map((p) => [p.name, p.accentColor]));
   const topProducts = [
     ...paidItems
       .reduce((map, i) => {
@@ -79,154 +116,245 @@ export default async function AdminDashboard() {
       .values(),
   ]
     .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 6);
-  const topMax = topProducts[0]?.revenue ?? 1;
+    .slice(0, 5);
+  const topMax = topProducts[0]?.revenue || 1;
 
   const revenue = rev30._sum.total ?? 0;
   const prevRevenue = rev60._sum.total ?? 0;
   const aov = rev30._count ? Math.round(revenue / rev30._count) : 0;
   const prevAov = rev60._count ? Math.round(prevRevenue / rev60._count) : 0;
 
+  const finding =
+    queue.length === 0
+      ? `No payments to match. ${toPackCount} order${toPackCount === 1 ? "" : "s"} to pack.`
+      : [
+          `${queue.length} payment${queue.length === 1 ? "" : "s"} to match (${formatMoney(awaitingSum._sum.total ?? 0)})`,
+          claimed ? `${claimed} reported paid by the customer` : null,
+          soon ? `${soon} expire${soon === 1 ? "s" : ""} within 12 hours` : null,
+          expired ? `${expired} past the ${settings.paymentWindowHours}-hour window` : null,
+        ]
+          .filter(Boolean)
+          .join(", ") + ".";
+
   return (
     <>
-      <PageHeader title="Dashboard" description={`Store performance overview · ${formatDate(now, { weekday: "long" })}`} />
+      <PageHeader title="Overview" description={`${formatDate(now, { weekday: "long" })}. ${finding}`} />
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-6">
-        <StatCard label="Revenue · 30d" value={formatMoney(revenue)} change={percentChange(revenue, prevRevenue)} hint="vs prior 30d" icon={DollarSign} />
-        <StatCard label="Orders · 30d" value={orders30} change={percentChange(orders30, ordersPrev30)} hint="vs prior 30d" icon={ShoppingCart} />
-        <StatCard label="Avg order value" value={formatMoney(aov)} change={percentChange(aov, prevAov)} hint="paid orders" icon={TrendingUp} />
-        <StatCard label="New customers" value={newCustomers} change={percentChange(newCustomers, newCustomersPrev)} hint="last 30d" icon={UserPlus} />
-        <StatCard
-          label="Awaiting payment"
-          value={awaiting._count}
-          hint={formatMoney(awaiting._sum.total ?? 0)}
-          icon={Clock}
-          tone={awaiting._count ? "warning" : "default"}
-        />
-        <StatCard label="Low stock" value={lowStock.length} hint="variants at/below threshold" icon={AlertTriangle} tone={lowStock.length ? "warning" : "default"} />
-      </div>
-
-      <div className="mt-6 grid gap-6 xl:grid-cols-[2fr_1fr]">
-        <RevenueChart data={[...days.values()]} />
-        <Card>
-          <CardHeader title="Top products" description="Paid revenue · last 90 days" />
-          <ul className="space-y-4 p-5">
-            {topProducts.length === 0 ? <li className="text-sm text-slate-500">No paid orders yet.</li> : null}
-            {topProducts.map((p) => (
-              <li key={p.name}>
-                <div className="flex items-baseline justify-between text-sm">
-                  <span className="font-medium text-ink-900">{p.name}</span>
-                  <span className="font-semibold tabular-nums">{formatMoney(p.revenue)}</span>
-                </div>
-                <div className="mt-1.5 flex items-center gap-2">
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
-                    <div className="h-full rounded-full bg-mint-500" style={{ width: `${(p.revenue / topMax) * 100}%` }} />
-                  </div>
-                  <span className="w-14 text-right text-xs text-slate-500">{p.units} units</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      </div>
-
-      <div className="mt-6 grid gap-6 xl:grid-cols-[2fr_1fr]">
-        <Card>
-          <CardHeader
-            title="Recent orders"
-            action={
-              <Link href="/admin/orders" className="inline-flex items-center gap-1 text-xs font-semibold text-mint-700 hover:text-mint-800">
-                All orders <ArrowRight className="size-3.5" />
-              </Link>
-            }
-          />
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] text-sm">
-              <tbody className="divide-y divide-slate-100">
-                {recentOrders.map((o) => (
-                  <tr key={o.id} className="hover:bg-slate-50">
-                    <td className="px-5 py-3">
-                      <Link href={`/admin/orders/${o.id}`} className="font-mono text-xs font-semibold text-ink-900 hover:text-mint-700">
+      <div className="grid items-start gap-4 xl:grid-cols-3">
+        {/* The screen's question: which payments need matching today? */}
+        <Panel
+          className="xl:col-span-2"
+          title="Payments to match"
+          description={`Bank transfer, PayID and crypto orders, ${settings.paymentWindowHours}-hour window`}
+          action={
+            <Link href="/admin/orders?status=PENDING_PAYMENT" className={textAction}>
+              View all {queue.length}
+            </Link>
+          }
+          bodyClassName="px-0 pb-2"
+        >
+          {queue.length === 0 ? (
+            <EmptyState title="Every order is paid." description="New bank transfer and PayID orders will wait here until you match them." />
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-small text-muted">
+                  <th scope="col" className="px-5 pb-2 font-normal">Order</th>
+                  <th scope="col" className="hidden px-3 pb-2 font-normal sm:table-cell">Method</th>
+                  <th scope="col" className="px-3 pb-2 text-right font-normal">Amount</th>
+                  <th scope="col" className="hidden px-3 pb-2 text-right font-normal md:table-cell">Window</th>
+                  <th scope="col" className="px-5 pb-2 text-right font-normal">
+                    <span className="sr-only">Action</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {queue.slice(0, 5).map((o) => (
+                  <tr key={o.id} className="border-t border-ink/[0.07]">
+                    <td className="px-5 py-2.5">
+                      <Link href={`/admin/orders/${o.id}`} className="font-medium text-ink hover:underline">
                         {o.number}
                       </Link>
-                    </td>
-                    <td className="px-5 py-3">
-                      <p className="font-medium text-ink-900">
+                      <p className="text-small text-muted">
                         {o.shipFirstName} {o.shipLastName}
+                        {o.paymentClaimedAt ? <span className="text-[#92400e]">, says paid {formatDate(o.paymentClaimedAt, { year: undefined, hour: "numeric", minute: "2-digit" })}</span> : null}
                       </p>
-                      <p className="text-xs text-slate-500">{o.email}</p>
                     </td>
-                    <td className="px-5 py-3">
-                      <StatusBadge status={o.status} />
+                    <td className="hidden px-3 py-2.5 text-muted sm:table-cell">{PAYMENT_METHODS[o.paymentMethod as PaymentMethod]?.label ?? o.paymentMethod}</td>
+                    <td className="tabular px-3 py-2.5 text-right font-medium">{formatMoney(o.total)}</td>
+                    <td className={`tabular hidden px-3 py-2.5 text-right md:table-cell ${!o.paymentClaimedAt && o.left <= 0 ? "text-danger" : "text-muted"}`}>
+                      {o.paymentClaimedAt ? "Held" : timeLeft(o.left)}
                     </td>
-                    <td className="px-5 py-3 text-xs text-slate-500">{formatDateTime(o.createdAt)}</td>
-                    <td className="px-5 py-3 text-right font-semibold tabular-nums">{formatMoney(o.total)}</td>
+                    <td className="px-5 py-2.5 text-right">
+                      <ConfirmButton
+                        action={markOrderPaid.bind(null, o.id)}
+                        message={`Mark ${o.number} as paid (${formatMoney(o.total)})? The customer will be emailed.`}
+                        variant="outline"
+                        size="sm"
+                        className="ring-1"
+                      >
+                        Mark Paid
+                      </ConfirmButton>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-        </Card>
+          )}
+          {/* Always mounted, so the result stays on screen after the list re-renders without the expired rows. */}
+          <ActionForm
+            action={cancelExpiredOrders}
+            compact
+            confirmMessage={`Cancel ${expired} unpaid order${expired === 1 ? "" : "s"} past the payment window? Stock is released and each customer is emailed.`}
+            className={expired ? "mt-2 border-t border-ink/[0.07] px-5 pt-3" : "px-5"}
+          >
+            {expired ? (
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-small text-muted">
+                  {expired} order{expired === 1 ? " is" : "s are"} past the payment window. The hourly job cancels {expired === 1 ? "it" : "them"} automatically.
+                </p>
+                <FormSubmit variant="ghost" size="sm" pendingText="Cancelling…" className="h-8 text-danger ring-1 ring-danger/40 ring-inset hover:bg-[#ffedea]">
+                  Cancel Expired Now
+                </FormSubmit>
+              </div>
+            ) : null}
+          </ActionForm>
+        </Panel>
 
-        <div className="space-y-6">
-          <Card>
-            <CardHeader
-              title="Low stock"
-              action={
-                <Link href="/admin/inventory" className="inline-flex items-center gap-1 text-xs font-semibold text-mint-700 hover:text-mint-800">
-                  Inventory <ArrowRight className="size-3.5" />
-                </Link>
-              }
-            />
-            <ul className="divide-y divide-slate-100">
-              {lowStock.length === 0 ? <li className="px-5 py-4 text-sm text-slate-500">All variants are above their thresholds.</li> : null}
-              {lowStock.slice(0, 6).map((v) => (
-                <li key={v.id} className="flex items-center justify-between px-5 py-3 text-sm">
-                  <div>
-                    <Link href={`/admin/products/${v.product.id}`} className="font-medium text-ink-900 hover:text-mint-700">
-                      {v.product.name} · {v.label}
-                    </Link>
-                    <p className="font-mono text-xs text-slate-500">{v.sku}</p>
-                  </div>
-                  <Badge className={v.stock === 0 ? "bg-rose-50 text-rose-700 ring-rose-600/20" : "bg-amber-50 text-amber-700 ring-amber-600/20"}>
-                    {v.stock === 0 ? "Out of stock" : `${v.stock} left`}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
-          </Card>
-
-          <Card>
-            <CardHeader
-              title="Recent messages"
-              action={
-                <Link href="/admin/messages" className="inline-flex items-center gap-1 text-xs font-semibold text-mint-700 hover:text-mint-800">
-                  Inbox <ArrowRight className="size-3.5" />
-                </Link>
-              }
-            />
-            <ul className="divide-y divide-slate-100">
-              {messages.length === 0 ? (
-                <li className="flex items-center gap-2 px-5 py-4 text-sm text-slate-500">
-                  <Inbox className="size-4" /> Inbox zero.
-                </li>
-              ) : null}
-              {messages.map((m) => (
-                <li key={m.id} className="px-5 py-3">
-                  <Link href={`/admin/messages?id=${m.id}`} className="block">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-medium text-ink-900">{m.subject}</p>
-                      {m.status === "NEW" ? <span className="size-2 shrink-0 rounded-full bg-mint-500" /> : null}
-                    </div>
-                    <p className="truncate text-xs text-slate-500">
-                      {m.name} · {formatDate(m.createdAt)}
-                    </p>
+        <Panel
+          title="Ready to pack"
+          description="Paid, oldest first"
+          action={
+            <Link href="/admin/orders?status=PAID" className={textAction}>
+              View all {toPackCount}
+            </Link>
+          }
+          bodyClassName="px-0 pb-2"
+        >
+          {toPack.length === 0 ? (
+            <EmptyState title="Nothing to pack." description="Paid orders appear here until they ship." />
+          ) : (
+            <ul>
+              {toPack.map((o) => (
+                <li key={o.id} className="border-t border-ink/[0.07] first:border-t-0">
+                  <Link href={`/admin/orders/${o.id}`} className="flex items-center justify-between gap-3 px-5 py-2.5 hover:bg-surface/50">
+                    <span className="min-w-0">
+                      <span className="block font-medium">{o.number}</span>
+                      <span className="block truncate text-small text-muted">
+                        {o.shipFirstName} {o.shipLastName}, {o._count.items} item{o._count.items === 1 ? "" : "s"}
+                        {o.shippingMethod === "EXPRESS" ? ", express" : ""}
+                      </span>
+                    </span>
+                    <StatusBadge status={o.status} />
                   </Link>
                 </li>
               ))}
             </ul>
-          </Card>
+          )}
+        </Panel>
+      </div>
+
+      <StatStrip
+        className="mt-4"
+        stats={[
+          { label: "Paid revenue, 30 days", value: formatMoney(revenue), ...delta(revenue, prevRevenue) },
+          { label: "Orders, 30 days", value: nf.format(orders30), ...delta(orders30, ordersPrev30) },
+          { label: "Average paid order", value: formatMoney(aov), ...delta(aov, prevAov) },
+          { label: "New customers, 30 days", value: nf.format(newCustomers), ...delta(newCustomers, newCustomersPrev) },
+        ]}
+      />
+
+      <div className="mt-4 grid items-start gap-4 xl:grid-cols-3">
+        <div className="xl:col-span-2">
+          <RevenueChart data={[...days.values()]} range={range} makeHref={(r) => (r === 30 ? "/admin" : `/admin?range=${r}`)} />
         </div>
+        <Panel title="Top compounds" description="Paid revenue, last 90 days">
+          {topProducts.length === 0 ? (
+            <p className="text-muted">No paid orders in the last 90 days.</p>
+          ) : (
+            <ul className="space-y-3">
+              {topProducts.map((p, i) => (
+                <li key={p.name}>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="flex items-center gap-2">
+                      <Swatch color={colour.get(p.name) ?? "#c9ced6"} />
+                      {p.name}
+                    </span>
+                    <span className="tabular font-medium">{formatMoney(p.revenue)}</span>
+                  </div>
+                  <div className="mt-1 h-0.5 bg-surface">
+                    <div className={i === 0 ? "h-full bg-ink" : "h-full bg-muted/50"} style={{ width: `${(p.revenue / topMax) * 100}%` }} />
+                  </div>
+                  <p className="tabular mt-1 text-small text-muted">{nf.format(p.units)} vials</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+      </div>
+
+      <div className="mt-4 grid items-start gap-4 md:grid-cols-2">
+        <Panel
+          title="Stock"
+          description={`${lowStock.length ? `${lowStock.length} variant${lowStock.length === 1 ? "" : "s"} at or below threshold` : "Every variant is above its threshold"}, ${alertsWaiting} back-in-stock request${alertsWaiting === 1 ? "" : "s"} waiting`}
+          action={
+            <Link href={alertsWaiting ? "/admin/stock-alerts" : "/admin/inventory"} className={textAction}>
+              {alertsWaiting ? "Stock alerts" : "Inventory"}
+            </Link>
+          }
+          bodyClassName="px-0 pb-2"
+        >
+          {lowStock.length === 0 ? (
+            <EmptyState title="Nothing is running low." className="py-4" />
+          ) : (
+            <ul>
+              {lowStock.map((v) => (
+                <li key={v.id} className="flex items-center justify-between gap-3 border-t border-ink/[0.07] px-5 py-2.5 first:border-t-0">
+                  <Link href={`/admin/products/${v.product.id}`} className="flex min-w-0 items-center gap-2 hover:underline">
+                    <Swatch color={v.product.accentColor} />
+                    <span className="truncate">
+                      {v.product.name} {v.label}
+                    </span>
+                  </Link>
+                  <span className={`tabular ${v.stock === 0 ? "text-danger" : "text-ink"}`}>
+                    {v.stock} <span className="text-muted">/ {v.lowStockThreshold}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+
+        <Panel
+          title="Unread messages"
+          action={
+            <Link href="/admin/messages" className={textAction}>
+              Inbox
+            </Link>
+          }
+          bodyClassName="px-0 pb-2"
+        >
+          {messages.length === 0 ? (
+            <EmptyState title="Inbox is clear." className="py-4" />
+          ) : (
+            <ul>
+              {messages.map((m) => (
+                <li key={m.id} className="border-t border-ink/[0.07] first:border-t-0">
+                  <Link href={`/admin/messages?id=${m.id}`} className="block px-5 py-2.5 hover:bg-surface/50">
+                    <span className="flex items-baseline justify-between gap-3">
+                      <span className="truncate font-medium">{m.subject}</span>
+                      <span className="shrink-0 text-small text-muted">{formatDate(m.createdAt, { year: undefined })}</span>
+                    </span>
+                    <span className="block truncate text-small text-muted">
+                      {m.name}
+                      {m.orderNumber ? `, order ${m.orderNumber}` : ""}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
       </div>
     </>
   );

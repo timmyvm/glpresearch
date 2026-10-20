@@ -10,6 +10,8 @@ import { getSettings } from "@/lib/settings";
 import { bool, str, zodErrors, type ActionState } from "@/lib/actions";
 import { ORDER_STATUSES, statusLabel } from "@/lib/orders";
 import { noteEmail, statusEmail, trackingEmail } from "@/lib/admin/emails";
+import { expireUnpaidOrders } from "@/lib/admin/expire-orders";
+import { notifyBackInStock } from "@/lib/admin/stock-alerts";
 
 const RESTOCKED = ["CANCELLED", "REFUNDED"];
 const PAID_STATES = ["PAID", "PROCESSING", "SHIPPED", "DELIVERED"];
@@ -37,6 +39,7 @@ export async function updateOrderStatus(orderId: string, _prev: ActionState, for
   const data: Prisma.OrderUpdateInput = { status };
   if (PAID_STATES.includes(status)) {
     data.paymentStatus = "PAID";
+    data.paymentClaimedAt = null;
     if (!order.paidAt) data.paidAt = now;
   }
   if (status === "SHIPPED" && !order.shippedAt) data.shippedAt = now;
@@ -74,6 +77,11 @@ export async function updateOrderStatus(orderId: string, _prev: ActionState, for
     }),
   ]);
 
+  // Stock returned by a cancellation or refund can bring a sold-out variant back.
+  if (willRestock && !wasRestocked) {
+    for (const item of order.items) if (item.variantId) await notifyBackInStock(item.variantId);
+  }
+
   if (notify) {
     const settings = await getSettings();
     const email = statusEmail(order, status, note, settings.storeName);
@@ -85,6 +93,7 @@ export async function updateOrderStatus(orderId: string, _prev: ActionState, for
 
   revalidateOrder(orderId);
   revalidatePath("/admin/inventory");
+  revalidatePath("/admin/stock-alerts");
   return {
     ok: true,
     message: `Status updated to ${statusLabel(status)}${willRestock !== wasRestocked ? (willRestock ? " · stock returned to inventory" : " · stock re-reserved") : ""}${notify ? " · customer notified" : ""}.`,
@@ -113,7 +122,7 @@ export async function updateTracking(orderId: string, _prev: ActionState, form: 
     where: { id: orderId },
     data: {
       ...parsed.data,
-      ...(shipNow ? { status: "SHIPPED", shippedAt: order.shippedAt ?? now, paymentStatus: "PAID", paidAt: order.paidAt ?? now } : {}),
+      ...(shipNow ? { status: "SHIPPED", shippedAt: order.shippedAt ?? now, paymentStatus: "PAID", paidAt: order.paidAt ?? now, paymentClaimedAt: null } : {}),
     },
   });
 
@@ -177,4 +186,42 @@ export async function updateAdminNote(orderId: string, _prev: ActionState, form:
   await db.order.update({ where: { id: orderId }, data: { adminNote: note || null } });
   revalidateOrder(orderId);
   return { ok: true, message: "Pinned note saved." };
+}
+
+/** One-click "payment matched" from the payments queue: PAID, claim cleared, customer emailed. */
+export async function markOrderPaid(orderId: string) {
+  const admin = await requireAdmin();
+  const order = await db.order.findUnique({ where: { id: orderId } });
+  if (!order || order.status !== "PENDING_PAYMENT") return;
+  const now = new Date();
+  const updated = await db.order.updateMany({
+    where: { id: orderId, status: "PENDING_PAYMENT" },
+    data: { status: "PAID", paymentStatus: "PAID", paidAt: now, paymentClaimedAt: null },
+  });
+  if (updated.count === 0) return;
+  await db.orderEvent.create({
+    data: { orderId, type: "PAYMENT", status: "PAID", message: "Payment received and matched.", createdBy: admin.email },
+  });
+  const settings = await getSettings();
+  const email = statusEmail(order, "PAID", null, settings.storeName);
+  await sendEmail({ to: order.email, subject: email.subject, text: email.text });
+  await db.orderEvent.create({
+    data: { orderId, type: "EMAIL", message: `Emailed customer: “${email.subject}”`, visibleToCustomer: false, createdBy: admin.email },
+  });
+  revalidateOrder(orderId);
+}
+
+/** Runs the same job as the hourly cron, on demand. */
+export async function cancelExpiredOrders(): Promise<ActionState> {
+  await requireAdmin();
+  const cancelled = await expireUnpaidOrders();
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin");
+  revalidatePath("/admin/inventory");
+  revalidatePath("/admin/stock-alerts");
+  if (!cancelled.length) return { ok: true, message: "No orders were past the payment window." };
+  return {
+    ok: true,
+    message: `Cancelled ${cancelled.length} unpaid order${cancelled.length === 1 ? "" : "s"} (${cancelled.join(", ")}) and released ${cancelled.length === 1 ? "its" : "their"} stock.`,
+  };
 }

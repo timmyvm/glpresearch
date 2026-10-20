@@ -1,27 +1,49 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ImageIcon, Loader2, Upload } from "lucide-react";
-import { Input } from "@/components/ui/form";
-import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
+import { Input } from "./fields";
 
-/** URL text input with an upload button that stores the file via /api/admin/upload. */
+const UPLOAD_ACCEPT = "image/png,image/jpeg,image/webp,image/avif";
+
+/** Posts one image to /api/admin/upload and resolves to its served URL. */
+export async function uploadImage(file: File) {
+  const body = new FormData();
+  body.append("file", file);
+  const res = await fetch("/api/admin/upload", { method: "POST", body });
+  const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+  if (!res.ok || !data.url) throw new Error(data.error ?? "Upload failed. Try again.");
+  return data.url;
+}
+
+/**
+ * An image URL with its Upload button joined to the field (one border, square inner corners).
+ * Uncontrolled by default (posts as `name`); pass value/onChange to drive it from state instead.
+ */
 export function ImageField({
   name,
   defaultValue,
-  accept = "image/png,image/jpeg,image/webp,image/avif",
+  value: controlled,
+  onChange,
+  accept = UPLOAD_ACCEPT,
   preview = true,
-  placeholder = "/images/... or https://...",
+  placeholder = "/images/… or https://…",
   id,
+  label = "Image URL",
 }: {
-  name: string;
+  name?: string;
   defaultValue?: string | null;
+  value?: string;
+  onChange?: (value: string) => void;
   accept?: string;
   preview?: boolean;
   placeholder?: string;
   id?: string;
+  label?: string;
 }) {
-  const [value, setValue] = useState(defaultValue ?? "");
+  const [own, setOwn] = useState(defaultValue ?? "");
+  const value = controlled ?? own;
+  const setValue = (v: string) => (onChange ? onChange(v) : setOwn(v));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -30,14 +52,9 @@ export function ImageField({
     setBusy(true);
     setError(null);
     try {
-      const body = new FormData();
-      body.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", body });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Upload failed");
-      setValue(data.url);
+      setValue(await uploadImage(file));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload failed");
+      setError(e instanceof Error ? e.message : "Upload failed. Try again.");
     } finally {
       setBusy(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -49,38 +66,53 @@ export function ImageField({
   return (
     <div className="flex items-start gap-3">
       {preview ? (
-        <div className={cn("relative grid size-10 shrink-0 place-items-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50")}>
+        <div className="relative size-10 shrink-0 overflow-hidden border border-[#dfe2e8] bg-surface">
           {isImage ? (
             // eslint-disable-next-line @next/next/no-img-element -- arbitrary admin-entered URLs
             <img src={value} alt="" className="size-full object-cover" />
-          ) : (
-            <ImageIcon className="size-4 text-slate-400" />
-          )}
+          ) : null}
         </div>
       ) : null}
       <div className="min-w-0 flex-1">
-        <div className="flex gap-2">
-          <Input id={id} name={name} value={value} onChange={(e) => setValue(e.target.value)} placeholder={placeholder} />
+        <div className="flex">
+          <Input
+            id={id}
+            name={name}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder={placeholder}
+            aria-label={id ? undefined : label}
+            autoComplete="off"
+            spellCheck={false}
+            className="min-w-0"
+          />
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={busy}
-            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-ink-800 hover:bg-slate-50 disabled:opacity-50"
+            className="press -ml-px inline-flex h-10 shrink-0 items-center gap-1.5 border border-[#dfe2e8] bg-white px-3 text-small font-medium text-ink hover:bg-surface disabled:opacity-50"
           >
-            {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />} Upload
+            {busy ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : null}
+            {busy ? "Uploading…" : "Upload"}
           </button>
           <input
             ref={fileRef}
             type="file"
             accept={accept}
             className="hidden"
+            tabIndex={-1}
+            aria-hidden="true"
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) void upload(file);
             }}
           />
         </div>
-        {error ? <p className="mt-1 text-xs text-rose-600">{error}</p> : null}
+        {error ? (
+          <p className="mt-1.5 text-small text-danger" role="alert">
+            {error}
+          </p>
+        ) : null}
       </div>
     </div>
   );

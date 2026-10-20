@@ -1,41 +1,40 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
+  Bell,
   Boxes,
   ClipboardList,
+  CreditCard,
+  ExternalLink,
   FileText,
   FlaskConical,
-  LayoutDashboard,
+  LayoutGrid,
+  LogOut,
   Mail,
   MailCheck,
-  Menu,
   Package,
   Settings,
   Tag,
   Users,
-  X,
 } from "lucide-react";
-import { Logo } from "@/components/site/logo";
 import { cn } from "@/lib/utils";
 
-type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; badge?: number };
+type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }>; count?: number };
 
-export function AdminSidebar({ pendingOrders, unreadMessages }: { pendingOrders: number; unreadMessages: number }) {
-  const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+export type SidebarCounts = { claimedPayments: number; unreadMessages: number; stockAlerts: number };
 
-  const groups: { title: string; items: NavItem[] }[] = [
-    {
-      title: "Overview",
-      items: [{ href: "/admin", label: "Dashboard", icon: LayoutDashboard }],
-    },
+function groups(c: SidebarCounts): { title: string; items: NavItem[] }[] {
+  return [
+    { title: "", items: [{ href: "/admin", label: "Overview", icon: LayoutGrid }] },
     {
       title: "Sales",
       items: [
-        { href: "/admin/orders", label: "Orders", icon: ClipboardList, badge: pendingOrders },
+        { href: "/admin/orders", label: "Orders", icon: ClipboardList },
+        { href: "/admin/orders?claimed=1", label: "Payments to check", icon: CreditCard, count: c.claimedPayments },
         { href: "/admin/customers", label: "Customers", icon: Users },
         { href: "/admin/coupons", label: "Coupons", icon: Tag },
       ],
@@ -45,48 +44,65 @@ export function AdminSidebar({ pendingOrders, unreadMessages }: { pendingOrders:
       items: [
         { href: "/admin/products", label: "Products", icon: Package },
         { href: "/admin/inventory", label: "Inventory", icon: Boxes },
-        { href: "/admin/batches", label: "Batches & COAs", icon: FlaskConical },
+        { href: "/admin/stock-alerts", label: "Stock alerts", icon: Bell, count: c.stockAlerts },
+        { href: "/admin/batches", label: "Batch certificates", icon: FlaskConical },
       ],
     },
     {
-      title: "Content & comms",
+      title: "Content",
       items: [
         { href: "/admin/articles", label: "Articles", icon: FileText },
-        { href: "/admin/messages", label: "Inbox", icon: Mail, badge: unreadMessages },
+        { href: "/admin/messages", label: "Inbox", icon: Mail, count: c.unreadMessages },
         { href: "/admin/emails", label: "Email log", icon: MailCheck },
       ],
     },
-    {
-      title: "Store",
-      items: [{ href: "/admin/settings", label: "Settings", icon: Settings }],
-    },
+    { title: "Store", items: [{ href: "/admin/settings", label: "Settings", icon: Settings }] },
   ];
+}
 
-  const isActive = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname.startsWith(href));
+function useIsActive(hrefs: string[]) {
+  const pathname = usePathname();
+  const params = useSearchParams();
+  // A query view (Payments to check) is active when its params all match; its list is active otherwise.
+  const matchesQuery = (href: string) => {
+    const [path, query] = href.split("?");
+    return pathname === path && [...new URLSearchParams(query)].every(([k, v]) => params.get(k) === v);
+  };
+  const queryHit = hrefs.some((h) => h.includes("?") && matchesQuery(h));
+  return (href: string) => {
+    if (href.includes("?")) return matchesQuery(href);
+    if (href === "/admin") return pathname === "/admin";
+    const onPath = pathname === href || pathname.startsWith(`${href}/`);
+    return onPath && !(queryHit && pathname === href);
+  };
+}
 
-  const nav = (
-    <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-5" aria-label="Admin">
-      {groups.map((group) => (
-        <div key={group.title}>
-          <p className="px-3 pb-2 text-[10px] font-semibold tracking-[0.18em] text-ink-400 uppercase">{group.title}</p>
-          <ul className="space-y-0.5">
+function NavList({ counts, onNavigate }: { counts: SidebarCounts; onNavigate?: () => void }) {
+  const isActive = useIsActive(groups(counts).flatMap((g) => g.items.map((i) => i.href)));
+  return (
+    <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4" aria-label="Admin">
+      {groups(counts).map((group, gi) => (
+        <div key={gi}>
+          {group.title ? <p className="px-2 pb-1.5 text-small text-muted">{group.title}</p> : null}
+          <ul>
             {group.items.map((item) => {
               const active = isActive(item.href);
               return (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    onClick={() => setOpen(false)}
+                    onClick={onNavigate}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                      active ? "bg-white/10 text-white" : "text-ink-300 hover:bg-white/5 hover:text-white",
+                      "flex h-9 items-center gap-2.5 px-2 text-sm transition-colors duration-150",
+                      active ? "bg-surface text-ink" : "text-muted hover:bg-surface/60 hover:text-ink",
                     )}
                   >
-                    <item.icon className={cn("size-4", active ? "text-mint-300" : "text-ink-400")} />
-                    <span className="flex-1">{item.label}</span>
-                    {item.badge ? (
-                      <span className="grid min-w-5 place-items-center rounded-full bg-mint-400 px-1.5 text-[10px] font-bold text-ink-950">
-                        {item.badge}
+                    <item.icon className="size-4 shrink-0" aria-hidden="true" />
+                    <span className="flex-1 truncate">{item.label}</span>
+                    {item.count ? (
+                      <span className="tabular min-w-5 bg-ink px-1.5 text-center text-small leading-5 text-on-navy" aria-label={`${item.count} waiting`}>
+                        {item.count}
                       </span>
                     ) : null}
                   </Link>
@@ -98,49 +114,105 @@ export function AdminSidebar({ pendingOrders, unreadMessages }: { pendingOrders:
       ))}
     </nav>
   );
+}
+
+function Brand() {
+  return (
+    <Link href="/admin" className="flex items-center gap-2.5" aria-label="GLP Research admin, overview">
+      <span className="grid size-8 place-items-center bg-surface">
+        <Image src="/images/logo-mark.webp" alt="" width={20} height={20} />
+      </span>
+      <span className="leading-tight">
+        <span className="block text-sm font-medium text-ink" translate="no">
+          GLP Research
+        </span>
+        <span className="block text-small text-muted">Admin</span>
+      </span>
+    </Link>
+  );
+}
+
+function Footer({ name, email, signOut }: { name: string; email: string; signOut: () => Promise<void> }) {
+  return (
+    <div className="space-y-1 border-t border-ink/10 px-3 py-3">
+      <Link href="/" className="flex h-9 items-center gap-2.5 px-2 text-sm text-muted hover:bg-surface/60 hover:text-ink">
+        <ExternalLink className="size-4" aria-hidden="true" /> View store
+      </Link>
+      <div className="flex items-center justify-between gap-2 px-2 pt-1">
+        <div className="min-w-0 leading-tight">
+          <p className="truncate text-sm text-ink">{name}</p>
+          <p className="truncate text-small text-muted">{email}</p>
+        </div>
+        <form action={signOut}>
+          <button type="submit" className="press grid size-9 place-items-center text-muted hover:bg-surface hover:text-ink" aria-label="Sign out">
+            <LogOut className="size-4" aria-hidden="true" />
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export function AdminSidebar({
+  counts,
+  name,
+  email,
+  signOut,
+}: {
+  counts: SidebarCounts;
+  name: string;
+  email: string;
+  signOut: () => Promise<void>;
+}) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const [lastPath, setLastPath] = useState(pathname);
+  if (lastPath !== pathname) {
+    setLastPath(pathname);
+    setOpen(false);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="fixed top-3 left-3 z-40 inline-flex size-10 items-center justify-center rounded-lg bg-ink-950 text-white shadow-lg lg:hidden print:hidden"
-        aria-label="Open admin menu"
-      >
-        <Menu className="size-5" />
-      </button>
-
-      {open ? (
-        <button
-          type="button"
-          className="fixed inset-0 z-40 bg-ink-950/60 backdrop-blur-sm lg:hidden"
-          onClick={() => setOpen(false)}
-          aria-label="Close admin menu"
-        />
-      ) : null}
-
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-ink-950 transition-transform lg:translate-x-0 print:hidden",
-          open ? "translate-x-0" : "-translate-x-full",
-        )}
-      >
-        <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
-          <Logo tone="light" />
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="rounded-lg p-1.5 text-ink-300 hover:bg-white/10 hover:text-white lg:hidden"
-            aria-label="Close admin menu"
-          >
-            <X className="size-5" />
-          </button>
+      {/* Desktop: labelled sidebar on the page ground, separated by one rule */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-ink/10 bg-white lg:flex print:hidden">
+        <div className="flex h-16 items-center px-5">
+          <Brand />
         </div>
-        {nav}
-        <div className="border-t border-white/10 px-5 py-4">
-          <p className="text-[11px] leading-relaxed text-ink-400">GLP Research admin · research use only catalogue</p>
-        </div>
+        <NavList counts={counts} />
+        <Footer name={name} email={email} signOut={signOut} />
       </aside>
+
+      {/* Phone and tablet: a 48px top bar and a full-screen sheet */}
+      <div className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-ink/10 bg-white px-4 lg:hidden print:hidden">
+        <Brand />
+        <button type="button" onClick={() => setOpen(true)} className="press h-10 px-2 text-sm font-medium text-ink" aria-expanded={open} aria-controls="admin-menu">
+          Menu
+        </button>
+      </div>
+      {open ? (
+        <div id="admin-menu" className="fixed inset-0 z-50 flex flex-col overscroll-contain bg-white lg:hidden" role="dialog" aria-modal="true" aria-label="Admin menu">
+          <div className="flex h-12 items-center justify-between border-b border-ink/10 px-4">
+            <Brand />
+            <button type="button" onClick={() => setOpen(false)} className="press h-10 px-2 text-sm font-medium text-ink">
+              Close
+            </button>
+          </div>
+          <NavList counts={counts} onNavigate={() => setOpen(false)} />
+          <Footer name={name} email={email} signOut={signOut} />
+        </div>
+      ) : null}
     </>
   );
 }

@@ -7,7 +7,11 @@ export const metadata = { title: "New product" };
 export default function NewProductPage() {
   return (
     <>
-      <PageHeader back={{ href: "/admin/products", label: "Products" }} title="New product" description="Add a compound to the catalogue." />
+      <PageHeader
+        back={{ href: "/admin/products", label: "Products" }}
+        title="New product"
+        description="Add a compound and at least one variant. It stays hidden until you tick On sale."
+      />
       <ProductForm action={saveProduct.bind(null, null)} />
     </>
   );

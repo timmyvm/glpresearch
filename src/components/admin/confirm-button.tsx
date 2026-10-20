@@ -8,7 +8,7 @@ function Inner({ children, variant, size, className }: { children: React.ReactNo
   const { pending } = useFormStatus();
   return (
     <Button type="submit" variant={variant} size={size} className={className} disabled={pending}>
-      {pending ? <Loader2 className="size-3.5 animate-spin" /> : null}
+      {pending ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : null}
       {children}
     </Button>
   );

@@ -1,26 +1,23 @@
 import Link from "next/link";
-import { Tag } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatMoney, fromCents } from "@/lib/money";
 import { formatDate } from "@/lib/utils";
 import { toDateInput } from "@/lib/admin/format";
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { ConfirmButton } from "@/components/admin/confirm-button";
 import { CouponForm } from "@/components/admin/coupon-form";
-import { EmptyState, PageHeader, TableWrap, Td, Th } from "@/components/admin/ui";
+import { EmptyState, PageHeader, Panel, TableWrap, Td, Th, textAction } from "@/components/admin/ui";
 import { deleteCoupon, saveCoupon, toggleCoupon } from "./actions";
 
 export const metadata = { title: "Coupons" };
 
 function couponState(c: { active: boolean; startsAt: Date | null; expiresAt: Date | null; maxUses: number | null; usedCount: number }) {
   const now = new Date();
-  if (!c.active) return { label: "Disabled", tone: "" };
-  if (c.expiresAt && c.expiresAt < now) return { label: "Expired", tone: "bg-slate-100 text-slate-600" };
-  if (c.startsAt && c.startsAt > now) return { label: "Scheduled", tone: "bg-sky-50 text-sky-700 ring-sky-600/20" };
-  if (c.maxUses && c.usedCount >= c.maxUses) return { label: "Used up", tone: "bg-amber-50 text-amber-700 ring-amber-600/20" };
-  return { label: "Live", tone: "bg-emerald-50 text-emerald-700 ring-emerald-600/20" };
+  if (!c.active) return { label: "Disabled", tone: "bg-surface text-muted" };
+  if (c.expiresAt && c.expiresAt < now) return { label: "Expired", tone: "bg-surface text-muted" };
+  if (c.startsAt && c.startsAt > now) return { label: "Scheduled", tone: "bg-[#e3f8fd] text-[#0c4a5e]" };
+  if (c.maxUses && c.usedCount >= c.maxUses) return { label: "Used up", tone: "bg-[#fffbeb] text-[#92400e]" };
+  return { label: "Live", tone: "bg-[#dcfae5] text-[#04250e]" };
 }
 
 export default async function CouponsPage({ searchParams }: { searchParams: Promise<{ edit?: string; saved?: string }> }) {
@@ -36,76 +33,94 @@ export default async function CouponsPage({ searchParams }: { searchParams: Prom
     }),
   ]);
   const statsFor = (code: string) => revenue.find((r) => r.couponCode === code);
+  const live = coupons.filter((c) => couponState(c).label === "Live").length;
 
   return (
     <>
-      <PageHeader title="Coupons" description="Discount codes customers can apply at checkout." />
+      <PageHeader title="Coupons" description={`Discount codes customers apply at checkout. ${live} of ${coupons.length} ${coupons.length === 1 ? "is" : "are"} live.`} />
       {sp.saved ? (
         <Alert tone="success" className="mb-6">
-          Coupon <span className="font-mono font-semibold">{sp.saved}</span> saved.
+          Coupon <span className="tabular font-medium">{sp.saved}</span> saved.
         </Alert>
       ) : null}
-      <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-        <TableWrap>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <TableWrap minWidth={0} className="self-start">
           <thead>
             <tr>
               <Th>Code</Th>
-              <Th>Discount</Th>
-              <Th>Conditions</Th>
-              <Th>Usage</Th>
-              <Th>Paid orders</Th>
-              <Th>Status</Th>
-              <Th className="text-right">Actions</Th>
+              <Th className="text-right">Discount</Th>
+              <Th className="hidden text-right md:table-cell">Used</Th>
+              <Th className="hidden text-right 2xl:table-cell">Paid orders</Th>
+              <Th className="hidden sm:table-cell">Status</Th>
+              <Th className="text-right">
+                <span className="sr-only">Actions</span>
+              </Th>
             </tr>
           </thead>
           <tbody>
             {coupons.length === 0 ? (
               <tr>
-                <Td colSpan={7}>
-                  <EmptyState icon={Tag} title="No coupons yet" description="Create one with the form." />
+                <Td colSpan={6} className="p-0">
+                  <EmptyState title="No coupons yet." description="Create one with the form beside this table." />
                 </Td>
               </tr>
             ) : null}
             {coupons.map((c) => {
               const state = couponState(c);
               const stats = statsFor(c.code);
+              const conditions = [
+                c.minSubtotal ? `Min ${formatMoney(c.minSubtotal)}` : "No minimum",
+                c.startsAt ? `from ${formatDate(c.startsAt)}` : null,
+                c.expiresAt ? `until ${formatDate(c.expiresAt)}` : null,
+              ].filter(Boolean);
               return (
-                <tr key={c.id} className={`hover:bg-slate-50 ${sp.edit === c.id ? "bg-mint-50/50" : ""}`}>
+                <tr key={c.id} className={sp.edit === c.id ? "bg-surface" : "hover:bg-surface/50"}>
                   <Td>
-                    <Link href={`/admin/coupons?edit=${c.id}`} className="font-mono text-sm font-semibold text-ink-900 hover:text-mint-700">
+                    <Link href={`/admin/coupons?edit=${c.id}`} className="tabular font-medium text-ink hover:underline" aria-current={sp.edit === c.id ? "true" : undefined}>
                       {c.code}
                     </Link>
-                    {c.description ? <p className="text-xs text-slate-500">{c.description}</p> : null}
+                    {c.description ? <p className="max-w-[18ch] truncate text-small text-muted sm:max-w-[34ch]">{c.description}</p> : null}
+                    <p className="tabular text-small text-muted">{conditions.join(", ")}</p>
                   </Td>
-                  <Td className="font-semibold">{c.type === "PERCENT" ? `${c.value}%` : formatMoney(c.value)}</Td>
-                  <Td className="text-xs text-slate-500">
-                    {c.minSubtotal ? <p>Min {formatMoney(c.minSubtotal)}</p> : <p>No minimum</p>}
-                    {c.expiresAt ? <p>Until {formatDate(c.expiresAt)}</p> : null}
-                    {c.startsAt ? <p>From {formatDate(c.startsAt)}</p> : null}
-                  </Td>
-                  <Td className="tabular-nums">
+                  <Td className="tabular text-right font-medium">{c.type === "PERCENT" ? `${c.value}%` : formatMoney(c.value)}</Td>
+                  <Td className="tabular hidden text-right whitespace-nowrap md:table-cell">
                     {c.usedCount}
-                    {c.maxUses ? <span className="text-slate-400"> / {c.maxUses}</span> : null}
+                    {c.maxUses ? <span className="text-muted"> of {c.maxUses}</span> : null}
                   </Td>
-                  <Td className="text-xs text-slate-600">
+                  <Td className="tabular hidden text-right whitespace-nowrap 2xl:table-cell">
                     {stats ? (
                       <>
-                        <p>{stats._count} orders · {formatMoney(stats._sum.total ?? 0)}</p>
-                        <p className="text-slate-400">−{formatMoney(stats._sum.discount ?? 0)} discounted</p>
+                        <p>{formatMoney(stats._sum.total ?? 0)}</p>
+                        <p className="text-small text-muted">
+                          {stats._count} orders, −{formatMoney(stats._sum.discount ?? 0)} off
+                        </p>
                       </>
                     ) : (
-                      "—"
+                      <span className="text-muted">–</span>
                     )}
                   </Td>
-                  <Td>
-                    <Badge className={state.tone}>{state.label}</Badge>
+                  <Td className="hidden sm:table-cell">
+                    <span className={`inline-flex h-6 items-center rounded-full px-2.5 text-small leading-none font-medium whitespace-nowrap ${state.tone}`}>{state.label}</span>
                   </Td>
                   <Td>
                     <div className="flex justify-end gap-1">
-                      <ConfirmButton action={toggleCoupon.bind(null, c.id)} message="" variant="ghost">
-                        {c.active ? "Disable" : "Enable"}
-                      </ConfirmButton>
-                      <ConfirmButton action={deleteCoupon.bind(null, c.id)} message={`Delete coupon ${c.code}?`} variant="ghost" className="text-rose-600 hover:bg-rose-50">
+                      {/* Phone: toggle from the edit form's Active box instead. */}
+                      <div className="hidden sm:block">
+                        <ConfirmButton
+                          action={toggleCoupon.bind(null, c.id)}
+                          message={c.active ? `Disable ${c.code}? Customers can no longer apply it.` : ""}
+                          variant="ghost"
+                          className="h-8"
+                        >
+                          {c.active ? "Disable" : "Enable"}
+                        </ConfirmButton>
+                      </div>
+                      <ConfirmButton
+                        action={deleteCoupon.bind(null, c.id)}
+                        message={`Delete coupon ${c.code}? Past orders keep their discount. This can't be undone.`}
+                        variant="ghost"
+                        className="h-8 text-danger hover:bg-[#ffedea]"
+                      >
                         Delete
                       </ConfirmButton>
                     </div>
@@ -116,35 +131,33 @@ export default async function CouponsPage({ searchParams }: { searchParams: Prom
           </tbody>
         </TableWrap>
 
-        <Card className="xl:sticky xl:top-24 xl:self-start">
-          <CardHeader
-            title={editing ? `Edit ${editing.code}` : "New coupon"}
-            action={
-              editing ? (
-                <Link href="/admin/coupons" className="text-xs font-semibold text-mint-700">
-                  + New instead
-                </Link>
-              ) : null
+        <Panel
+          className="xl:sticky xl:top-8 xl:self-start"
+          title={editing ? `Edit ${editing.code}` : "New coupon"}
+          action={
+            editing ? (
+              <Link href="/admin/coupons" className={textAction}>
+                New Coupon Instead
+              </Link>
+            ) : null
+          }
+        >
+          <CouponForm
+            key={editing?.id ?? "new"}
+            action={saveCoupon.bind(null, editing?.id ?? null)}
+            initial={
+              editing
+                ? {
+                    ...editing,
+                    value: editing.type === "PERCENT" ? String(editing.value) : fromCents(editing.value),
+                    minSubtotal: fromCents(editing.minSubtotal),
+                    startsAt: toDateInput(editing.startsAt),
+                    expiresAt: toDateInput(editing.expiresAt),
+                  }
+                : undefined
             }
           />
-          <CardBody>
-            <CouponForm
-              key={editing?.id ?? "new"}
-              action={saveCoupon.bind(null, editing?.id ?? null)}
-              initial={
-                editing
-                  ? {
-                      ...editing,
-                      value: editing.type === "PERCENT" ? String(editing.value) : fromCents(editing.value),
-                      minSubtotal: fromCents(editing.minSubtotal),
-                      startsAt: toDateInput(editing.startsAt),
-                      expiresAt: toDateInput(editing.expiresAt),
-                    }
-                  : undefined
-              }
-            />
-          </CardBody>
-        </Card>
+        </Panel>
       </div>
     </>
   );

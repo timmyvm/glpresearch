@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ActionForm, FormSubmit } from "./action-form";
-import { Checkbox, Field, Input, Select } from "@/components/ui/form";
+import { CheckRow, Field, Input, Select } from "./fields";
 import type { ActionState } from "@/lib/actions";
 
 type Coupon = {
@@ -22,10 +22,10 @@ export function CouponForm({ action, initial }: { action: (prev: ActionState, fo
   return (
     <ActionForm action={action} compact className="space-y-4">
       <Field label="Code" htmlFor="code">
-        <Input id="code" name="code" defaultValue={initial?.code ?? ""} className="font-mono uppercase" placeholder="WELCOME10" />
+        <Input id="code" name="code" defaultValue={initial?.code ?? ""} className="tabular uppercase" placeholder="WELCOME10…" autoComplete="off" spellCheck={false} />
       </Field>
       <Field label="Description" htmlFor="description">
-        <Input id="description" name="description" defaultValue={initial?.description ?? ""} placeholder="10% off first order" />
+        <Input id="description" name="description" defaultValue={initial?.description ?? ""} placeholder="10% off a first order…" />
       </Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Type" htmlFor="type">
@@ -35,26 +35,24 @@ export function CouponForm({ action, initial }: { action: (prev: ActionState, fo
           </Select>
         </Field>
         <Field label={type === "PERCENT" ? "Percent (%)" : "Amount ($)"} htmlFor="value">
-          <Input id="value" name="value" inputMode="decimal" defaultValue={initial?.value ?? ""} placeholder={type === "PERCENT" ? "10" : "25.00"} />
+          <Input id="value" name="value" inputMode="decimal" defaultValue={initial?.value ?? ""} placeholder={type === "PERCENT" ? "10" : "25.00"} className="tabular" />
         </Field>
-        <Field label="Min. subtotal ($)" htmlFor="minSubtotal">
-          <Input id="minSubtotal" name="minSubtotal" inputMode="decimal" defaultValue={initial?.minSubtotal ?? "0"} />
+        <Field label="Minimum spend ($)" htmlFor="minSubtotal">
+          <Input id="minSubtotal" name="minSubtotal" inputMode="decimal" defaultValue={initial?.minSubtotal ?? "0"} className="tabular" />
         </Field>
-        <Field label="Max uses" htmlFor="maxUses" hint="Blank = unlimited">
-          <Input id="maxUses" name="maxUses" type="number" min={1} defaultValue={initial?.maxUses ?? ""} />
+        <Field label="Max uses" htmlFor="maxUses" hint="Leave empty for no limit.">
+          <Input id="maxUses" name="maxUses" type="number" inputMode="numeric" min={1} defaultValue={initial?.maxUses ?? ""} className="tabular" />
         </Field>
         <Field label="Starts" htmlFor="startsAt">
-          <Input id="startsAt" name="startsAt" type="date" defaultValue={initial?.startsAt ?? ""} />
+          <Input id="startsAt" name="startsAt" type="date" defaultValue={initial?.startsAt ?? ""} className="tabular" />
         </Field>
         <Field label="Expires" htmlFor="expiresAt">
-          <Input id="expiresAt" name="expiresAt" type="date" defaultValue={initial?.expiresAt ?? ""} />
+          <Input id="expiresAt" name="expiresAt" type="date" defaultValue={initial?.expiresAt ?? ""} className="tabular" />
         </Field>
       </div>
-      <label className="flex items-center gap-2 text-sm text-ink-800">
-        <Checkbox name="active" defaultChecked={initial?.active ?? true} /> Active
-      </label>
-      <FormSubmit className="w-full" pendingText="Saving…">
-        {initial ? "Save coupon" : "Create coupon"}
+      <CheckRow name="active" defaultChecked={initial?.active ?? true} title="Active" description="Customers can apply it while it is within its dates." />
+      <FormSubmit className="w-full" variant="ink" pendingText="Saving…">
+        {initial ? "Save Coupon" : "Create Coupon"}
       </FormSubmit>
     </ActionForm>
   );

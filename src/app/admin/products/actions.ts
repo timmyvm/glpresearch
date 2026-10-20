@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { toCents } from "@/lib/money";
 import { slugify } from "@/lib/utils";
 import { bool, optStr, str, zodErrors, type ActionState } from "@/lib/actions";
+import { notifyBackInStock } from "@/lib/admin/stock-alerts";
 
 const variantSchema = z.object({
   id: z.string().optional(),
@@ -132,7 +133,10 @@ export async function saveProduct(productId: string | null, _prev: ActionState, 
     redirect(`/admin/products/${created.id}?created=1`);
   }
 
-  const existing = await db.product.findUnique({ where: { id: productId }, include: { variants: { select: { id: true } } } });
+  const existing = await db.product.findUnique({
+    where: { id: productId },
+    include: { variants: { select: { id: true, stock: true, active: true } } },
+  });
   if (!existing) return { error: "Product not found." };
   const keepIds = variants.map((v) => v.id).filter((id): id is string => !!id && existing.variants.some((ev) => ev.id === id));
 
@@ -148,10 +152,17 @@ export async function saveProduct(productId: string | null, _prev: ActionState, 
     ),
   ]);
 
+  // A kept variant that couldn't be bought before (sold out or hidden) may be buyable now:
+  // email anyone waiting on it. notifyBackInStock checks the saved state and no-ops otherwise.
+  const reopened = existing.variants.filter((ev) => keepIds.includes(ev.id) && (ev.stock <= 0 || !ev.active || !existing.active));
+  let emailed = 0;
+  for (const ev of reopened) emailed += await notifyBackInStock(ev.id);
+
   revalidateCatalogue(data.slug);
   if (existing.slug !== data.slug) revalidatePath(`/shop/${existing.slug}`);
   revalidatePath(`/admin/products/${productId}`);
-  return { ok: true, message: "Product saved." };
+  if (emailed) revalidatePath("/admin/stock-alerts");
+  return { ok: true, message: `Product saved.${emailed ? ` ${emailed} waiting customer${emailed === 1 ? "" : "s"} emailed that it is back in stock.` : ""}` };
 }
 
 export async function toggleProductActive(productId: string) {
@@ -159,6 +170,11 @@ export async function toggleProductActive(productId: string) {
   const product = await db.product.findUnique({ where: { id: productId }, select: { active: true, slug: true } });
   if (!product) return;
   await db.product.update({ where: { id: productId }, data: { active: !product.active } });
+  if (!product.active) {
+    const variants = await db.productVariant.findMany({ where: { productId }, select: { id: true } });
+    for (const v of variants) await notifyBackInStock(v.id);
+    revalidatePath("/admin/stock-alerts");
+  }
   revalidateCatalogue(product.slug);
 }
 

@@ -1,12 +1,17 @@
 import type { Prisma } from "@prisma/client";
 import { isOrderStatus } from "@/lib/orders";
 
-export type OrderFilters = { q?: string; status?: string };
+export type OrderFilters = { q?: string; status?: string; claimed?: string };
 
 /** Shared filter logic for the orders table and the CSV export. */
-export function orderWhere({ q, status }: OrderFilters): Prisma.OrderWhereInput {
+export function orderWhere({ q, status, claimed }: OrderFilters): Prisma.OrderWhereInput {
   const where: Prisma.OrderWhereInput = {};
-  if (status && isOrderStatus(status)) where.status = status;
+  if (claimed === "1") {
+    where.status = "PENDING_PAYMENT";
+    where.paymentClaimedAt = { not: null };
+  } else if (status && isOrderStatus(status)) {
+    where.status = status;
+  }
   const term = q?.trim();
   if (term) {
     where.OR = [

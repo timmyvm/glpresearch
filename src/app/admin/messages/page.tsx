@@ -1,55 +1,54 @@
 import Link from "next/link";
-import { Archive, Download, Inbox, Mail, Reply, Trash2, Users } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { db } from "@/lib/db";
 import { cn, formatDate, formatDateTime } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { ConfirmButton } from "@/components/admin/confirm-button";
-import { EmptyState, PageHeader, TableWrap, Td, Th } from "@/components/admin/ui";
+import { Tabs } from "@/components/admin/filters";
+import { EmptyState, PageHeader, TableWrap, Td, Th, textAction } from "@/components/admin/ui";
 import { deleteMessage, deleteSubscriber, setMessageStatus } from "./actions";
 
 export const metadata = { title: "Inbox" };
 
 const FILTERS = [
   { value: "", label: "Open" },
-  { value: "NEW", label: "New" },
+  { value: "NEW", label: "Unread" },
   { value: "READ", label: "Read" },
   { value: "REPLIED", label: "Replied" },
   { value: "ARCHIVED", label: "Archived" },
   { value: "ALL", label: "All" },
 ];
 
-const TONE: Record<string, string> = {
-  NEW: "bg-mint-50 text-mint-700 ring-mint-600/20",
-  READ: "bg-slate-100 text-slate-600",
-  REPLIED: "bg-sky-50 text-sky-700 ring-sky-600/20",
-  ARCHIVED: "bg-slate-100 text-slate-400",
+const STATUS: Record<string, { label: string; tone: string }> = {
+  NEW: { label: "Unread", tone: "bg-[#e4e9f4] text-ink" },
+  READ: { label: "Read", tone: "bg-surface text-muted" },
+  REPLIED: { label: "Replied", tone: "bg-[#dcfae5] text-[#04250e]" },
+  ARCHIVED: { label: "Archived", tone: "bg-surface text-muted" },
 };
+
+function StatusPill({ status }: { status: string }) {
+  const s = STATUS[status] ?? { label: status, tone: "bg-surface text-muted" };
+  return <span className={cn("inline-flex h-6 shrink-0 items-center rounded-full px-2.5 text-small leading-none font-medium whitespace-nowrap", s.tone)}>{s.label}</span>;
+}
 
 export default async function MessagesPage({ searchParams }: { searchParams: Promise<{ tab?: string; status?: string; id?: string }> }) {
   const sp = await searchParams;
   const tab = sp.tab === "subscribers" ? "subscribers" : "messages";
 
-  const counts = await db.contactMessage.groupBy({ by: ["status"], _count: true });
+  // Opening a message marks it read before the list and counts are drawn.
+  if (sp.id && tab === "messages") await db.contactMessage.updateMany({ where: { id: sp.id, status: "NEW" }, data: { status: "READ" } });
+  const [counts, subscriberCount] = await Promise.all([db.contactMessage.groupBy({ by: ["status"], _count: true }), db.subscriber.count()]);
   const count = (s: string) => counts.find((c) => c.status === s)?._count ?? 0;
-  const subscriberCount = await db.subscriber.count();
+  const open = counts.filter((c) => c.status !== "ARCHIVED").reduce((s, c) => s + c._count, 0);
 
-  const tabs = (
-    <div className="mb-6 flex gap-1 border-b border-slate-200">
-      <Link
-        href="/admin/messages"
-        className={cn("-mb-px flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium", tab === "messages" ? "border-ink-900 text-ink-900" : "border-transparent text-slate-500 hover:text-ink-900")}
-      >
-        <Mail className="size-4" /> Messages {count("NEW") ? <Badge className={TONE.NEW}>{count("NEW")} new</Badge> : null}
-      </Link>
-      <Link
-        href="/admin/messages?tab=subscribers"
-        className={cn("-mb-px flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium", tab === "subscribers" ? "border-ink-900 text-ink-900" : "border-transparent text-slate-500 hover:text-ink-900")}
-      >
-        <Users className="size-4" /> Subscribers <Badge>{subscriberCount}</Badge>
-      </Link>
-    </div>
+  const sections = (
+    <Tabs
+      label="Inbox sections"
+      tabs={[
+        { href: "/admin/messages", label: "Messages", count: open, active: tab === "messages" },
+        { href: "/admin/messages?tab=subscribers", label: "Newsletter subscribers", count: subscriberCount, active: tab === "subscribers" },
+      ]}
+    />
   );
 
   if (tab === "subscribers") {
@@ -58,39 +57,45 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
       <>
         <PageHeader
           title="Inbox"
-          description="Contact form messages and newsletter subscribers."
+          description="The export also includes customers who opted in to marketing emails when they signed up."
           actions={
-            <a href="/api/admin/subscribers/export" className={buttonClass("outline", "md")}>
-              <Download className="size-4" /> Export CSV
+            <a href="/api/admin/subscribers/export" className={buttonClass("outline", "sm", "ring-1 ring-ink/25")}>
+              Export CSV
             </a>
           }
         />
-        {tabs}
-        <p className="mb-3 text-xs text-slate-500">The CSV export also includes customers who opted in to marketing emails at sign-up.</p>
-        <TableWrap>
+        {sections}
+        <TableWrap minWidth={0}>
           <thead>
             <tr>
               <Th>Email</Th>
-              <Th>Subscribed</Th>
-              <Th className="text-right">Remove</Th>
+              <Th className="text-right">Subscribed</Th>
+              <Th className="text-right">
+                <span className="sr-only">Remove</span>
+              </Th>
             </tr>
           </thead>
           <tbody>
             {subscribers.length === 0 ? (
               <tr>
-                <Td colSpan={3}>
-                  <EmptyState icon={Users} title="No subscribers yet" />
+                <Td colSpan={3} className="p-0">
+                  <EmptyState title="No subscribers yet." description="People who join the newsletter from the store footer appear here." />
                 </Td>
               </tr>
             ) : null}
             {subscribers.map((s) => (
-              <tr key={s.id} className="hover:bg-slate-50">
-                <Td className="font-medium">{s.email}</Td>
-                <Td className="text-xs text-slate-500">{formatDateTime(s.createdAt)}</Td>
+              <tr key={s.id} className="hover:bg-surface/50">
+                <Td className="font-medium break-all">{s.email}</Td>
+                <Td className="tabular text-right whitespace-nowrap text-muted">{formatDateTime(s.createdAt)}</Td>
                 <Td>
                   <div className="flex justify-end">
-                    <ConfirmButton action={deleteSubscriber.bind(null, s.id)} message={`Remove ${s.email}?`} variant="ghost">
-                      <Trash2 className="size-3.5" />
+                    <ConfirmButton
+                      action={deleteSubscriber.bind(null, s.id)}
+                      message={`Remove ${s.email} from the newsletter list?`}
+                      variant="ghost"
+                      className="h-8 text-danger hover:bg-[#ffedea]"
+                    >
+                      Remove
                     </ConfirmButton>
                   </div>
                 </Td>
@@ -104,123 +109,145 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
 
   const status = sp.status ?? "";
   const where = status === "ALL" ? {} : status ? { status } : { status: { not: "ARCHIVED" } };
+  const selected = sp.id ? await db.contactMessage.findUnique({ where: { id: sp.id } }) : null;
   const messages = await db.contactMessage.findMany({ where, orderBy: { createdAt: "desc" } });
-  let selected = sp.id ? await db.contactMessage.findUnique({ where: { id: sp.id } }) : null;
-  if (selected?.status === "NEW") {
-    selected = await db.contactMessage.update({ where: { id: selected.id }, data: { status: "READ" } });
-  }
-  const order = selected?.orderNumber ? await db.order.findUnique({ where: { number: selected.orderNumber }, select: { id: true } }) : null;
-  const customer = selected ? await db.user.findUnique({ where: { email: selected.email }, select: { id: true } }) : null;
+  const [order, customer] = selected
+    ? await Promise.all([
+        selected.orderNumber ? db.order.findUnique({ where: { number: selected.orderNumber }, select: { id: true } }) : null,
+        db.user.findUnique({ where: { email: selected.email }, select: { id: true } }),
+      ])
+    : [null, null];
 
+  const listHref = status ? `/admin/messages?status=${status}` : "/admin/messages";
   const qs = (extra: Record<string, string>) => {
     const p = new URLSearchParams();
     if (status) p.set("status", status);
     for (const [k, v] of Object.entries(extra)) p.set(k, v);
     return `/admin/messages?${p}`;
   };
+  const unread = count("NEW");
 
   return (
     <>
-      <PageHeader title="Inbox" description="Contact form messages and newsletter subscribers." />
-      {tabs}
-      <div className="mb-4 flex flex-wrap gap-1.5">
+      <PageHeader
+        title="Inbox"
+        description={unread ? `${unread} unread message${unread === 1 ? "" : "s"} from the contact form.` : "Every contact form message has been read."}
+      />
+      {sections}
+      <nav aria-label="Message status" className="mb-4 flex flex-wrap gap-x-4 gap-y-1 text-sm">
         {FILTERS.map((f) => (
           <Link
             key={f.value}
             href={f.value ? `/admin/messages?status=${f.value}` : "/admin/messages"}
-            className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset ${status === f.value ? "bg-ink-900 text-white ring-ink-900" : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50"}`}
+            aria-current={status === f.value ? "page" : undefined}
+            className={status === f.value ? "font-medium text-ink" : "text-muted hover:text-ink"}
           >
             {f.label}
-            {f.value && f.value !== "ALL" ? ` · ${count(f.value)}` : ""}
+            {f.value && f.value !== "ALL" ? <span className="tabular ml-1 text-muted">{count(f.value)}</span> : null}
           </Link>
         ))}
-      </div>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,380px)_1fr]">
-        <Card className="overflow-hidden">
-          {messages.length === 0 ? <EmptyState icon={Inbox} title="Nothing here" description="No messages match this filter." /> : null}
-          <ul className="max-h-[70vh] divide-y divide-slate-100 overflow-y-auto">
-            {messages.map((m) => (
-              <li key={m.id}>
-                <Link href={qs({ id: m.id })} className={cn("block px-4 py-3 hover:bg-slate-50", selected?.id === m.id && "bg-mint-50/60")}>
+      </nav>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
+        <section aria-label="Messages" className={cn("border border-ink/10 bg-white", selected && "hidden lg:block")}>
+          {messages.length === 0 ? <EmptyState title="No messages here." description="Try another status." /> : null}
+          <ul className="max-h-[70vh] overflow-y-auto overscroll-contain">
+            {messages.map((m, i) => (
+              <li key={m.id} className={i ? "border-t border-ink/[0.07]" : undefined}>
+                <Link
+                  href={qs({ id: m.id })}
+                  aria-current={selected?.id === m.id ? "true" : undefined}
+                  className={cn("block px-4 py-3", selected?.id === m.id ? "bg-surface" : "hover:bg-surface/50")}
+                >
                   <div className="flex items-center justify-between gap-2">
-                    <p className={cn("truncate text-sm", m.status === "NEW" ? "font-semibold text-ink-900" : "font-medium text-ink-800")}>{m.name}</p>
-                    <span className="shrink-0 text-xs text-slate-400">{formatDate(m.createdAt)}</span>
+                    <p className={cn("truncate text-sm text-ink", m.status === "NEW" ? "font-semibold" : "font-medium")}>
+                      {m.status === "NEW" ? <span className="mr-1.5 inline-block size-1.5 rounded-full bg-ink align-middle" aria-label="Unread" /> : null}
+                      {m.name}
+                    </p>
+                    <span className="tabular shrink-0 text-small text-muted">{formatDate(m.createdAt, { year: undefined })}</span>
                   </div>
-                  <p className="truncate text-sm text-ink-800">{m.subject}</p>
-                  <div className="mt-1 flex items-center gap-2">
-                    <Badge className={cn("text-[10px]", TONE[m.status])}>{m.status.toLowerCase()}</Badge>
-                    <p className="truncate text-xs text-slate-500">{m.message}</p>
-                  </div>
+                  <p className="truncate text-sm text-ink">{m.subject}</p>
+                  <p className="truncate text-small text-muted">{m.message}</p>
                 </Link>
               </li>
             ))}
           </ul>
-        </Card>
+        </section>
 
-        <Card className="min-h-80">
+        <section aria-label="Message" className={cn("min-h-80 border border-ink/10 bg-white", !selected && "hidden lg:block")}>
           {selected ? (
             <div className="flex h-full flex-col">
-              <div className="flex flex-col gap-3 border-b border-slate-100 px-6 py-5 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-ink-900">{selected.subject}</h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {selected.name} &lt;{selected.email}&gt; · {formatDateTime(selected.createdAt)}
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                    {selected.orderNumber ? (
-                      order ? (
-                        <Link href={`/admin/orders/${order.id}`} className="font-mono font-semibold text-mint-700 hover:underline">
-                          Order {selected.orderNumber}
-                        </Link>
-                      ) : (
-                        <span className="font-mono text-slate-500">Order {selected.orderNumber} (not found)</span>
-                      )
-                    ) : null}
-                    {customer ? (
-                      <Link href={`/admin/customers/${customer.id}`} className="font-semibold text-mint-700 hover:underline">
-                        View customer
+              <div className="border-b border-ink/[0.07] px-5 py-4 sm:px-6">
+                <Link href={listHref} className="mb-3 inline-flex items-center gap-1 text-small text-muted hover:text-ink lg:hidden">
+                  <ChevronLeft className="size-3.5" aria-hidden="true" /> All messages
+                </Link>
+                <div className="flex items-start justify-between gap-3">
+                  <h2 className="text-lg font-medium text-ink">{selected.subject}</h2>
+                  <StatusPill status={selected.status} />
+                </div>
+                <p className="mt-1 text-sm text-muted">
+                  {selected.name}, <span className="break-all">{selected.email}</span>
+                  <span className="tabular">, {formatDateTime(selected.createdAt)}</span>
+                </p>
+                <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                  {selected.orderNumber ? (
+                    order ? (
+                      <Link href={`/admin/orders/${order.id}`} className={textAction}>
+                        Order {selected.orderNumber}
                       </Link>
                     ) : (
-                      <span className="text-slate-400">No account</span>
-                    )}
-                  </div>
-                </div>
-                <Badge className={TONE[selected.status]}>{selected.status.toLowerCase()}</Badge>
+                      <span className="text-muted">Order {selected.orderNumber} was not found</span>
+                    )
+                  ) : null}
+                  {customer ? (
+                    <Link href={`/admin/customers/${customer.id}`} className={textAction}>
+                      View Customer
+                    </Link>
+                  ) : (
+                    <span className="text-muted">No account with this email</span>
+                  )}
+                </p>
               </div>
-              <div className="flex-1 px-6 py-5 text-sm leading-relaxed whitespace-pre-line text-ink-900">{selected.message}</div>
-              <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 px-6 py-4">
+              <div className="flex-1 px-5 py-5 text-sm leading-relaxed whitespace-pre-line text-ink sm:px-6">{selected.message}</div>
+              <div className="flex flex-wrap items-center gap-2 border-t border-ink/[0.07] px-5 py-4 sm:px-6">
                 <a
-                  href={`mailto:${selected.email}?subject=${encodeURIComponent(`Re: ${selected.subject}`)}&body=${encodeURIComponent(`Hi ${selected.name.split(" ")[0]},\n\n\n\n> ${selected.message.split("\n").join("\n> ")}`)}`}
-                  className={buttonClass("primary", "sm")}
+                  href={`mailto:${selected.email}?subject=${encodeURIComponent(`Re: ${selected.subject}`)}&body=${encodeURIComponent(
+                    `Hi ${selected.name.split(" ")[0]},\n\n\n\n> ${selected.message.split("\n").join("\n> ")}`,
+                  )}`}
+                  className={buttonClass("ink", "sm")}
                 >
-                  <Reply className="size-3.5" /> Reply by email
+                  Reply by Email
                 </a>
                 {selected.status !== "REPLIED" ? (
-                  <ConfirmButton action={setMessageStatus.bind(null, selected.id, "REPLIED")} message="" variant="outline">
-                    Mark replied
+                  <ConfirmButton action={setMessageStatus.bind(null, selected.id, "REPLIED")} message="" variant="outline" className="ring-1 ring-ink/25">
+                    Mark Replied
                   </ConfirmButton>
                 ) : null}
                 {selected.status !== "NEW" ? (
                   <ConfirmButton action={setMessageStatus.bind(null, selected.id, "NEW")} message="" variant="ghost">
-                    Mark unread
+                    Mark Unread
                   </ConfirmButton>
                 ) : null}
                 {selected.status !== "ARCHIVED" ? (
                   <ConfirmButton action={setMessageStatus.bind(null, selected.id, "ARCHIVED")} message="" variant="ghost">
-                    <Archive className="size-3.5" /> Archive
+                    Archive
                   </ConfirmButton>
                 ) : null}
                 <div className="ml-auto">
-                  <ConfirmButton action={deleteMessage.bind(null, selected.id)} message="Delete this message permanently?" variant="ghost" className="text-rose-600 hover:bg-rose-50">
-                    <Trash2 className="size-3.5" /> Delete
+                  <ConfirmButton
+                    action={deleteMessage.bind(null, selected.id)}
+                    message={`Delete the message from ${selected.name} permanently? Archive it instead to keep a record.`}
+                    variant="ghost"
+                    className="text-danger hover:bg-[#ffedea]"
+                  >
+                    Delete
                   </ConfirmButton>
                 </div>
               </div>
             </div>
           ) : (
-            <EmptyState icon={Mail} title="Select a message" description="Choose a message from the list to read it." />
+            <EmptyState title="Choose a message to read it." />
           )}
-        </Card>
+        </section>
       </div>
     </>
   );

@@ -1,15 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
-import { Alert } from "@/components/ui/alert";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/form";
+import { useId, useState } from "react";
 import type { ActionState } from "@/lib/actions";
 import { fromCents } from "@/lib/money";
 import { slugify } from "@/lib/utils";
+import { Panel } from "./ui";
+import { CheckRow, Checkbox, Field, Input, Select, Textarea } from "./fields";
 import { ImageField } from "./image-field";
-import { FormSubmit, PendingContext, useActionForm } from "./action-form";
+import { FormFeedback, FormSubmit, PendingContext, useActionForm } from "./action-form";
 
 type Variant = {
   id?: string;
@@ -79,6 +77,9 @@ function parseReferences(json: string | null): Reference[] {
   }
 }
 
+const smallAction = "press inline-flex h-8 items-center border border-[#d1d5db] bg-white px-3 text-small font-medium text-ink hover:bg-surface";
+const mono = "font-mono text-small"; // taste-skill-ignore: SKUs, slugs, CAS numbers, sequences and Markdown source are literal code
+
 export function ProductForm({
   action,
   initial,
@@ -87,6 +88,7 @@ export function ProductForm({
   initial?: ProductFormValues;
 }) {
   const { state, onSubmit, pending } = useActionForm(action);
+  const uid = useId();
   const [name, setName] = useState(initial?.name ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(!!initial?.slug);
@@ -133,80 +135,86 @@ export function ProductForm({
 
   return (
     <PendingContext.Provider value={pending}>
-    <form onSubmit={onSubmit} className="space-y-6">
-      <input type="hidden" name="variants" value={variantsJson} />
-      <input type="hidden" name="references" value={referencesJson} />
+      <form onSubmit={onSubmit}>
+        <input type="hidden" name="variants" value={variantsJson} />
+        <input type="hidden" name="references" value={referencesJson} />
 
-      {state.error ? <Alert tone="error" title={state.error} /> : null}
-      {state.ok && state.message ? <Alert tone="success">{state.message}</Alert> : null}
-
-      <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
-        <div className="space-y-6">
-          <Card>
-            <CardHeader title="Basics" description="What customers see on the shop and product pages." />
-            <CardBody className="grid gap-4 sm:grid-cols-2">
-              <Field label="Name" htmlFor="name" error={err("name")}>
-                <Input
-                  id="name"
-                  name="name"
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value);
-                    if (!slugTouched) setSlug(slugify(e.target.value));
-                  }}
-                  required
-                />
-              </Field>
-              <Field label="Slug" htmlFor="slug" error={err("slug")} hint={`/shop/${slug || "…"}`}>
-                <Input
-                  id="slug"
-                  name="slug"
-                  value={slug}
-                  onChange={(e) => {
-                    setSlug(e.target.value);
-                    setSlugTouched(true);
-                  }}
-                  className="font-mono"
-                />
-              </Field>
-              <Field label="Subtitle" htmlFor="subtitle" error={err("subtitle")} className="sm:col-span-2">
-                <Input id="subtitle" name="subtitle" defaultValue={initial?.subtitle} placeholder="e.g. Long-acting GLP-1 receptor agonist" />
-              </Field>
-              <Field label="Category" htmlFor="category" error={err("category")}>
-                <Select id="category" name="category" defaultValue={initial?.category ?? "GLP1"}>
-                  <option value="GLP1">GLP-1 agonist</option>
-                  <option value="DUAL">Dual agonist</option>
-                  <option value="TRIPLE">Triple agonist</option>
-                </Select>
-              </Field>
-              <Field label="Accent colour" htmlFor="accentColor" error={err("accentColor")}>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    value={accent}
-                    onChange={(e) => setAccent(e.target.value)}
-                    className="h-10 w-12 cursor-pointer rounded-lg border border-slate-300 bg-white p-1"
-                    aria-label="Pick accent colour"
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="min-w-0 space-y-6">
+            <Panel title="Basics" description="What customers see on the shop and product pages.">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Name" htmlFor="name" error={err("name")}>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={name}
+                    autoComplete="off"
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (!slugTouched) setSlug(slugify(e.target.value));
+                    }}
+                    required
                   />
-                  <Input id="accentColor" name="accentColor" value={accent} onChange={(e) => setAccent(e.target.value)} className="font-mono" />
-                </div>
-              </Field>
-              <Field label="Short description" htmlFor="shortDescription" error={err("shortDescription")} className="sm:col-span-2">
-                <Textarea id="shortDescription" name="shortDescription" rows={2} defaultValue={initial?.shortDescription} />
-              </Field>
-              <Field label="Description (markdown)" htmlFor="description" error={err("description")} className="sm:col-span-2">
-                <Textarea id="description" name="description" rows={8} defaultValue={initial?.description} className="font-mono text-xs" />
-              </Field>
-              <Field label="Main image" htmlFor="image" error={err("image")} className="sm:col-span-2">
-                <ImageField id="image" name="image" defaultValue={initial?.image} />
-              </Field>
-            </CardBody>
-          </Card>
+                </Field>
+                <Field label="Slug" htmlFor="slug" error={err("slug")} hint={`/shop/${slug || "…"}`}>
+                  <Input
+                    id="slug"
+                    name="slug"
+                    value={slug}
+                    autoComplete="off"
+                    spellCheck={false}
+                    onChange={(e) => {
+                      setSlug(e.target.value);
+                      setSlugTouched(true);
+                    }}
+                    className={mono}
+                  />
+                </Field>
+                <Field label="Subtitle" htmlFor="subtitle" error={err("subtitle")} className="sm:col-span-2">
+                  <Input id="subtitle" name="subtitle" defaultValue={initial?.subtitle} placeholder="Long-acting GLP-1 receptor agonist…" />
+                </Field>
+                <Field label="Category" htmlFor="category" error={err("category")}>
+                  <Select id="category" name="category" defaultValue={initial?.category ?? "GLP1"}>
+                    <option value="GLP1">GLP-1 agonist</option>
+                    <option value="DUAL">Dual agonist</option>
+                    <option value="TRIPLE">Triple agonist</option>
+                  </Select>
+                </Field>
+                <Field label="Label colour" htmlFor="accentColor" error={err("accentColor")} hint="Marks this compound across the store and admin.">
+                  <div className="flex">
+                    <input
+                      type="color"
+                      value={accent}
+                      onChange={(e) => setAccent(e.target.value)}
+                      className="h-10 w-12 shrink-0 cursor-pointer border border-[#dfe2e8] bg-white p-1"
+                      aria-label="Pick label colour"
+                    />
+                    <Input
+                      id="accentColor"
+                      name="accentColor"
+                      value={accent}
+                      onChange={(e) => setAccent(e.target.value)}
+                      autoComplete="off"
+                      spellCheck={false}
+                      className={`${mono} -ml-px`}
+                    />
+                  </div>
+                </Field>
+                <Field label="Short description" htmlFor="shortDescription" error={err("shortDescription")} className="sm:col-span-2">
+                  <Textarea id="shortDescription" name="shortDescription" rows={2} defaultValue={initial?.shortDescription} />
+                </Field>
+                <Field label="Description" htmlFor="description" error={err("description")} hint="Markdown." className="sm:col-span-2">
+                  <Textarea id="description" name="description" rows={8} defaultValue={initial?.description} className={mono} />
+                </Field>
+                <Field label="Main image" htmlFor="image" error={err("image")} className="sm:col-span-2">
+                  <ImageField id="image" name="image" defaultValue={initial?.image} />
+                </Field>
+              </div>
+            </Panel>
 
-          <Card>
-            <CardHeader
+            <Panel
               title="Variants"
-              description="Sizes, pricing (in dollars) and stock."
+              description="Sizes, prices in dollars, and stock. Raising a sold-out variant above zero emails everyone waiting on it."
               action={
                 <button
                   type="button"
@@ -216,232 +224,208 @@ export function ProductForm({
                       { key: nextKey(), label: "", sku: "", price: "", compareAtPrice: "", stock: "0", lowStockThreshold: "10", image: "", active: true },
                     ])
                   }
-                  className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-semibold text-ink-800 hover:bg-slate-50"
+                  className={smallAction}
                 >
-                  <Plus className="size-3.5" /> Add variant
+                  Add Variant
                 </button>
               }
-            />
-            <CardBody className="space-y-4">
-              {variants.map((v, i) => (
-                <div key={v.key} className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
-                  <div className="mb-3 flex items-center justify-between">
-                    <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                      Variant {i + 1} {v.id ? "" : <span className="text-mint-700 normal-case">· new</span>}
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <label className="flex items-center gap-1.5 text-xs text-ink-800">
-                        <Checkbox checked={v.active} onChange={(e) => updateVariant(v.key, { active: e.target.checked })} /> Active
-                      </label>
-                      <button
-                        type="button"
-                        disabled={variants.length === 1}
-                        onClick={() => setVariants((vs) => vs.filter((x) => x.key !== v.key))}
-                        className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-rose-600 disabled:opacity-30"
-                      >
-                        <Trash2 className="size-3.5" /> Remove
-                      </button>
+              bodyClassName="px-0 pb-0"
+            >
+              {variants.map((v, i) => {
+                const vid = `${uid}v${i}`; // not v.key: the key counter differs between server and client
+                return (
+                  <fieldset key={v.key} className="border-t border-ink/[0.07] px-5 py-4">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <legend className="text-sm font-medium text-ink">
+                        {v.label || `Variant ${i + 1}`}
+                        {v.id ? null : <span className="ml-2 font-normal text-muted">New</span>}
+                      </legend>
+                      <div className="flex items-center gap-4">
+                        <label className="flex items-center gap-2 text-sm text-ink">
+                          <Checkbox checked={v.active} onChange={(e) => updateVariant(v.key, { active: e.target.checked })} /> On sale
+                        </label>
+                        <button
+                          type="button"
+                          disabled={variants.length === 1}
+                          title={variants.length === 1 ? "A product needs at least one variant" : undefined}
+                          onClick={() => setVariants((vs) => vs.filter((x) => x.key !== v.key))}
+                          className="text-small text-muted hover:text-danger disabled:cursor-not-allowed disabled:hover:text-muted"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-                    <Field label="Label">
-                      <Input value={v.label} onChange={(e) => updateVariant(v.key, { label: e.target.value })} placeholder="10 mg" />
-                    </Field>
-                    <Field label="SKU">
-                      <Input value={v.sku} onChange={(e) => updateVariant(v.key, { sku: e.target.value.toUpperCase() })} className="font-mono" placeholder="GLP-XXX-10" />
-                    </Field>
-                    <Field label="Price ($)">
-                      <Input value={v.price} onChange={(e) => updateVariant(v.key, { price: e.target.value })} inputMode="decimal" placeholder="139.00" />
-                    </Field>
-                    <Field label="Compare at ($)">
-                      <Input value={v.compareAtPrice} onChange={(e) => updateVariant(v.key, { compareAtPrice: e.target.value })} inputMode="decimal" placeholder="—" />
-                    </Field>
-                    <Field label="Stock">
-                      <Input type="number" min={0} value={v.stock} onChange={(e) => updateVariant(v.key, { stock: e.target.value })} />
-                    </Field>
-                    <Field label="Low stock at">
-                      <Input type="number" min={0} value={v.lowStockThreshold} onChange={(e) => updateVariant(v.key, { lowStockThreshold: e.target.value })} />
-                    </Field>
-                  </div>
-                  <div className="mt-3">
-                    <VariantImage value={v.image} onChange={(image) => updateVariant(v.key, { image })} />
-                  </div>
-                </div>
-              ))}
-            </CardBody>
-          </Card>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                      <Field label="Label" htmlFor={`${vid}-label`}>
+                        <Input id={`${vid}-label`} value={v.label} onChange={(e) => updateVariant(v.key, { label: e.target.value })} placeholder="10 mg…" autoComplete="off" />
+                      </Field>
+                      <Field label="SKU" htmlFor={`${vid}-sku`}>
+                        <Input
+                          id={`${vid}-sku`}
+                          value={v.sku}
+                          onChange={(e) => updateVariant(v.key, { sku: e.target.value.toUpperCase() })}
+                          className={mono}
+                          placeholder="GLP-XXX-10…"
+                          autoComplete="off"
+                          spellCheck={false}
+                        />
+                      </Field>
+                      <Field label="Price ($)" htmlFor={`${vid}-price`}>
+                        <Input id={`${vid}-price`} value={v.price} onChange={(e) => updateVariant(v.key, { price: e.target.value })} inputMode="decimal" placeholder="139.00" className="tabular" />
+                      </Field>
+                      <Field label="Was ($)" htmlFor={`${vid}-compare`}>
+                        <Input
+                          id={`${vid}-compare`}
+                          value={v.compareAtPrice}
+                          onChange={(e) => updateVariant(v.key, { compareAtPrice: e.target.value })}
+                          inputMode="decimal"
+                          placeholder="Optional"
+                          className="tabular"
+                        />
+                      </Field>
+                      <Field label="Stock" htmlFor={`${vid}-stock`}>
+                        <Input id={`${vid}-stock`} type="number" inputMode="numeric" min={0} value={v.stock} onChange={(e) => updateVariant(v.key, { stock: e.target.value })} className="tabular" />
+                      </Field>
+                      <Field label="Low stock at" htmlFor={`${vid}-low`}>
+                        <Input
+                          id={`${vid}-low`}
+                          type="number"
+                          inputMode="numeric"
+                          min={0}
+                          value={v.lowStockThreshold}
+                          onChange={(e) => updateVariant(v.key, { lowStockThreshold: e.target.value })}
+                          className="tabular"
+                        />
+                      </Field>
+                    </div>
+                    <div className="mt-3">
+                      <ImageField
+                        value={v.image}
+                        onChange={(image) => updateVariant(v.key, { image })}
+                        label={`Image for ${v.label || `variant ${i + 1}`}`}
+                        placeholder="Variant image, optional. Uses the main image if empty…"
+                      />
+                    </div>
+                  </fieldset>
+                );
+              })}
+            </Panel>
 
-          <Card>
-            <CardHeader title="Research monograph" description="Scientific data shown on the product's Research and Specifications tabs." />
-            <CardBody className="grid gap-4 sm:grid-cols-2">
-              <Field label="Research codes / aliases" htmlFor="aliases" hint="Comma separated">
-                <Input id="aliases" name="aliases" defaultValue={initial?.aliases ?? ""} />
-              </Field>
-              <Field label="Developer" htmlFor="developer">
-                <Input id="developer" name="developer" defaultValue={initial?.developer ?? ""} />
-              </Field>
-              <Field label="Receptor targets" htmlFor="receptorTargets" error={err("receptorTargets")} hint="Comma separated, e.g. GIPR,GLP-1R">
-                <Input id="receptorTargets" name="receptorTargets" defaultValue={initial?.receptorTargets ?? "GLP-1R"} className="font-mono" />
-              </Field>
-              <Field label="Half-life" htmlFor="halfLife">
-                <Input id="halfLife" name="halfLife" defaultValue={initial?.halfLife ?? ""} placeholder="~7 days" />
-              </Field>
-              <Field label="Molecular formula" htmlFor="molecularFormula">
-                <Input id="molecularFormula" name="molecularFormula" defaultValue={initial?.molecularFormula ?? ""} className="font-mono" />
-              </Field>
-              <Field label="Molecular weight" htmlFor="molecularWeight">
-                <Input id="molecularWeight" name="molecularWeight" defaultValue={initial?.molecularWeight ?? ""} />
-              </Field>
-              <Field label="CAS number" htmlFor="casNumber">
-                <Input id="casNumber" name="casNumber" defaultValue={initial?.casNumber ?? ""} className="font-mono" />
-              </Field>
-              <Field label="Amino acid count" htmlFor="aminoAcidCount" error={err("aminoAcidCount")}>
-                <Input id="aminoAcidCount" name="aminoAcidCount" type="number" min={0} defaultValue={initial?.aminoAcidCount ?? ""} />
-              </Field>
-              <Field label="Sequence" htmlFor="sequence" className="sm:col-span-2">
-                <Textarea id="sequence" name="sequence" rows={2} defaultValue={initial?.sequence ?? ""} className="font-mono text-xs" />
-              </Field>
-              <Field label="Regulatory status" htmlFor="regulatoryStatus" className="sm:col-span-2">
-                <Input id="regulatoryStatus" name="regulatoryStatus" defaultValue={initial?.regulatoryStatus ?? ""} />
-              </Field>
-              <Field label="Mechanism of action (markdown)" htmlFor="mechanism" className="sm:col-span-2">
-                <Textarea id="mechanism" name="mechanism" rows={6} defaultValue={initial?.mechanism ?? ""} className="font-mono text-xs" />
-              </Field>
-              <Field label="Key published findings (markdown)" htmlFor="research" className="sm:col-span-2">
-                <Textarea id="research" name="research" rows={6} defaultValue={initial?.research ?? ""} className="font-mono text-xs" />
-              </Field>
-              <div className="sm:col-span-2">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-sm font-medium text-ink-800">References</p>
-                  <button
-                    type="button"
-                    onClick={() => setReferences((rs) => [...rs, { key: nextKey(), label: "", url: "" }])}
-                    className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-semibold text-ink-800 hover:bg-slate-50"
-                  >
-                    <Plus className="size-3.5" /> Add reference
+            <Panel title="Research monograph" description="Shown on the product's Research and Specifications tabs.">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Research codes and aliases" htmlFor="aliases" hint="Comma separated.">
+                  <Input id="aliases" name="aliases" defaultValue={initial?.aliases ?? ""} autoComplete="off" />
+                </Field>
+                <Field label="Developer" htmlFor="developer">
+                  <Input id="developer" name="developer" defaultValue={initial?.developer ?? ""} autoComplete="off" />
+                </Field>
+                <Field label="Receptor targets" htmlFor="receptorTargets" error={err("receptorTargets")} hint="Comma separated, like GIPR,GLP-1R.">
+                  <Input id="receptorTargets" name="receptorTargets" defaultValue={initial?.receptorTargets ?? "GLP-1R"} className={mono} spellCheck={false} />
+                </Field>
+                <Field label="Half-life" htmlFor="halfLife">
+                  <Input id="halfLife" name="halfLife" defaultValue={initial?.halfLife ?? ""} placeholder="About 7 days…" />
+                </Field>
+                <Field label="Molecular formula" htmlFor="molecularFormula">
+                  <Input id="molecularFormula" name="molecularFormula" defaultValue={initial?.molecularFormula ?? ""} className={mono} spellCheck={false} />
+                </Field>
+                <Field label="Molecular weight" htmlFor="molecularWeight">
+                  <Input id="molecularWeight" name="molecularWeight" defaultValue={initial?.molecularWeight ?? ""} className="tabular" />
+                </Field>
+                <Field label="CAS number" htmlFor="casNumber">
+                  <Input id="casNumber" name="casNumber" defaultValue={initial?.casNumber ?? ""} className={mono} spellCheck={false} />
+                </Field>
+                <Field label="Amino acid count" htmlFor="aminoAcidCount" error={err("aminoAcidCount")}>
+                  <Input id="aminoAcidCount" name="aminoAcidCount" type="number" inputMode="numeric" min={0} defaultValue={initial?.aminoAcidCount ?? ""} className="tabular" />
+                </Field>
+                <Field label="Sequence" htmlFor="sequence" className="sm:col-span-2">
+                  <Textarea id="sequence" name="sequence" rows={2} defaultValue={initial?.sequence ?? ""} className={mono} spellCheck={false} />
+                </Field>
+                <Field label="Regulatory status" htmlFor="regulatoryStatus" className="sm:col-span-2">
+                  <Input id="regulatoryStatus" name="regulatoryStatus" defaultValue={initial?.regulatoryStatus ?? ""} />
+                </Field>
+                <Field label="Mechanism of action" htmlFor="mechanism" hint="Markdown." className="sm:col-span-2">
+                  <Textarea id="mechanism" name="mechanism" rows={6} defaultValue={initial?.mechanism ?? ""} className={mono} />
+                </Field>
+                <Field label="Key published findings" htmlFor="research" hint="Markdown." className="sm:col-span-2">
+                  <Textarea id="research" name="research" rows={6} defaultValue={initial?.research ?? ""} className={mono} />
+                </Field>
+              </div>
+
+              <div className="mt-6 border-t border-ink/[0.07] pt-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="text-sm font-medium text-ink">References</p>
+                  <button type="button" onClick={() => setReferences((rs) => [...rs, { key: nextKey(), label: "", url: "" }])} className={smallAction}>
+                    Add Reference
                   </button>
                 </div>
-                {references.length === 0 ? <p className="text-xs text-slate-500">No references yet.</p> : null}
+                {references.length === 0 ? <p className="text-sm text-muted">No references yet.</p> : null}
                 <div className="space-y-2">
-                  {references.map((r) => (
-                    <div key={r.key} className="flex flex-col gap-2 sm:flex-row">
-                      <Input value={r.label} onChange={(e) => updateReference(r.key, { label: e.target.value })} placeholder="Author et al. Journal Year;Vol:Pages" className="sm:flex-[2]" />
-                      <Input value={r.url} onChange={(e) => updateReference(r.key, { url: e.target.value })} placeholder="https://doi.org/…" className="font-mono text-xs sm:flex-1" />
+                  {references.map((r, i) => (
+                    <div key={r.key} className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <Input
+                        value={r.label}
+                        onChange={(e) => updateReference(r.key, { label: e.target.value })}
+                        aria-label={`Reference ${i + 1} citation`}
+                        placeholder="Author et al. Journal Year;Vol:Pages…"
+                        className="sm:flex-[2]"
+                      />
+                      <Input
+                        value={r.url}
+                        onChange={(e) => updateReference(r.key, { url: e.target.value })}
+                        aria-label={`Reference ${i + 1} link`}
+                        placeholder="https://doi.org/…"
+                        className={`${mono} sm:flex-1`}
+                        spellCheck={false}
+                      />
                       <button
                         type="button"
                         onClick={() => setReferences((rs) => rs.filter((x) => x.key !== r.key))}
-                        className="inline-flex h-10 items-center justify-center rounded-lg px-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
-                        aria-label="Remove reference"
+                        className="h-10 shrink-0 px-2 text-left text-small text-muted hover:text-danger"
+                        aria-label={`Remove reference ${i + 1}`}
                       >
-                        <Trash2 className="size-4" />
+                        Remove
                       </button>
                     </div>
                   ))}
                 </div>
               </div>
-            </CardBody>
-          </Card>
+            </Panel>
+          </div>
+
+          <div className="min-w-0 space-y-6 xl:sticky xl:top-8 xl:self-start">
+            <Panel title="Visibility">
+              <div className="space-y-4">
+                <CheckRow name="active" defaultChecked={initial?.active ?? false} title="On sale" description="Visible and orderable in the store." />
+                <CheckRow name="featured" defaultChecked={initial?.featured ?? false} title="Featured" description="Shown on the home page." />
+                <Field label="Sort order" htmlFor="sortOrder" hint="Lower numbers appear first.">
+                  <Input id="sortOrder" name="sortOrder" type="number" inputMode="numeric" defaultValue={initial?.sortOrder ?? 0} className="tabular" />
+                </Field>
+              </div>
+            </Panel>
+
+            <Panel title="Storage and specs">
+              <div className="space-y-4">
+                <Field label="Form" htmlFor="form">
+                  <Input id="form" name="form" defaultValue={initial?.form ?? "Lyophilized powder"} />
+                </Field>
+                <Field label="Purity" htmlFor="purity">
+                  <Input id="purity" name="purity" defaultValue={initial?.purity ?? "≥99% (HPLC)"} />
+                </Field>
+                <Field label="Storage" htmlFor="storage">
+                  <Textarea id="storage" name="storage" rows={3} defaultValue={initial?.storage ?? "Store lyophilized at −20 °C, protected from light and moisture."} />
+                </Field>
+              </div>
+            </Panel>
+
+            <div>
+              <FormSubmit className="w-full" variant="ink" pendingText="Saving…">
+                {initial ? "Save Product" : "Create Product"}
+              </FormSubmit>
+              <FormFeedback state={state} compact />
+            </div>
+          </div>
         </div>
-
-        <div className="space-y-6 xl:sticky xl:top-24 xl:self-start">
-          <Card>
-            <CardHeader title="Visibility" />
-            <CardBody className="space-y-3">
-              <label className="flex items-start gap-3 text-sm">
-                <Checkbox name="active" defaultChecked={initial?.active ?? true} className="mt-0.5" />
-                <span>
-                  <span className="font-medium text-ink-900">Active</span>
-                  <span className="block text-xs text-slate-500">Visible and purchasable in the store.</span>
-                </span>
-              </label>
-              <label className="flex items-start gap-3 text-sm">
-                <Checkbox name="featured" defaultChecked={initial?.featured ?? false} className="mt-0.5" />
-                <span>
-                  <span className="font-medium text-ink-900">Featured</span>
-                  <span className="block text-xs text-slate-500">Highlighted on the home page.</span>
-                </span>
-              </label>
-              <Field label="Sort order" htmlFor="sortOrder" hint="Lower numbers appear first.">
-                <Input id="sortOrder" name="sortOrder" type="number" defaultValue={initial?.sortOrder ?? 0} />
-              </Field>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardHeader title="Storage & specs" />
-            <CardBody className="space-y-4">
-              <Field label="Form" htmlFor="form">
-                <Input id="form" name="form" defaultValue={initial?.form ?? "Lyophilized powder"} />
-              </Field>
-              <Field label="Purity" htmlFor="purity">
-                <Input id="purity" name="purity" defaultValue={initial?.purity ?? "≥99% (HPLC)"} />
-              </Field>
-              <Field label="Storage" htmlFor="storage">
-                <Textarea
-                  id="storage"
-                  name="storage"
-                  rows={3}
-                  defaultValue={initial?.storage ?? "Store lyophilized at −20 °C, protected from light and moisture."}
-                />
-              </Field>
-            </CardBody>
-          </Card>
-
-          <FormSubmit className="w-full" size="lg" pendingText="Saving…">
-            {initial ? "Save product" : "Create product"}
-          </FormSubmit>
-          {state.error ? <Alert tone="error" title={state.error} /> : null}
-          {state.ok && state.message ? <Alert tone="success">{state.message}</Alert> : null}
-        </div>
-      </div>
-    </form>
+      </form>
     </PendingContext.Provider>
-  );
-}
-
-function VariantImage({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  // Wraps ImageField semantics for controlled variant rows (no form name; value lives in JSON state).
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function upload(file: File) {
-    setBusy(true);
-    setError(null);
-    try {
-      const body = new FormData();
-      body.append("file", file);
-      const res = await fetch("/api/admin/upload", { method: "POST", body });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Upload failed");
-      onChange(data.url);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload failed");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="flex items-center gap-2">
-      <div className="size-10 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
-        {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary admin-entered URLs */}
-        {value ? <img src={value} alt="" className="size-full object-cover" /> : null}
-      </div>
-      <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="Variant image URL (optional — falls back to main image)" className="text-xs" />
-      <label className="inline-flex h-10 shrink-0 cursor-pointer items-center rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-ink-800 hover:bg-slate-50">
-        {busy ? "Uploading…" : "Upload"}
-        <input
-          type="file"
-          accept="image/png,image/jpeg,image/webp,image/avif"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) void upload(f);
-            e.target.value = "";
-          }}
-        />
-      </label>
-      {error ? <p className="text-xs text-rose-600">{error}</p> : null}
-    </div>
   );
 }

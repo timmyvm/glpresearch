@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink, FlaskConical } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/utils";
 import { Alert } from "@/components/ui/alert";
 import { buttonClass } from "@/components/ui/button";
-import { PageHeader } from "@/components/admin/ui";
+import { PageHeader, Swatch } from "@/components/admin/ui";
 import { ConfirmButton } from "@/components/admin/confirm-button";
 import { ProductForm } from "@/components/admin/product-form";
 import { deleteProduct, saveProduct } from "../actions";
@@ -33,38 +32,50 @@ export default async function EditProductPage({
     },
   });
   if (!product) notFound();
-  const unitsSold = await db.orderItem.aggregate({
-    where: { variant: { productId: id }, order: { paymentStatus: "PAID" } },
-    _sum: { quantity: true },
-  });
+  const [unitsSold, waiting] = await Promise.all([
+    db.orderItem.aggregate({
+      where: { variant: { productId: id }, order: { paymentStatus: "PAID" } },
+      _sum: { quantity: true },
+    }),
+    db.stockAlert.count({ where: { notifiedAt: null, variant: { productId: id } } }),
+  ]);
+  const sold = unitsSold._sum.quantity ?? 0;
 
   return (
     <>
       <PageHeader
         back={{ href: "/admin/products", label: "Products" }}
-        title={product.name}
-        description={`${product.variants.length} variants · ${unitsSold._sum.quantity ?? 0} units sold · last updated ${formatDate(product.updatedAt)}`}
+        title={
+          <span className="flex items-center gap-3">
+            <Swatch color={product.accentColor} className="size-3.5" />
+            {product.name}
+          </span>
+        }
+        description={`${product.variants.length} variant${product.variants.length === 1 ? "" : "s"}, ${sold} unit${sold === 1 ? "" : "s"} sold${
+          waiting ? `, ${waiting} customer${waiting === 1 ? "" : "s"} waiting for restock` : ""
+        }. Last updated ${formatDate(product.updatedAt)}.`}
         actions={
           <>
-            <Link href={`/shop/${product.slug}`} target="_blank" className={buttonClass("ghost", "md")}>
-              <ExternalLink className="size-4" /> View in store
+            <Link href={`/shop/${product.slug}`} target="_blank" className={buttonClass("ghost", "sm")}>
+              View in Store
             </Link>
-            <Link href={`/admin/batches?product=${product.id}`} className={buttonClass("outline", "md")}>
-              <FlaskConical className="size-4" /> Batches ({product._count.batches})
+            <Link href={`/admin/batches?product=${product.id}`} className={buttonClass("outline", "sm", "ring-1 ring-ink/25")}>
+              Batches ({product._count.batches})
             </Link>
             <ConfirmButton
               action={deleteProduct.bind(null, product.id)}
-              message={`Delete ${product.name}? This removes its variants and batches. Past orders keep their line items.`}
-              size="md"
+              message={`Delete ${product.name}? This removes its ${product.variants.length} variants and ${product._count.batches} batch certificates. Past orders keep their line items. This can't be undone.`}
+              variant="ghost"
+              className="text-danger hover:bg-[#ffedea]"
             >
-              Delete
+              Delete Product
             </ConfirmButton>
           </>
         }
       />
       {sp.created ? (
         <Alert tone="success" className="mb-6">
-          Product created. You can keep editing below.
+          Product created. Keep editing below, or tick On sale and save to publish it.
         </Alert>
       ) : null}
       <ProductForm action={saveProduct.bind(null, product.id)} initial={product} />

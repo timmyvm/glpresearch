@@ -15,9 +15,10 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
           setTimeout(() => setCopied(false), 1500);
         } catch {}
       }}
-      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-ink-900"
+      className="press inline-flex h-8 items-center gap-1.5 px-2 text-small font-medium text-muted hover:bg-surface hover:text-ink"
+      aria-live="polite"
     >
-      {copied ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
+      {copied ? <Check className="size-3.5 text-success" aria-hidden="true" /> : <Copy className="size-3.5" aria-hidden="true" />}
       {copied ? "Copied" : label}
     </button>
   );
@@ -25,12 +26,8 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
 
 export function PrintButton() {
   return (
-    <button
-      type="button"
-      onClick={() => window.print()}
-      className="inline-flex h-10 items-center gap-2 rounded-lg bg-ink-900 px-4 text-sm font-semibold text-white hover:bg-ink-800 print:hidden"
-    >
-      Print packing slip
+    <button type="button" onClick={() => window.print()} className="press inline-flex h-10 items-center bg-ink px-4 text-sm font-medium text-on-navy hover:bg-ink-800 print:hidden">
+      Print Packing Slip
     </button>
   );
 }

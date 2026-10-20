@@ -43,7 +43,7 @@ export function FormSubmit({
   const pending = useContext(PendingContext);
   return (
     <Button type="submit" variant={variant} size={size} className={className} disabled={pending}>
-      {pending ? <Loader2 className="size-4 animate-spin" /> : null}
+      {pending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
       {pending && pendingText ? pendingText : children}
     </Button>
   );
@@ -58,7 +58,7 @@ export function FormFeedback({ state, compact }: { state: ActionState; compact?:
   return (
     <>
       {state.error ? (
-        <Alert tone="error" className={compact ? "mt-3 p-3 text-xs" : "mt-4"} title={state.error}>
+        <Alert tone="error" className={compact ? "mt-3 px-3 py-2.5" : "mt-4"} title={state.error}>
           {fieldErrors.length ? (
             <ul className="list-disc pl-4">
               {fieldErrors.map((e) => (
@@ -69,7 +69,7 @@ export function FormFeedback({ state, compact }: { state: ActionState; compact?:
         </Alert>
       ) : null}
       {state.ok && state.message ? (
-        <Alert tone="success" className={compact ? "mt-3 p-3 text-xs" : "mt-4"}>
+        <Alert tone="success" className={compact ? "mt-3 px-3 py-2.5" : "mt-4"}>
           {state.message}
         </Alert>
       ) : null}

@@ -13,7 +13,11 @@ export default async function NewBatchPage({ searchParams }: { searchParams: Pro
   });
   return (
     <>
-      <PageHeader back={{ href: "/admin/batches", label: "Batches" }} title="New batch" description="Record third-party test results for a manufacturing lot." />
+      <PageHeader
+        back={{ href: "/admin/batches", label: "Batch certificates" }}
+        title="New batch"
+        description="Record the third-party test results for one manufacturing lot."
+      />
       <BatchForm action={saveBatch.bind(null, null)} products={products} defaultProductId={sp.product} />
     </>
   );

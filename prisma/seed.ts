@@ -153,14 +153,26 @@ async function main() {
   console.log("Creating orders…");
   const statuses = ["DELIVERED", "DELIVERED", "DELIVERED", "SHIPPED", "SHIPPED", "PROCESSING", "PAID", "PENDING_PAYMENT", "PENDING_PAYMENT", "CANCELLED"];
   const methods = ["BANK_TRANSFER", "PAYID", "PAYID", "CRYPTO"];
+  let pendingCount = 0;
   for (let n = 0; n < 48; n++) {
     const user = pick(users);
     const address = user.addresses[0];
     const age = Math.floor(rand() * 75);
-    const created = daysAgo(age, Math.floor(rand() * 20));
+    let created = daysAgo(age, Math.floor(rand() * 20));
     let status = pick(statuses);
     if (age < 2 && status === "DELIVERED") status = "PROCESSING";
-    if (age > 10 && status === "PENDING_PAYMENT") status = "DELIVERED";
+
+    // Keep a few unpaid orders, all inside the 48-hour payment window so the expiry job leaves them alone.
+    let paymentClaimedAt: Date | null = null;
+    if (status === "PENDING_PAYMENT") {
+      if (pendingCount >= 3) {
+        status = age < 2 ? "PROCESSING" : "DELIVERED";
+      } else {
+        pendingCount++;
+        created = new Date(Date.now() - (2 + Math.floor(rand() * 30)) * 3600000);
+        if (pendingCount === 1) paymentClaimedAt = new Date(created.getTime() + 90 * 60000);
+      }
+    }
 
     const lines = Array.from({ length: 1 + Math.floor(rand() * 3) }, () => pick(variantRecords));
     const unique = [...new Map(lines.map((l) => [l.id, l])).values()];
@@ -182,6 +194,7 @@ async function main() {
     if (["PROCESSING", "SHIPPED", "DELIVERED"].includes(status)) events.push({ type: "STATUS", status: "PROCESSING", message: "Order is being picked and packed.", createdAt: new Date(created.getTime() + 20 * 3600000), createdBy: adminEmail });
     if (shipped) events.push({ type: "STATUS", status: "SHIPPED", message: "Shipped with Australia Post.", createdAt: new Date(created.getTime() + 30 * 3600000), createdBy: adminEmail });
     if (status === "DELIVERED") events.push({ type: "STATUS", status: "DELIVERED", message: "Delivered.", createdAt: new Date(created.getTime() + 4 * 86400000), createdBy: adminEmail });
+    if (paymentClaimedAt) events.push({ type: "PAYMENT", message: "Payment reported as sent by the customer.", createdAt: paymentClaimedAt });
     if (status === "CANCELLED") events.push({ type: "STATUS", status: "CANCELLED", message: "Cancelled — payment not received within 48 hours.", createdAt: new Date(created.getTime() + 50 * 3600000), createdBy: adminEmail });
 
     await db.order.create({
@@ -210,6 +223,7 @@ async function main() {
         carrier: shipped ? "Australia Post" : null,
         trackingNumber: shipped ? `33LPR${String(500000 + n * 7919).padStart(7, "0")}01000` : null,
         researchAck: true,
+        paymentClaimedAt,
         paidAt: paid ? events.find((e) => e.status === "PAID")?.createdAt : null,
         shippedAt: shipped ? events.find((e) => e.status === "SHIPPED")?.createdAt : null,
         deliveredAt: status === "DELIVERED" ? events.find((e) => e.status === "DELIVERED")?.createdAt : null,

@@ -1,16 +1,15 @@
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
-import { Users } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
 import { formatDate } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { ListFilters } from "@/components/admin/filters";
-import { EmptyState, PageHeader, Pagination, TableWrap, Td, Th } from "@/components/admin/ui";
+import { AccountPill, EmptyState, PageHeader, Pagination, TableWrap, Td, Th } from "@/components/admin/ui";
 
 export const metadata = { title: "Customers" };
 
 const PAGE_SIZE = 25;
+const nf = new Intl.NumberFormat("en-AU");
 
 export default async function CustomersPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
@@ -29,7 +28,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
     ];
   }
 
-  const [users, total] = await Promise.all([
+  const [users, total, everyone] = await Promise.all([
     db.user.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -38,6 +37,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
       include: { _count: { select: { orders: true } } },
     }),
     db.user.count({ where }),
+    db.user.count(),
   ]);
   const spend = await db.order.groupBy({
     by: ["userId"],
@@ -52,9 +52,10 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
 
   return (
     <>
-      <PageHeader title="Customers" description="Accounts, order history and lifetime value." />
+      <PageHeader title="Customers" description={`${nf.format(everyone)} accounts. Lifetime spend counts paid orders that were not cancelled or refunded.`} />
       <ListFilters
-        placeholder="Search name, email or institution…"
+        label="Search customers"
+        placeholder="Name, email or institution…"
         selectName="filter"
         selectLabel="Filter customers"
         selectOptions={[
@@ -63,57 +64,43 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
           { value: "SUSPENDED", label: "Suspended" },
           { value: "OPTIN", label: "Marketing opt-in" },
         ]}
+        count={`${nf.format(total)} account${total === 1 ? "" : "s"}`}
       />
-      <TableWrap>
+      <TableWrap minWidth={0}>
         <thead>
           <tr>
             <Th>Customer</Th>
-            <Th>Institution</Th>
-            <Th>Orders</Th>
-            <Th>Lifetime spend</Th>
-            <Th>Joined</Th>
-            <Th>Last sign-in</Th>
-            <Th>Status</Th>
+            <Th className="hidden lg:table-cell">Institution</Th>
+            <Th className="hidden text-right md:table-cell">Orders</Th>
+            <Th className="text-right">Lifetime spend</Th>
+            <Th className="hidden text-right lg:table-cell">Joined</Th>
+            <Th className="hidden text-right xl:table-cell">Last sign-in</Th>
+            <Th className="hidden sm:table-cell">Status</Th>
           </tr>
         </thead>
         <tbody>
           {users.length === 0 ? (
             <tr>
-              <Td colSpan={7}>
-                <EmptyState icon={Users} title="No customers found" />
+              <Td colSpan={7} className="p-0">
+                <EmptyState title="No customers match this search." description="Try another name, or clear the filter." />
               </Td>
             </tr>
           ) : null}
           {users.map((u) => (
-            <tr key={u.id} className="group hover:bg-slate-50">
+            <tr key={u.id} className="hover:bg-surface/50">
               <Td>
-                <Link href={`/admin/customers/${u.id}`} className="flex items-center gap-3">
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-ink-100 text-xs font-semibold text-ink-700">
-                    {u.firstName[0]}
-                    {u.lastName[0]}
-                  </span>
-                  <span>
-                    <span className="block font-medium text-ink-900 group-hover:text-mint-700">
-                      {u.firstName} {u.lastName}
-                    </span>
-                    <span className="block text-xs text-slate-500">{u.email}</span>
-                  </span>
+                <Link href={`/admin/customers/${u.id}`} className="font-medium text-ink hover:underline">
+                  {u.firstName} {u.lastName}
                 </Link>
+                <p className="max-w-[32ch] truncate text-small text-muted">{u.email}</p>
               </Td>
-              <Td className="text-xs text-slate-600">{u.institution ?? "—"}</Td>
-              <Td className="tabular-nums">{u._count.orders}</Td>
-              <Td className="font-semibold tabular-nums">{formatMoney(spendFor(u.id))}</Td>
-              <Td className="text-xs whitespace-nowrap text-slate-500">{formatDate(u.createdAt)}</Td>
-              <Td className="text-xs whitespace-nowrap text-slate-500">{u.lastLoginAt ? formatDate(u.lastLoginAt) : "—"}</Td>
-              <Td>
-                <div className="flex flex-wrap gap-1">
-                  {u.role === "ADMIN" ? <Badge className="bg-ink-900 text-white ring-ink-900">Admin</Badge> : null}
-                  {u.status === "SUSPENDED" ? (
-                    <Badge className="bg-rose-50 text-rose-700 ring-rose-600/20">Suspended</Badge>
-                  ) : (
-                    <Badge className="bg-emerald-50 text-emerald-700 ring-emerald-600/20">Active</Badge>
-                  )}
-                </div>
+              <Td className="hidden max-w-[24ch] truncate text-muted lg:table-cell">{u.institution ?? "–"}</Td>
+              <Td className="tabular hidden text-right md:table-cell">{u._count.orders}</Td>
+              <Td className="tabular text-right font-medium">{formatMoney(spendFor(u.id))}</Td>
+              <Td className="tabular hidden text-right whitespace-nowrap text-muted lg:table-cell">{formatDate(u.createdAt)}</Td>
+              <Td className="tabular hidden text-right whitespace-nowrap text-muted xl:table-cell">{u.lastLoginAt ? formatDate(u.lastLoginAt) : "–"}</Td>
+              <Td className="hidden sm:table-cell">
+                <AccountPill role={u.role} status={u.status} />
               </Td>
             </tr>
           ))}
@@ -123,6 +110,8 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
         page={page}
         pageCount={Math.ceil(total / PAGE_SIZE)}
         total={total}
+        pageSize={PAGE_SIZE}
+        noun="account"
         makeHref={(p) => {
           const next = new URLSearchParams(params);
           next.set("page", String(p));

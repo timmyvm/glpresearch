@@ -1,13 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
-import { Package, Plus } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
 import { categoryLabel } from "@/lib/orders";
-import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { ConfirmButton } from "@/components/admin/confirm-button";
-import { EmptyState, PageHeader, TableWrap, Td, Th } from "@/components/admin/ui";
+import { EmptyState, PageHeader, Swatch, TableWrap, Td, Th } from "@/components/admin/ui";
 import { toggleProductActive } from "./actions";
 
 export const metadata = { title: "Products" };
@@ -17,88 +14,107 @@ export default async function ProductsPage() {
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     include: { variants: { orderBy: { sortOrder: "asc" } }, _count: { select: { batches: true } } },
   });
+  const live = products.filter((p) => p.active).length;
 
   return (
     <>
       <PageHeader
         title="Products"
-        description={`${products.length} compounds in the catalogue.`}
+        description={`${products.length} compounds in the catalogue, ${live} on sale and ${products.length - live} hidden.`}
         actions={
-          <ButtonLink href="/admin/products/new">
-            <Plus className="size-4" /> New product
+          <ButtonLink href="/admin/products/new" variant="ink" size="sm">
+            New Product
           </ButtonLink>
         }
       />
-      <TableWrap>
+      <TableWrap minWidth={0}>
         <thead>
           <tr>
             <Th>Product</Th>
-            <Th>Category</Th>
-            <Th>Variants</Th>
-            <Th>Price range</Th>
-            <Th>Stock</Th>
-            <Th>Batches</Th>
-            <Th>Status</Th>
-            <Th className="text-right">Visibility</Th>
+            <Th className="hidden md:table-cell">Category</Th>
+            <Th className="hidden lg:table-cell">Variants</Th>
+            <Th className="hidden text-right lg:table-cell">Price</Th>
+            <Th className="text-right">Stock</Th>
+            <Th className="hidden text-right xl:table-cell">Batches</Th>
+            <Th className="hidden sm:table-cell">Status</Th>
+            <Th className="text-right">
+              <span className="sr-only">Visibility</span>
+            </Th>
           </tr>
         </thead>
         <tbody>
           {products.length === 0 ? (
             <tr>
-              <Td colSpan={8}>
-                <EmptyState icon={Package} title="No products yet" action={<ButtonLink href="/admin/products/new">Create your first product</ButtonLink>} />
+              <Td colSpan={8} className="p-0">
+                <EmptyState
+                  title="No products yet."
+                  description="Add a compound with at least one variant to start selling."
+                  action={
+                    <ButtonLink href="/admin/products/new" variant="ink" size="sm">
+                      New Product
+                    </ButtonLink>
+                  }
+                />
               </Td>
             </tr>
           ) : null}
           {products.map((p) => {
             const stock = p.variants.reduce((s, v) => s + v.stock, 0);
-            const low = p.variants.some((v) => v.active && v.stock <= v.lowStockThreshold);
+            const lowest = p.variants.filter((v) => v.active).sort((a, b) => a.stock - a.lowStockThreshold - (b.stock - b.lowStockThreshold))[0];
             const prices = p.variants.map((v) => v.price);
             return (
-              <tr key={p.id} className="group hover:bg-slate-50">
+              <tr key={p.id} className="hover:bg-surface/50">
                 <Td>
-                  <Link href={`/admin/products/${p.id}`} className="flex items-center gap-3">
-                    <span className="relative size-11 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-                      <Image src={p.image} alt="" fill sizes="44px" className="object-cover" />
-                    </span>
-                    <span>
-                      <span className="flex items-center gap-2 font-semibold text-ink-900 group-hover:text-mint-700">
-                        <span className="size-2 rounded-full" style={{ backgroundColor: p.accentColor }} />
+                  <div className="flex items-start gap-2.5">
+                    <Swatch color={p.accentColor} className="mt-1.5" />
+                    <div className="min-w-0">
+                      <Link href={`/admin/products/${p.id}`} className="font-medium text-ink hover:underline">
                         {p.name}
-                        {p.featured ? <Badge className="bg-mint-50 text-mint-700 ring-mint-600/20">Featured</Badge> : null}
-                      </span>
-                      <span className="block text-xs text-slate-500">{p.subtitle}</span>
-                    </span>
-                  </Link>
-                </Td>
-                <Td className="text-xs text-slate-600">{categoryLabel(p.category)}</Td>
-                <Td>
-                  <div className="flex flex-wrap gap-1">
-                    {p.variants.map((v) => (
-                      <Badge key={v.id} className={v.active ? "" : "line-through opacity-60"}>
-                        {v.label}
-                      </Badge>
-                    ))}
+                      </Link>
+                      {p.featured ? <span className="ml-2 text-small text-muted">Featured</span> : null}
+                      <p className="max-w-[20ch] truncate text-small text-muted sm:max-w-[40ch]">{p.subtitle}</p>
+                    </div>
                   </div>
                 </Td>
-                <Td className="text-xs tabular-nums">
-                  {prices.length ? `${formatMoney(Math.min(...prices))}${prices.length > 1 ? ` – ${formatMoney(Math.max(...prices))}` : ""}` : "—"}
+                <Td className="hidden whitespace-nowrap text-muted md:table-cell">{categoryLabel(p.category)}</Td>
+                <Td className="hidden text-muted lg:table-cell">
+                  {p.variants.map((v, i) => (
+                    <span key={v.id}>
+                      {i ? ", " : ""}
+                      <span className={v.active ? "whitespace-nowrap" : "whitespace-nowrap line-through"}>{v.label}</span>
+                    </span>
+                  ))}
                 </Td>
-                <Td>
-                  <span className={`font-semibold tabular-nums ${low ? "text-amber-600" : "text-ink-900"}`}>{stock}</span>
-                  {low ? <span className="ml-1.5 text-xs text-amber-600">low</span> : null}
+                <Td className="tabular hidden text-right whitespace-nowrap lg:table-cell">
+                  {prices.length ? `${formatMoney(Math.min(...prices))}${prices.length > 1 ? `–${formatMoney(Math.max(...prices))}` : ""}` : "–"}
                 </Td>
-                <Td className="text-slate-600">{p._count.batches}</Td>
-                <Td>
-                  {p.active ? (
-                    <Badge className="bg-emerald-50 text-emerald-700 ring-emerald-600/20">Active</Badge>
-                  ) : (
-                    <Badge>Hidden</Badge>
-                  )}
+                <Td className="text-right">
+                  <span className="tabular font-medium">{stock}</span>
+                  {lowest && lowest.stock <= lowest.lowStockThreshold ? (
+                    <span className="block text-small whitespace-nowrap text-muted">
+                      {lowest.label} {lowest.stock <= 0 ? "sold out" : "low"}
+                    </span>
+                  ) : null}
+                </Td>
+                <Td className="tabular hidden text-right text-muted xl:table-cell">{p._count.batches}</Td>
+                <Td className="hidden sm:table-cell">
+                  <span
+                    className={`inline-flex h-6 items-center rounded-full px-2.5 text-small leading-none font-medium whitespace-nowrap ${
+                      p.active ? "bg-surface text-muted" : "bg-[#fffbeb] text-[#92400e]"
+                    }`}
+                  >
+                    {p.active ? "On sale" : "Hidden"}
+                  </span>
                 </Td>
                 <Td className="text-right">
                   <div className="flex justify-end">
-                    <ConfirmButton action={toggleProductActive.bind(null, p.id)} message="" variant="outline" size="sm">
+                    <ConfirmButton
+                      action={toggleProductActive.bind(null, p.id)}
+                      message={p.active ? `Hide ${p.name} from the store? Customers will no longer see it or be able to order it.` : ""}
+                      variant="ghost"
+                      size="sm"
+                      className="h-8"
+                    >
                       {p.active ? "Hide" : "Publish"}
                     </ConfirmButton>
                   </div>
