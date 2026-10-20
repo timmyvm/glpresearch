@@ -120,7 +120,20 @@ model ProductVariant {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  orderItems OrderItem[]
+  orderItems  OrderItem[]
+  stockAlerts StockAlert[]
+}
+
+// "Email me when it's back": one row per email per sold-out variant.
+model StockAlert {
+  id         String         @id @default(cuid())
+  email      String
+  variantId  String
+  variant    ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  notifiedAt DateTime?
+  createdAt  DateTime       @default(now())
+
+  @@unique([email, variantId])
 }
 
 // Third-party test results (Certificate of Analysis) per manufacturing batch.
@@ -177,6 +190,9 @@ model Order {
   carrier        String?
   trackingNumber String?
   researchAck    Boolean @default(false)
+
+  // Set when the customer says they have sent payment; cleared when payment is confirmed.
+  paymentClaimedAt DateTime?
 
   paidAt      DateTime?
   shippedAt   DateTime?
@@ -279,4 +295,11 @@ model EmailLog {
 model Setting {
   key   String @id
   value String // JSON encoded
+}
+
+// Fixed-window rate limiting for sign-in, sign-up, password reset and contact forms.
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
 }

@@ -49,6 +49,8 @@ async function main() {
   await db.subscriber.deleteMany();
   await db.emailLog.deleteMany();
   await db.setting.deleteMany();
+  await db.stockAlert.deleteMany();
+  await db.rateLimit.deleteMany();
 
   console.log("Creating admin…");
   const adminEmail = (process.env.SEED_ADMIN_EMAIL ?? "admin@glpresearch.com").toLowerCase();

@@ -1,109 +1,88 @@
 import Link from "next/link";
-import { FlaskConical, Mail } from "lucide-react";
-import { db } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
-import { Logo } from "./logo";
+import { DispatchClock } from "./dispatch-clock";
 import { NewsletterForm } from "./newsletter-form";
 
+const LINKS = [
+  { href: "/shop", label: "Peptides" },
+  { href: "/research", label: "Research library" },
+  { href: "/compare", label: "Compare compounds" },
+  { href: "/coa", label: "Lab results" },
+  { href: "/faq", label: "Questions" },
+  { href: "/shipping", label: "Shipping & returns" },
+  { href: "/track", label: "Track an order" },
+  { href: "/contact", label: "Contact" },
+];
+
+const LEGAL = [
+  { href: "/disclaimer", label: "Research use policy" },
+  { href: "/terms", label: "Terms of sale" },
+  { href: "/privacy", label: "Privacy" },
+];
+
+// "A footer of tiles": every cell filled, 8px gaps, the name returning at full width.
 export async function Footer() {
-  const [settings, products] = await Promise.all([
-    getSettings(),
-    db.product.findMany({
-      where: { active: true },
-      orderBy: { sortOrder: "asc" },
-      select: { slug: true, name: true },
-    }),
-  ]);
-
-  const columns = [
-    {
-      title: "Peptides",
-      links: [...products.map((p) => ({ href: `/shop/${p.slug}`, label: p.name })), { href: "/shop", label: "All peptides" }],
-    },
-    {
-      title: "Science",
-      links: [
-        { href: "/research", label: "Research library" },
-        { href: "/compare", label: "Compound comparison" },
-        { href: "/research/glossary", label: "Glossary" },
-        { href: "/coa", label: "Certificates of analysis" },
-      ],
-    },
-    {
-      title: "Support",
-      links: [
-        { href: "/account", label: "My account" },
-        { href: "/track", label: "Track an order" },
-        { href: "/shipping", label: "Shipping & returns" },
-        { href: "/faq", label: "FAQ" },
-        { href: "/contact", label: "Contact us" },
-      ],
-    },
-    {
-      title: "Company",
-      links: [
-        { href: "/about", label: "About" },
-        { href: "/disclaimer", label: "Research use policy" },
-        { href: "/terms", label: "Terms of sale" },
-        { href: "/privacy", label: "Privacy policy" },
-      ],
-    },
-  ];
-
+  const settings = await getSettings();
   return (
-    <footer className="mt-24 bg-ink-950 text-ink-200">
-      <div className="container-page grid gap-12 py-16 lg:grid-cols-[1.2fr_2fr]">
-        <div className="space-y-6">
-          <Logo tone="light" />
-          <p className="max-w-sm text-sm leading-relaxed text-ink-300">
-            Research-grade incretin receptor agonists, independently verified by HPLC and mass spectrometry — and a
-            library that explains the science behind them.
+    <footer className="mt-32 px-2 pb-2 lg:mt-48" aria-labelledby="footer-title">
+      <h2 id="footer-title" className="sr-only">
+        About this site
+      </h2>
+      <div className="grid gap-2 md:grid-cols-12">
+        <div className="flex min-h-56 flex-col justify-between gap-8 bg-surface p-6 md:col-span-6 lg:col-span-4">
+          <p className="max-w-[28ch] text-lead text-ink">
+            Seven peptides that act on the <span className="whitespace-nowrap">GLP-1</span> receptor, each batch tested before it is sold.
           </p>
+          <div className="space-y-3 text-small text-muted">
+            <p className="max-w-[60ch]">
+              For laboratory research use only. Not for human or veterinary use, and not a medicine, food or cosmetic.
+              Content summarises published literature and is not medical advice.
+            </p>
+            <p className="flex flex-wrap gap-x-4 gap-y-1">
+              {LEGAL.map((l) => (
+                <Link key={l.href} href={l.href} className="link">
+                  {l.label}
+                </Link>
+              ))}
+              <span>© {new Date().getFullYear()} {settings.storeName}</span>
+            </p>
+          </div>
+        </div>
+        <nav className="bg-field-grey p-6 md:col-span-6 lg:col-span-3" aria-label="Footer">
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-2 lg:grid-cols-1">
+            {LINKS.map((l) => (
+              <li key={l.href}>
+                <Link href={l.href} className="link decoration-transparent hover:decoration-ink">
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <DispatchClock className="md:col-span-6 lg:col-span-2" />
+        <div className="flex min-h-56 flex-col justify-between gap-6 bg-surface p-6 md:col-span-6 lg:col-span-3">
           <div>
-            <p className="mb-2 text-sm font-semibold text-white">Research updates</p>
-            <p className="mb-3 text-xs text-ink-300">New compounds, batch releases and literature reviews. No spam.</p>
-            <NewsletterForm />
+            <p className="text-small text-muted">Questions, batch certificates, institutional supply</p>
+            <a href={`mailto:${settings.supportEmail}`} className="link mt-1 inline-block text-lead break-all">
+              {settings.supportEmail}
+            </a>
           </div>
-          <a href={`mailto:${settings.supportEmail}`} className="inline-flex items-center gap-2 text-sm text-ink-200 hover:text-white">
-            <Mail className="size-4 text-mint-300" /> {settings.supportEmail}
-          </a>
+          <NewsletterForm />
         </div>
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-          {columns.map((col) => (
-            <div key={col.title}>
-              <p className="text-xs font-semibold tracking-[0.16em] text-white uppercase">{col.title}</p>
-              <ul className="mt-4 space-y-2.5">
-                {col.links.map((link) => (
-                  <li key={link.href}>
-                    <Link href={link.href} className="text-sm text-ink-300 transition-colors hover:text-mint-300">
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+        <div className="grid min-h-40 place-items-center overflow-hidden bg-ink px-4 md:col-span-8 md:min-h-80">
+          <p className="text-[clamp(2.75rem,9vw,10rem)] leading-none font-medium tracking-[-0.06em] whitespace-nowrap text-on-navy" translate="no" aria-hidden="true">
+            GLP Research
+          </p>
         </div>
-      </div>
-      <div className="border-t border-white/10">
-        <div className="container-page py-6">
-          <div className="flex gap-3 rounded-2xl bg-white/5 p-4 text-xs leading-relaxed text-ink-300 ring-1 ring-white/10">
-            <FlaskConical className="mt-0.5 size-4 shrink-0 text-mint-300" />
-            <p>
-              <strong className="text-ink-100">Research use only.</strong> All products sold by {settings.storeName} are
-              intended solely for in-vitro laboratory research by qualified professionals. They are not medicines, are
-              not intended for human or veterinary use, and must not be used to diagnose, treat, cure or prevent any
-              disease. Information on this website summarises published scientific literature for educational purposes
-              and is not medical advice. Statements have not been evaluated by the TGA, FDA or any regulatory body.
-            </p>
-          </div>
-          <div className="mt-6 flex flex-col gap-2 text-xs text-ink-400 sm:flex-row sm:items-center sm:justify-between">
-            <p>
-              © {new Date().getFullYear()} {settings.storeName}. All rights reserved.
-            </p>
-            <p>Prices in AUD · Payments by bank transfer, PayID or crypto</p>
-          </div>
-        </div>
+        <Link
+          href="/shop"
+          className="press group flex min-h-40 flex-col justify-between bg-accent p-6 text-accent-ink hover:bg-accent-strong md:col-span-4 md:min-h-80"
+        >
+          <span className="text-index font-medium">Shop the catalogue</span>
+          <svg className="size-14 self-end transition-transform duration-300 ease-[var(--ease-out)] group-hover:translate-x-1" viewBox="0 0 56 56" fill="none" aria-hidden="true">
+            <path d="M8 28h38M32 14l14 14-14 14" stroke="currentColor" strokeWidth="4" strokeLinecap="square" />
+          </svg>
+        </Link>
       </div>
     </footer>
   );

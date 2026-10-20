@@ -9,21 +9,36 @@ export function NewsletterForm() {
   const [state, action] = useActionState(subscribe, initialActionState);
 
   if (state.ok) {
-    return <p className="rounded-lg bg-mint-400/10 px-3 py-2 text-sm text-mint-200">{state.message}</p>;
+    return (
+      <p className="text-small text-ink" role="status">
+        {state.message}
+      </p>
+    );
   }
 
   return (
-    <form action={action} className="flex max-w-sm gap-2">
-      <input
-        type="email"
-        name="email"
-        required
-        placeholder="you@institution.edu"
-        aria-label="Email address"
-        className="h-10 min-w-0 flex-1 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-white placeholder:text-ink-400 focus:border-mint-400 focus:outline-none"
-      />
-      <SubmitButton variant="accent">Subscribe</SubmitButton>
-      {state.error ? <p className="sr-only">{state.error}</p> : null}
+    <form action={action} className="space-y-2">
+      <label htmlFor="newsletter-email" className="block text-small text-muted">
+        New batches and literature reviews, by email
+      </label>
+      <div className="flex gap-2">
+        <input
+          id="newsletter-email"
+          type="email"
+          name="email"
+          required
+          autoComplete="email"
+          spellCheck={false}
+          placeholder="you@institution.edu…"
+          className="h-11 min-w-0 flex-1 bg-white px-3 text-base text-ink placeholder:text-muted/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+        />
+        <SubmitButton variant="ink">Subscribe</SubmitButton>
+      </div>
+      {state.error ? (
+        <p className="text-small text-danger" role="alert">
+          {state.error}
+        </p>
+      ) : null}
     </form>
   );
 }

@@ -1,36 +1,54 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Hanken_Grotesk } from "next/font/google";
 import { siteUrl } from "@/lib/utils";
+import { RevealObserver } from "@/components/motion/reveal-observer";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const hanken = Hanken_Grotesk({
+  variable: "--font-hanken",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
+});
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
-    default: "GLP Research — Research-grade GLP-1 peptides & incretin science",
+    default: "GLP Research — GLP-1 research peptides, batch tested",
     template: "%s · GLP Research",
   },
   description:
-    "Third-party tested GLP-1, dual and triple incretin receptor agonist peptides for laboratory research, plus an in-depth library on incretin biology and published clinical data.",
+    "Seven research compounds that act on the GLP-1 receptor, from semaglutide to retatrutide. Every batch independently verified by HPLC and mass spectrometry, with a referenced research library.",
   openGraph: {
     type: "website",
     siteName: "GLP Research",
-    images: [{ url: "/images/hero-vials.webp", width: 1600, height: 900 }],
+    locale: "en_AU",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b1530",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="min-h-dvh">{children}</body>
+    <html lang="en-AU" className={hanken.variable} suppressHydrationWarning>
+      <head>
+        {/* Hidden reveal states only apply once this class is set, so content never depends on JS. */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
+      <body className="min-h-dvh">
+        <a
+          href="#main"
+          className="sr-only z-[100] bg-ink px-4 py-3 text-small font-medium text-on-navy focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+        >
+          Skip to content
+        </a>
+        {children}
+        <RevealObserver />
+      </body>
     </html>
   );
 }

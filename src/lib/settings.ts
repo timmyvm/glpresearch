@@ -25,7 +25,7 @@ export const DEFAULT_SETTINGS: StoreSettings = {
   storeName: "GLP Research",
   supportEmail: "support@glpresearch.com",
   supportPhone: "",
-  announcement: "Free tracked shipping on orders over $250 · Every batch third-party tested",
+  announcement: "Free tracked shipping on orders over $250",
   orderPrefix: "GLP",
   shippingStandard: 1295,
   shippingExpress: 1995,

@@ -1,11 +1,12 @@
 import { cn } from "@/lib/utils";
 import { statusLabel, statusTone } from "@/lib/orders";
 
+// Status pills: a pale tint with dark text of the same hue (app-screen rule). Never above a heading.
 export function Badge({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 ring-1 ring-slate-500/10 ring-inset",
+        "inline-flex h-6 flex-none items-center gap-1 rounded-full bg-surface px-2.5 text-small leading-none font-medium whitespace-nowrap text-muted",
         className,
       )}
       {...props}

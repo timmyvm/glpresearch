@@ -1,19 +1,21 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
+// Square corners, Title Case labels, one press response. See DESIGN.md.
 const variants = {
-  primary: "bg-ink-900 text-white hover:bg-ink-800 shadow-sm",
-  accent: "bg-mint-400 text-ink-950 hover:bg-mint-300 shadow-sm shadow-mint-500/20",
-  outline: "border border-slate-300 bg-white text-ink-900 hover:border-ink-300 hover:bg-ink-50",
-  ghost: "text-ink-700 hover:bg-ink-50 hover:text-ink-900",
-  danger: "bg-rose-600 text-white hover:bg-rose-500",
-  light: "bg-white/10 text-white ring-1 ring-white/20 backdrop-blur hover:bg-white/15",
+  primary: "bg-accent text-accent-ink hover:bg-accent-strong",
+  accent: "bg-accent text-accent-ink hover:bg-accent-strong",
+  ink: "bg-ink text-on-navy hover:bg-ink-800",
+  outline: "bg-transparent text-ink ring-2 ring-ink ring-inset hover:bg-ink hover:text-on-navy",
+  ghost: "bg-transparent text-ink hover:bg-surface",
+  danger: "bg-danger text-white hover:bg-[#a52a08]",
+  light: "bg-white text-ink hover:bg-surface",
 } as const;
 
 const sizes = {
-  sm: "h-8 px-3 text-xs gap-1.5",
-  md: "h-10 px-4 text-sm gap-2",
-  lg: "h-12 px-6 text-sm gap-2",
+  sm: "h-9 px-3 text-small gap-1.5",
+  md: "h-11 px-5 text-small gap-2",
+  lg: "h-14 px-7 text-body gap-2",
 } as const;
 
 export type ButtonVariant = keyof typeof variants;
@@ -21,7 +23,7 @@ export type ButtonSize = keyof typeof sizes;
 
 export function buttonClass(variant: ButtonVariant = "primary", size: ButtonSize = "md", className?: string) {
   return cn(
-    "inline-flex shrink-0 items-center justify-center rounded-lg font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50",
+    "press inline-flex shrink-0 items-center justify-center font-medium whitespace-nowrap select-none disabled:pointer-events-none disabled:opacity-50",
     variants[variant],
     sizes[size],
     className,

@@ -89,7 +89,7 @@ Albumin binding via the C18 diacid side chain reduces renal clearance and shield
     name: "Tirzepatide",
     subtitle: "Dual GIP / GLP-1 receptor agonist",
     category: "DUAL",
-    accentColor: "#8B5CF6",
+    accentColor: "#FF6831",
     featured: true,
     shortDescription:
       "A 39-residue ‘twincretin’ built on the GIP backbone that activates both GIP and GLP-1 receptors, with a ~5-day half-life.",
@@ -303,7 +303,7 @@ In mice, its greater weight loss than semaglutide reflected both reduced intake 
     name: "Mazdutide",
     subtitle: "Dual GLP-1 / glucagon receptor agonist",
     category: "DUAL",
-    accentColor: "#6366F1",
+    accentColor: "#2563EB",
     shortDescription:
       "A lipidated oxyntomodulin analogue — the first glucagon/GLP-1 dual agonist to reach regulatory approval anywhere.",
     description: `Mazdutide is a long-acting analogue of **oxyntomodulin**, the endogenous gut hormone that naturally activates both the GLP-1 and glucagon receptors. The 34-residue backbone carries Aib at position 2 and a C-terminal amide, and **Lys20** bears a **C20 fatty diacid** through a γGlu–2×AEEA linker for once-weekly pharmacokinetics.

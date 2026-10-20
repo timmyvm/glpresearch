@@ -1,5 +1,10 @@
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
+
+// Teach tailwind-merge the custom type steps so `text-body` is a size, not a colour.
+const twMerge = extendTailwindMerge({
+  extend: { theme: { text: ["small", "body", "lead", "index", "head", "display"] } },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

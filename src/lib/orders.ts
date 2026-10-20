@@ -22,13 +22,13 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
 
 /** Tailwind classes for status pills. */
 export const ORDER_STATUS_TONE: Record<OrderStatus, string> = {
-  PENDING_PAYMENT: "bg-amber-50 text-amber-700 ring-amber-600/20",
-  PAID: "bg-sky-50 text-sky-700 ring-sky-600/20",
-  PROCESSING: "bg-indigo-50 text-indigo-700 ring-indigo-600/20",
-  SHIPPED: "bg-violet-50 text-violet-700 ring-violet-600/20",
-  DELIVERED: "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
-  CANCELLED: "bg-slate-100 text-slate-600 ring-slate-500/20",
-  REFUNDED: "bg-rose-50 text-rose-700 ring-rose-600/20",
+  PENDING_PAYMENT: "bg-[#fffbeb] text-[#92400e]",
+  PAID: "bg-[#e4e9f4] text-[#0b1530]",
+  PROCESSING: "bg-[#c9d2e8] text-[#0b1530]",
+  SHIPPED: "bg-[#e3f8fd] text-[#0c4a5e]",
+  DELIVERED: "bg-[#dcfae5] text-[#04250e]",
+  CANCELLED: "bg-surface text-muted",
+  REFUNDED: "bg-[#ffedea] text-[#831c1e]",
 };
 
 /** The happy-path order lifecycle shown as a progress tracker. */

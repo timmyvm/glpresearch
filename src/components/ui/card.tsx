@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils";
 
+// App-screen panel: white with one quiet border, square corners, no shadow.
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("rounded-2xl border border-slate-200 bg-white shadow-xs", className)} {...props} />;
+  return <div className={cn("border border-ink/10 bg-white", className)} {...props} />;
 }
 
 export function CardHeader({
@@ -16,10 +17,10 @@ export function CardHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4", className)}>
-      <div>
-        <h3 className="text-sm font-semibold text-ink-900">{title}</h3>
-        {description ? <p className="mt-0.5 text-sm text-slate-500">{description}</p> : null}
+    <div className={cn("flex items-start justify-between gap-4 px-5 pt-5 pb-3", className)}>
+      <div className="min-w-0">
+        <h2 className="text-base font-medium text-ink">{title}</h2>
+        {description ? <p className="mt-1 text-small text-muted">{description}</p> : null}
       </div>
       {action}
     </div>
@@ -27,5 +28,5 @@ export function CardHeader({
 }
 
 export function CardBody({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("p-5", className)} {...props} />;
+  return <div className={cn("px-5 pb-5", className)} {...props} />;
 }

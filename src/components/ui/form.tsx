@@ -1,22 +1,23 @@
 import { cn } from "@/lib/utils";
 
+// Fields are filled surfaces with no border; focus draws a 2px ink ring. See DESIGN.md.
 const control =
-  "block w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-ink-900 shadow-xs placeholder:text-slate-400 focus:border-mint-500 focus:ring-2 focus:ring-mint-500/20 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500 aria-invalid:border-rose-400";
+  "block w-full bg-surface px-3.5 text-base text-ink placeholder:text-muted/80 transition-[background-color,box-shadow] duration-150 hover:bg-surface-2 focus:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ink disabled:cursor-not-allowed disabled:text-muted aria-invalid:bg-[#ffedea] aria-invalid:ring-2 aria-invalid:ring-danger/60";
 
 export function Input({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cn(control, "h-10", className)} {...props} />;
+  return <input className={cn(control, "h-12", className)} {...props} />;
 }
 
 export function Textarea({ className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea className={cn(control, "py-2 leading-relaxed", className)} {...props} />;
+  return <textarea className={cn(control, "py-3 leading-relaxed", className)} {...props} />;
 }
 
 export function Select({ className, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select className={cn(control, "h-10 pr-8", className)} {...props} />;
+  return <select className={cn(control, "h-12 pr-9", className)} {...props} />;
 }
 
 export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) {
-  return <label className={cn("mb-1.5 block text-sm font-medium text-ink-800", className)} {...props} />;
+  return <label className={cn("mb-2 block text-small font-medium text-ink", className)} {...props} />;
 }
 
 export function Field({
@@ -40,20 +41,16 @@ export function Field({
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
       {message ? (
-        <p className="mt-1.5 text-xs text-rose-600">{message}</p>
+        <p className="mt-2 text-small text-danger" role="alert">
+          {message}
+        </p>
       ) : hint ? (
-        <p className="mt-1.5 text-xs text-slate-500">{hint}</p>
+        <p className="mt-2 text-small text-muted">{hint}</p>
       ) : null}
     </div>
   );
 }
 
 export function Checkbox({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      type="checkbox"
-      className={cn("size-4 rounded border-slate-300 text-mint-600 accent-mint-600 focus:ring-mint-500", className)}
-      {...props}
-    />
-  );
+  return <input type="checkbox" className={cn("size-5 shrink-0 accent-ink", className)} {...props} />;
 }
