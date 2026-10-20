@@ -114,6 +114,7 @@ Admin image uploads are saved to `./uploads` and served from `/api/uploads/…`.
 | `npm run build` / `npm start` | Production build / serve |
 | `npm run lint` / `npm run typecheck` | ESLint / TypeScript |
 | `npm run test:e2e` | Playwright end-to-end tests (uses the dev server on :3000; seed first) |
+| `npm run test:flows` | Customer journey checks: register, checkout, payment, cancel, invoices, rate limits, close account. Cleans up after itself |
 | `npm run db:push` | Sync the Prisma schema to the database |
 | `npm run db:seed` | **Wipe** and reseed demo data |
 | `npm run db:reset` | Force-reset the schema and reseed |

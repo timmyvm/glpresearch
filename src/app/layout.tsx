@@ -35,10 +35,6 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en-AU" className={hanken.variable} suppressHydrationWarning>
-      <head>
-        {/* Hidden reveal states only apply once this class is set, so content never depends on JS. */}
-        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
-      </head>
       <body className="min-h-dvh">
         <a
           href="#main"

@@ -88,7 +88,7 @@ Headline rules:
 - **Easing:** `--ease-out` for UI under 600ms and `--ease-expo` for reveals.
 - **Durations:** press 140ms, hover 180ms, reveal 800ms.
 - **Load sequence:** the hero h1 lines rise from a mask, then the lead and the action follow. Everything settles within 1.2s.
-- **Reveals:** `[data-reveal]` elements rise 24px with opacity, once, in reading order with 70ms between them. They are hidden only under `html.js`.
+- **Reveals:** `[data-reveal]` elements rise 24px with opacity, once, in reading order with 70ms between them. They are hidden only under `@media (scripting: enabled)`, so with scripting off everything shows.
 - **Hero:** the signature move is the drag row of vials, built on native scroll-snap.
 - **One moving picture:** a slow drift on the lab photograph.
 - **Reduced motion:** everything sits inside `prefers-reduced-motion: no-preference`, and the reduced state is simply the finished state.

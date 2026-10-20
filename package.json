@@ -14,7 +14,8 @@
     "db:studio": "prisma studio",
     "images": "node scripts/optimize-images.mjs",
     "postinstall": "prisma generate",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:flows": "node tests/e2e/customer-flows.cjs"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

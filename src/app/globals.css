@@ -192,16 +192,16 @@
 
   /* Long-form research content */
   .prose-research {
-    @apply prose max-w-none text-body text-ink prose-headings:scroll-mt-28 prose-headings:font-medium prose-headings:text-ink prose-h2:mt-16 prose-h2:mb-5 prose-h2:text-[clamp(1.75rem,1.3rem+1.6vw,2.5rem)] prose-h2:leading-[1.05] prose-h2:tracking-[-0.03em] prose-h3:mt-10 prose-h3:text-lead prose-h3:tracking-[-0.015em] prose-p:leading-relaxed prose-p:text-ink prose-a:font-medium prose-a:text-ink prose-a:underline prose-a:decoration-[0.07em] prose-a:underline-offset-[0.2em] prose-blockquote:border-l-4 prose-blockquote:border-accent prose-blockquote:bg-surface prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:font-normal prose-blockquote:not-italic prose-blockquote:text-ink prose-strong:font-medium prose-strong:text-ink prose-code:bg-surface prose-code:px-1.5 prose-code:py-0.5 prose-code:text-[0.85em] prose-code:font-normal prose-code:text-ink prose-code:before:content-none prose-code:after:content-none prose-li:text-ink prose-li:marker:text-muted prose-img:rounded-none;
+    @apply prose max-w-none text-body text-ink prose-headings:scroll-mt-28 prose-headings:font-medium prose-headings:text-ink prose-h2:mt-16 prose-h2:mb-5 prose-h2:text-[clamp(1.75rem,1.3rem+1.6vw,2.5rem)] prose-h2:leading-[1.05] prose-h2:tracking-[-0.03em] prose-h3:mt-10 prose-h3:text-lead prose-h3:tracking-[-0.015em] prose-p:leading-relaxed prose-p:text-ink prose-a:font-medium prose-a:text-ink prose-a:underline prose-a:decoration-[0.07em] prose-a:underline-offset-[0.2em] prose-blockquote:border-l-4 prose-blockquote:border-accent prose-blockquote:bg-surface prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:font-normal prose-blockquote:not-italic prose-blockquote:text-ink prose-strong:font-medium prose-strong:text-ink prose-code:bg-surface prose-code:px-1.5 prose-code:py-0.5 prose-code:text-[0.85em] prose-code:font-normal prose-code:text-ink prose-code:before:content-none prose-code:after:content-none prose-li:text-ink prose-li:marker:text-muted prose-img:rounded-none; /* taste-skill-ignore: the 4px quote bar is a graphic element, not a hairline */
   }
 }
 
 /* ─── Motion ─────────────────────────────────────────────────────────
-   Content is always in the HTML. Hidden states apply only under html.js
-   (set by an inline script) and only when motion is allowed. */
+   Content is always in the HTML. Hidden states apply only when scripting
+   is on (the observer reveals them) and motion is allowed. */
 
-@media (prefers-reduced-motion: no-preference) {
-  .js [data-reveal] {
+@media (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  [data-reveal] {
     opacity: 0;
     transform: translateY(24px);
     transition:
@@ -210,24 +210,26 @@
     transition-delay: calc(var(--i, 0) * var(--stagger-item));
   }
 
-  .js [data-reveal][data-revealed] {
+  [data-reveal][data-revealed] {
     opacity: 1;
     transform: none;
   }
 
-  .js .lines [data-line] {
+  .lines [data-line] {
     transform: translateY(105%);
     animation: line-up 900ms var(--ease-expo) forwards;
     animation-delay: calc(var(--i, 0) * var(--stagger-line) + 120ms);
   }
 
-  .js [data-load] {
+  [data-load] {
     opacity: 0;
     transform: translateY(12px);
     animation: load-rise 500ms var(--ease-out) forwards;
     animation-delay: var(--d, 400ms);
   }
+}
 
+@media (prefers-reduced-motion: no-preference) {
   .drift {
     animation: drift 24s var(--ease-soft) infinite alternate;
   }

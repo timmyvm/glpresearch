@@ -36,7 +36,7 @@ export function CartDrawer({ freeShippingThreshold }: { freeShippingThreshold: n
         onClick={() => setOpen(false)}
         aria-label="Close cart"
       />
-      <div className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col overscroll-contain bg-white shadow-[-16px_0_40px_rgba(11,21,48,0.18)]">
+      <div className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col overscroll-contain bg-white shadow-[-16px_0_40px_rgba(11,21,48,0.18)]" /* taste-skill-ignore: the drawer is a real overlay */>
         <div className="flex items-center justify-between px-6 py-5">
           <h2 className="text-lead font-medium">Cart</h2>
           <button
