@@ -1,0 +1,282 @@
+// GLP Research data model.
+// SQLite for local development. To run on Postgres (Supabase, Neon, Vercel Postgres),
+// change `provider` to "postgresql", point DATABASE_URL at it, and run `npm run db:push`.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Customers & auth ────────────────────────────────────────────────
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  phone          String?
+  institution    String?
+  role           String    @default("CUSTOMER") // CUSTOMER | ADMIN
+  status         String    @default("ACTIVE") // ACTIVE | SUSPENDED
+  marketingOptIn Boolean   @default(false)
+  adminNotes     String?
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  addresses   Address[]
+  orders      Order[]
+  resetTokens PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String?
+  firstName String
+  lastName  String
+  company   String?
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  postcode  String
+  country   String   @default("Australia")
+  phone     String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// ─── Catalog ─────────────────────────────────────────────────────────
+
+model Product {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  subtitle         String // e.g. "GLP-1 receptor agonist"
+  category         String // GLP1 | DUAL | TRIPLE
+  shortDescription String
+  description      String // markdown
+  image            String
+  accentColor      String   @default("#2DD4BF")
+
+  // Research monograph
+  aliases          String? // comma separated research codes
+  developer        String?
+  receptorTargets  String // comma separated, e.g. "GIPR,GLP-1R"
+  molecularFormula String?
+  molecularWeight  String?
+  casNumber        String?
+  sequence         String?
+  aminoAcidCount   Int?
+  halfLife         String?
+  regulatoryStatus String?
+  mechanism        String? // markdown
+  research         String? // markdown: key published findings
+  references       String? // JSON: [{ label, url }]
+  form             String   @default("Lyophilized powder")
+  purity           String   @default("≥99% (HPLC)")
+  storage          String   @default("Store lyophilized at −20 °C, protected from light and moisture.")
+
+  featured  Boolean  @default(false)
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  variants ProductVariant[]
+  batches  Batch[]
+}
+
+model ProductVariant {
+  id                String   @id @default(cuid())
+  productId         String
+  product           Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label             String // "10 mg"
+  sku               String   @unique
+  price             Int // cents
+  compareAtPrice    Int?
+  stock             Int      @default(0)
+  lowStockThreshold Int      @default(10)
+  image             String?
+  active            Boolean  @default(true)
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  orderItems OrderItem[]
+}
+
+// Third-party test results (Certificate of Analysis) per manufacturing batch.
+model Batch {
+  id           String    @id @default(cuid())
+  productId    String
+  product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  batchNumber  String    @unique
+  variantLabel String?
+  purity       Float // percent, e.g. 99.42
+  massSpec     String? // e.g. "Confirmed — observed 4113.6 Da"
+  testMethod   String    @default("RP-HPLC (UV 214 nm) / ESI-MS")
+  laboratory   String
+  testedAt     DateTime
+  expiresAt    DateTime?
+  coaUrl       String?
+  notes        String?
+  published    Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────
+
+model Order {
+  id             String  @id @default(cuid())
+  number         String  @unique
+  accessToken    String  @unique // lets guests view their order confirmation
+  userId         String?
+  user           User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email          String
+  status         String  @default("PENDING_PAYMENT") // see src/lib/orders.ts
+  paymentMethod  String // BANK_TRANSFER | PAYID | CRYPTO
+  paymentStatus  String  @default("UNPAID") // UNPAID | PAID | REFUNDED
+  subtotal       Int
+  discount       Int     @default(0)
+  shipping       Int
+  total          Int
+  couponCode     String?
+  shippingMethod String // STANDARD | EXPRESS
+
+  shipFirstName String
+  shipLastName  String
+  shipCompany   String?
+  shipLine1     String
+  shipLine2     String?
+  shipCity      String
+  shipState     String
+  shipPostcode  String
+  shipCountry   String
+  shipPhone     String?
+
+  customerNote   String?
+  adminNote      String?
+  carrier        String?
+  trackingNumber String?
+  researchAck    Boolean @default(false)
+
+  paidAt      DateTime?
+  shippedAt   DateTime?
+  deliveredAt DateTime?
+  cancelledAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  items  OrderItem[]
+  events OrderEvent[]
+}
+
+model OrderItem {
+  id           String          @id @default(cuid())
+  orderId      String
+  order        Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId    String?
+  variant      ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  productName  String
+  variantLabel String
+  sku          String
+  image        String?
+  unitPrice    Int
+  quantity     Int
+  lineTotal    Int
+}
+
+model OrderEvent {
+  id                String   @id @default(cuid())
+  orderId           String
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type              String // STATUS | NOTE | PAYMENT | EMAIL
+  status            String?
+  message           String
+  visibleToCustomer Boolean  @default(true)
+  createdBy         String?
+  createdAt         DateTime @default(now())
+}
+
+model Coupon {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  description String?
+  type        String // PERCENT | FIXED
+  value       Int // percent (10 = 10%) or cents
+  minSubtotal Int       @default(0)
+  maxUses     Int?
+  usedCount   Int       @default(0)
+  startsAt    DateTime?
+  expiresAt   DateTime?
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+}
+
+// ─── Content & inbox ─────────────────────────────────────────────────
+
+model Article {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  title          String
+  excerpt        String
+  content        String // markdown
+  category       String // Fundamentals | Compounds | Clinical Research | Lab Practice
+  coverImage     String?
+  author         String   @default("GLP Research Science Team")
+  readingMinutes Int      @default(5)
+  featured       Boolean  @default(false)
+  published      Boolean  @default(true)
+  publishedAt    DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model ContactMessage {
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  subject     String
+  orderNumber String?
+  message     String
+  status      String   @default("NEW") // NEW | READ | REPLIED | ARCHIVED
+  createdAt   DateTime @default(now())
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  to        String
+  subject   String
+  body      String
+  status    String   @default("LOGGED") // LOGGED | SENT | FAILED
+  createdAt DateTime @default(now())
+}
+
+model Setting {
+  key   String @id
+  value String // JSON encoded
+}
