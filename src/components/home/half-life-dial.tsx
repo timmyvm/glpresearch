@@ -61,13 +61,12 @@ export function HalfLifeDial({ items }: { items: DialItem[] }) {
           <h2 id="half-life-title" className="text-index font-medium text-muted">
             Half-life
           </h2>
-          <ul className="flex flex-wrap gap-x-5 md:block" role="listbox" aria-labelledby="half-life-title">
+          <ul className="flex flex-wrap gap-x-5 md:block" aria-labelledby="half-life-title">
             {items.map((it, k) => (
               <li key={it.slug}>
                 <button
                   type="button"
-                  role="option"
-                  aria-selected={k === i}
+                  aria-pressed={k === i}
                   onClick={() => setI(k)}
                   className={cn(
                     "inline-flex items-center gap-3 text-left text-index font-medium transition-colors duration-200",

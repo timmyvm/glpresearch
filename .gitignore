@@ -48,3 +48,7 @@ uploads/
 
 # taste-skill working files (screenshots, direction sheets)
 .taste-skill/
+
+# Playwright
+test-results/
+playwright-report/

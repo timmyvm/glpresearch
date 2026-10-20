@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { LoopVideo } from "@/components/motion/loop-video";
 import { Button } from "@/components/ui/button";
 
 export type CardBatch = { batchNumber: string; purity: number };
@@ -44,9 +44,12 @@ export function CoaCard({ batches, count, average }: { batches: CardBatch[]; cou
       <div className="frame mt-16 flex justify-center">
         <article className="-mb-24 w-[92vw] rotate-1 bg-white px-7 pt-7 pb-36 md:w-[56vw] md:-rotate-[1.5deg] md:px-14 md:pt-14" aria-label="Certificate of analysis summary">
           <h3 className="text-center text-lead font-medium">Certificate of analysis</h3>
-          <div className="relative mt-6 aspect-video overflow-clip">
-            <Image src="/images/hplc-analysis.webp" alt="An analyst holds a sample vial beside an HPLC chromatogram showing a single sharp peak" fill sizes="(min-width: 768px) 50vw, 90vw" className="drift object-cover" />
-          </div>
+          <LoopVideo
+            className="mt-6 aspect-video overflow-clip bg-surface"
+            src="/video/hplc-loop.mp4"
+            poster="/video/hplc-loop-poster.webp"
+            label="A slow move towards an HPLC chromatogram showing a single sharp purity peak"
+          />
           <p className="mt-8 text-center text-lead leading-[1.7]">
             {batches.map((b, i) => (
               <span key={b.batchNumber}>
