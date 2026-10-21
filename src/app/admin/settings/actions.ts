@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidateStorefront } from "@/lib/revalidate";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { saveSettings, type StoreSettings } from "@/lib/settings";
@@ -44,6 +44,6 @@ export async function updateSettings(_prev: ActionState, form: FormData): Promis
     freeShippingThreshold: toCents(d.freeShippingThreshold),
   };
   await saveSettings(values);
-  revalidatePath("/", "layout");
+  revalidateStorefront();
   return { ok: true, message: "Settings saved. Changes are live on the store." };
 }

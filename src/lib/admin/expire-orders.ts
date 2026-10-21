@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { sendEmail } from "@/lib/email";
 import { formatMoney } from "@/lib/money";
 import { getSettings } from "@/lib/settings";
+import { revalidateStorefront } from "@/lib/revalidate";
 import { orderLink } from "./emails";
 import { notifyBackInStock } from "./stock-alerts";
 
@@ -70,5 +71,6 @@ export async function expireUnpaidOrders(now = new Date()) {
   }
   // Released stock can take a sold-out variant back above zero.
   for (const variantId of restocked) await notifyBackInStock(variantId);
+  if (cancelled.length) revalidateStorefront();
   return cancelled;
 }

@@ -2,6 +2,7 @@
 
 import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { revalidateStorefront } from "@/lib/revalidate";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -94,6 +95,7 @@ export async function updateOrderStatus(orderId: string, _prev: ActionState, for
   revalidateOrder(orderId);
   revalidatePath("/admin/inventory");
   revalidatePath("/admin/stock-alerts");
+  if (willRestock !== wasRestocked) revalidateStorefront();
   return {
     ok: true,
     message: `Status updated to ${statusLabel(status)}${willRestock !== wasRestocked ? (willRestock ? " · stock returned to inventory" : " · stock re-reserved") : ""}${notify ? " · customer notified" : ""}.`,
@@ -220,6 +222,7 @@ export async function cancelExpiredOrders(): Promise<ActionState> {
   revalidatePath("/admin/inventory");
   revalidatePath("/admin/stock-alerts");
   if (!cancelled.length) return { ok: true, message: "No orders were past the payment window." };
+  revalidateStorefront();
   return {
     ok: true,
     message: `Cancelled ${cancelled.length} unpaid order${cancelled.length === 1 ? "" : "s"} (${cancelled.join(", ")}) and released ${cancelled.length === 1 ? "its" : "their"} stock.`,

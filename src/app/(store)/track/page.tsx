@@ -5,6 +5,7 @@ import { TrackForm } from "@/components/checkout/track-form";
 export const metadata: Metadata = {
   title: "Track an order",
   description: "Check the status of your GLP Research order with your order number and email.",
+  alternates: { canonical: "/track" },
 };
 
 export default function TrackPage() {

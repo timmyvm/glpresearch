@@ -35,7 +35,8 @@ export function SpecimenTile({ product, wide = false, className, priority = fals
           src={specimenImage(product.image) ?? product.image}
           alt={`${product.name} research vial`}
           fill
-          priority={priority}
+          loading={priority ? "eager" : undefined}
+          fetchPriority={priority ? "high" : undefined}
           sizes={wide ? "(min-width: 768px) 50vw, 100vw" : "(min-width: 1024px) 25vw, 50vw"}
           className="object-contain px-[8%] pt-[10%] pb-[4%] transition-transform duration-500 ease-[var(--ease-out)] group-hover:-translate-y-1.5"
         />

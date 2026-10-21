@@ -7,8 +7,9 @@ import { ButtonLink } from "@/components/ui/button";
 import { PageIntro, TitleLines } from "@/components/store/page-intro";
 
 export const metadata: Metadata = {
-  title: "About",
+  title: "About us",
   description: "GLP Research supplies only incretin-class research peptides, each batch independently tested and documented.",
+  alternates: { canonical: "/about" },
 };
 
 const PRINCIPLES = [

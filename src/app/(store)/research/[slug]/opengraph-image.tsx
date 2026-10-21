@@ -7,6 +7,12 @@ export const alt = "A GLP Research library article";
 export const size = OG_SIZE;
 export const contentType = "image/png";
 
+// Built with the pages, so share cards are static files rather than rendered per request.
+export async function generateStaticParams() {
+  const rows = await db.article.findMany({ where: { published: true }, select: { slug: true } });
+  return rows.map(({ slug }) => ({ slug }));
+}
+
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [article, fonts, logo] = await Promise.all([

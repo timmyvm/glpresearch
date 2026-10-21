@@ -78,3 +78,67 @@ test("sitemap lists products and articles", async ({ request }) => {
   expect(xml).toContain("/shop/semaglutide");
   expect(xml).toContain("/research/what-is-glp-1");
 });
+
+test("catalogue filters run in the browser on the static page", async ({ page }) => {
+  await page.goto("/shop?category=DUAL");
+  const filters = page.getByRole("navigation", { name: "Filter by receptor class" });
+  const grid = page.getByRole("region", { name: "Compounds" });
+  const active = filters.locator('[aria-current="page"]');
+  await expect(active).toContainText("Dual agonists");
+  const dual = Number(await active.locator(".tabular").textContent());
+  await expect(grid.locator('a[href^="/shop/"]')).toHaveCount(dual);
+
+  await filters.getByRole("link", { name: /^All/ }).click();
+  await expect(page).toHaveURL(/\/shop$/);
+  const all = Number(await filters.locator('[aria-current="page"] .tabular').textContent());
+  expect(all).toBeGreaterThan(dual);
+  await expect(grid.locator('a[href^="/shop/"]')).toHaveCount(all);
+});
+
+test("research topics filter in the browser on the static page", async ({ page }) => {
+  await page.goto("/research?category=Compounds");
+  await expect(page.getByRole("navigation", { name: "Filter by topic" }).locator('[aria-current="page"]')).toHaveText("Compounds");
+  await expect(page.getByRole("heading", { name: "Six decades of incretin science" })).toHaveCount(0);
+  await page.getByRole("link", { name: "All topics" }).click();
+  await expect(page.getByRole("heading", { name: "Six decades of incretin science" })).toBeVisible();
+});
+
+test("header shows a signed-in customer's name on static pages", async ({ page, isMobile }) => {
+  test.skip(isMobile, "the account link lives in the menu on phones");
+  await page.goto("/login");
+  await page.fill("#email", "olivia.chen@example.com");
+  await page.fill("#password", "Password123!");
+  await page.click("button:has-text('Sign In')");
+  await page.waitForURL(/\/account/);
+  await page.goto("/shop");
+  const header = page.getByRole("banner");
+  await expect(header.getByRole("link", { name: "Olivia" })).toBeVisible();
+  await page.goto("/account");
+  await page.getByRole("button", { name: "Sign Out" }).click();
+  await page.waitForURL((url) => !url.pathname.startsWith("/account"));
+  await page.goto("/shop");
+  await expect(header.getByRole("link", { name: "Sign In" })).toBeVisible();
+});
+
+test("public pages carry a canonical URL and valid structured data", async ({ page }) => {
+  for (const [path, canonical, types] of [
+    ["/shop?category=DUAL&sort=name", "/shop", ["ItemList", "BreadcrumbList"]],
+    ["/shop/semaglutide", "/shop/semaglutide", ["Product", "BreadcrumbList", "Organization"]],
+    ["/research/what-is-glp-1", "/research/what-is-glp-1", ["Article", "BreadcrumbList", "Organization"]],
+    ["/faq", "/faq", ["FAQPage"]],
+  ] as const) {
+    await page.goto(path);
+    expect(new URL((await page.locator('link[rel="canonical"]').getAttribute("href"))!).pathname, `${path} canonical`).toBe(canonical);
+    const graphs = await page.locator('script[type="application/ld+json"]').allTextContents();
+    const found = graphs.flatMap((g) => JSON.parse(g)["@graph"].map((n: { "@type": string }) => n["@type"]));
+    expect(found, `${path} structured data`).toEqual(expect.arrayContaining([...types]));
+  }
+});
+
+test("robots and sitemap leave out private and noindex pages", async ({ request }) => {
+  const robots = await (await request.get("/robots.txt")).text();
+  for (const path of ["/admin", "/account", "/checkout", "/search"]) expect(robots).toContain(`Disallow: ${path}`);
+  const locs = [...(await (await request.get("/sitemap.xml")).text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
+  expect(locs).toContain("/shop/semaglutide");
+  for (const path of ["/search", "/cart", "/login"]) expect(locs).not.toContain(path);
+});

@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/store/legal-page";
 
-export const metadata: Metadata = { title: "Research use policy" };
+export const metadata: Metadata = {
+  title: "Research use policy",
+  description: "GLP Research products are supplied for in-vitro laboratory research only, not for human or veterinary use. The conditions of supply.",
+  alternates: { canonical: "/disclaimer" },
+};
 
 export default function DisclaimerPage() {
   return (

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateStorefront } from "@/lib/revalidate";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
@@ -17,10 +18,9 @@ const schema = z.object({
   testedAt: z.date({ error: "Tested date is required" }),
 });
 
-function revalidateBatches(productSlug?: string) {
+function revalidateBatches() {
   revalidatePath("/admin/batches");
-  revalidatePath("/coa");
-  if (productSlug) revalidatePath(`/shop/${productSlug}`);
+  revalidateStorefront();
 }
 
 export async function saveBatch(batchId: string | null, _prev: ActionState, form: FormData): Promise<ActionState> {
@@ -56,25 +56,25 @@ export async function saveBatch(batchId: string | null, _prev: ActionState, form
 
   if (batchId) {
     await db.batch.update({ where: { id: batchId }, data });
-    revalidateBatches(product.slug);
+    revalidateBatches();
     return { ok: true, message: "Batch saved." };
   }
   await db.batch.create({ data });
-  revalidateBatches(product.slug);
+  revalidateBatches();
   redirect("/admin/batches");
 }
 
 export async function deleteBatch(batchId: string) {
   await requireAdmin();
-  const batch = await db.batch.delete({ where: { id: batchId }, include: { product: { select: { slug: true } } } });
-  revalidateBatches(batch.product.slug);
+  await db.batch.delete({ where: { id: batchId } });
+  revalidateBatches();
   redirect("/admin/batches");
 }
 
 export async function toggleBatchPublished(batchId: string) {
   await requireAdmin();
-  const batch = await db.batch.findUnique({ where: { id: batchId }, include: { product: { select: { slug: true } } } });
+  const batch = await db.batch.findUnique({ where: { id: batchId }, select: { published: true } });
   if (!batch) return;
   await db.batch.update({ where: { id: batchId }, data: { published: !batch.published } });
-  revalidateBatches(batch.product.slug);
+  revalidateBatches();
 }

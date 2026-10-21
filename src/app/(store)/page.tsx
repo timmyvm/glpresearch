@@ -1,5 +1,9 @@
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
+import { organizationLd, websiteLd } from "@/lib/seo";
+import { getSettings } from "@/lib/settings";
+import { JsonLd } from "@/components/seo/json-ld";
 import { parseHalfLife, timesNative } from "@/lib/half-life";
 import { specimenImage } from "@/lib/plates";
 import { splitList } from "@/lib/utils";
@@ -12,6 +16,8 @@ import { LibraryTiles } from "@/components/home/library-tiles";
 import { ProcessTiles } from "@/components/home/process-tiles";
 import { FaqCards } from "@/components/home/faq-cards";
 import { FAQS } from "./faq/faqs";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 const RECEPTOR_WORDS: Record<string, string> = { "GLP-1R": "GLP-1", GIPR: "GIP", GCGR: "glucagon" };
 
@@ -36,7 +42,7 @@ const FAQ_TOPICS: { topic: string; q: string }[] = [
 ];
 
 export default async function HomePage() {
-  const [products, batches, batchStats, articles] = await Promise.all([
+  const [products, batches, batchStats, articles, settings] = await Promise.all([
     db.product.findMany({
       where: { active: true },
       orderBy: { sortOrder: "asc" },
@@ -64,6 +70,7 @@ export default async function HomePage() {
       take: 6,
       select: { slug: true, title: true, category: true, readingMinutes: true, coverImage: true },
     }),
+    getSettings(),
   ]);
 
   const fromPrice = (p: (typeof products)[number]) => Math.min(...p.variants.map((v) => v.price));
@@ -83,6 +90,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <JsonLd data={[organizationLd({ name: settings.storeName, email: settings.supportEmail }), websiteLd(settings.storeName)]} />
       <HeroLineup
         items={lineup}
         title={

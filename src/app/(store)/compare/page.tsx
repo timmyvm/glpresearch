@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   title: "Compare GLP-1, dual and triple agonists",
   description:
     "Semaglutide, tirzepatide, retatrutide and four more incretin research peptides side by side: receptor targets, half-life, structure and development status.",
+  alternates: { canonical: "/compare" },
 };
 
 // Log scale for the half-life chart: one minute to one month.

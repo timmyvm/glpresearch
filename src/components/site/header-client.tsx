@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { cartCount, useCart } from "@/lib/cart";
+import { HINT_COOKIE, parseHint } from "@/lib/session-hint";
+import { useCookie } from "@/lib/use-cookie";
 import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
 
@@ -17,8 +19,10 @@ const NAV = [
 const subscribe = () => () => {};
 const useHydrated = () => useSyncExternalStore(subscribe, () => true, () => false);
 
-export function HeaderClient({ user }: { user: { firstName: string; role: string } | null }) {
+export function HeaderClient() {
   const pathname = usePathname();
+  // Read in the browser so every public page can be served as static HTML.
+  const user = parseHint(useCookie(HINT_COOKIE));
   const hydrated = useHydrated();
   const [open, setOpen] = useState(false);
   const count = useCart((s) => cartCount(s.items));
@@ -44,7 +48,7 @@ export function HeaderClient({ user }: { user: { firstName: string; role: string
   }, [open]);
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
-  const account = user ? (user.role === "ADMIN" ? { href: "/admin", label: "Admin" } : { href: "/account", label: "Account" }) : { href: "/login", label: "Sign In" };
+  const account = user ? (user.admin ? { href: "/admin", label: "Admin" } : { href: "/account", label: "Account" }) : { href: "/login", label: "Sign In" };
 
   return (
     <header className="sticky top-0 z-40 bg-bg">
@@ -70,7 +74,7 @@ export function HeaderClient({ user }: { user: { firstName: string; role: string
             Search
           </Link>
           <Link href={account.href} className="link hidden text-small text-muted decoration-transparent hover:text-ink sm:inline">
-            {user && user.role !== "ADMIN" ? user.firstName : account.label}
+            {user && !user.admin && user.name ? user.name : account.label}
           </Link>
           <button
             type="button"

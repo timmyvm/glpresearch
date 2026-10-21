@@ -2,15 +2,24 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { db } from "@/lib/db";
-import { cn, formatDate } from "@/lib/utils";
+import { ORG_ID, breadcrumbLd, organizationLd } from "@/lib/seo";
+import { getSettings } from "@/lib/settings";
+import { cn, formatDate, siteUrl } from "@/lib/utils";
+import { JsonLd } from "@/components/seo/json-ld";
 import { splitTitle } from "@/components/store/article-title";
 import { Markdown, extractHeadings } from "@/components/store/markdown";
 
 type Params = { params: Promise<{ slug: string }> };
 
-async function getArticle(slug: string) {
-  return db.article.findFirst({ where: { slug, published: true } });
+// Shared by generateMetadata and the page, so each render queries once.
+const getArticle = cache(async (slug: string) => db.article.findFirst({ where: { slug, published: true } }));
+
+// Every published article is built ahead of time; new ones are built on their first visit.
+export async function generateStaticParams() {
+  const articles = await db.article.findMany({ where: { published: true }, select: { slug: true } });
+  return articles.map(({ slug }) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -19,6 +28,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title: article.title,
     description: article.excerpt,
+    alternates: { canonical: `/research/${article.slug}` },
     // Replaces the layout's openGraph object, so it repeats the site fields.
     openGraph: {
       type: "article",
@@ -39,7 +49,7 @@ export default async function ArticlePage({ params }: Params) {
 
   const { head, rest } = splitTitle(article.title);
   const headings = extractHeadings(article.content);
-  const [others, products] = await Promise.all([
+  const [others, products, settings] = await Promise.all([
     db.article.findMany({
       where: { published: true, id: { not: article.id } },
       orderBy: { publishedAt: "desc" },
@@ -51,24 +61,37 @@ export default async function ArticlePage({ params }: Params) {
       orderBy: { sortOrder: "asc" },
       select: { slug: true, name: true, subtitle: true, accentColor: true },
     }),
+    getSettings(),
   ]);
   const lower = article.content.toLowerCase();
   const mentioned = products.filter((p) => lower.includes(p.name.toLowerCase())).slice(0, 5);
 
-  const jsonLd = {
-    "@context": "https://schema.org",
+  const url = siteUrl(`/research/${article.slug}`);
+  const articleLd = {
     "@type": "Article",
+    "@id": `${url}#article`,
     headline: article.title,
     description: article.excerpt,
-    image: article.coverImage ?? undefined,
+    url,
+    mainEntityOfPage: url,
+    image: article.coverImage ? siteUrl(article.coverImage) : undefined,
+    articleSection: article.category,
+    wordCount: article.content.split(/\s+/).length,
+    inLanguage: "en-AU",
     datePublished: article.publishedAt.toISOString(),
     dateModified: article.updatedAt.toISOString(),
     author: { "@type": "Organization", name: article.author },
+    publisher: { "@id": ORG_ID },
   };
+  const crumbs = breadcrumbLd([
+    { name: "Home", path: "/" },
+    { name: "Research library", path: "/research" },
+    { name: article.title, path: `/research/${article.slug}` },
+  ]);
 
   return (
     <article>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <JsonLd data={[articleLd, crumbs, organizationLd({ name: settings.storeName, email: settings.supportEmail })]} />
 
       <header className="frame grid gap-6 pt-8 md:grid-cols-12 md:gap-x-[var(--gutter)] md:pt-14">
         <nav aria-label="Breadcrumb" className="text-small text-muted md:col-span-12">
@@ -98,7 +121,7 @@ export default async function ArticlePage({ params }: Params) {
       {article.coverImage ? (
         <div className="frame mt-10 md:mt-14">
           <div className="relative aspect-[4/3] overflow-clip bg-ink sm:aspect-[21/9]" data-load style={{ "--d": "450ms" } as React.CSSProperties}>
-            <Image src={article.coverImage} alt="" fill priority sizes="100vw" className="object-cover" />
+            <Image src={article.coverImage} alt="" fill preload sizes="(min-width: 1760px) 1760px, 100vw" className="object-cover" />
           </div>
         </div>
       ) : null}

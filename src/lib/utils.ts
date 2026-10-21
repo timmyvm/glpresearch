@@ -40,7 +40,12 @@ export function splitList(value: string | null | undefined) {
     .filter(Boolean);
 }
 
+/**
+ * Absolute URL on the public site, for canonicals, sitemaps, emails and structured data.
+ * On Vercel it falls back to the production domain if NEXT_PUBLIC_SITE_URL is not set.
+ */
 export function siteUrl(path = "") {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? (vercel ? `https://${vercel}` : "http://localhost:3000");
   return `${base.replace(/\/$/, "")}${path}`;
 }

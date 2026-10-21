@@ -21,7 +21,8 @@ export async function POST(request: Request) {
 
   const name = `${randomBytes(16).toString("hex")}.${ext === "jpeg" ? "jpg" : ext}`;
   await mkdir(UPLOAD_DIR, { recursive: true });
-  await writeFile(path.join(UPLOAD_DIR, name), Buffer.from(await file.arrayBuffer()));
+  // Runtime-only location, so keep the bundler from tracing the whole project into the function.
+  await writeFile(path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, name), Buffer.from(await file.arrayBuffer()));
 
   return Response.json({ url: `/api/uploads/${name}` });
 }

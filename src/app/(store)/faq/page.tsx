@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { JsonLd } from "@/components/seo/json-ld";
 import Image from "next/image";
 import Link from "next/link";
 import { cn, slugify } from "@/lib/utils";
@@ -6,8 +7,9 @@ import { PageIntro, TitleLines } from "@/components/store/page-intro";
 import { FAQS } from "./faqs";
 
 export const metadata: Metadata = {
-  title: "Questions",
+  title: "Frequently asked questions",
   description: "Answers about product quality, batch testing, storage, payment and shipping for GLP Research peptides.",
+  alternates: { canonical: "/faq" },
 };
 
 const PICTURES: Record<string, { src: string; alt: string; position?: string }> = {
@@ -19,7 +21,6 @@ const PICTURES: Record<string, { src: string; alt: string; position?: string }> 
 
 export default function FaqPage() {
   const jsonLd = {
-    "@context": "https://schema.org",
     "@type": "FAQPage",
     mainEntity: FAQS.flatMap((g) => g.items).map((f) => ({
       "@type": "Question",
@@ -30,7 +31,7 @@ export default function FaqPage() {
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <JsonLd data={jsonLd} />
       <PageIntro
         title={<TitleLines lines={["Questions and", "answers"]} />}
         lead="Quality, testing, storage, ordering and shipping. If yours isn't here, our team replies within one business day."

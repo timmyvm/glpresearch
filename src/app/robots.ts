@@ -3,7 +3,8 @@ import { siteUrl } from "@/lib/utils";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: "*", allow: "/", disallow: ["/admin", "/account", "/checkout", "/order", "/api"] }],
+    // Private and transactional pages, plus internal search results (which are noindex anyway).
+    rules: [{ userAgent: "*", allow: "/", disallow: ["/admin", "/account", "/checkout", "/cart", "/order", "/search", "/api"] }],
     sitemap: siteUrl("/sitemap.xml"),
   };
 }

@@ -50,7 +50,7 @@ export function LoopVideo({ src, poster, label, className }: { src: string; post
         muted
         loop
         playsInline
-        preload="metadata"
+        preload="none"
         aria-label={label}
       />
       <button

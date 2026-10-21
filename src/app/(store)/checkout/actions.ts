@@ -6,6 +6,7 @@ import { getCurrentUser, hashPassword, startSession } from "@/lib/auth";
 import { CheckoutError, placeOrder, quoteLines, validateCoupon, type QuotedLine } from "@/lib/checkout";
 import { sendNewOrderNotification, sendOrderConfirmation } from "@/lib/order-emails";
 import { getSettings } from "@/lib/settings";
+import { revalidateStorefront } from "@/lib/revalidate";
 import { PAYMENT_METHODS, SHIPPING_METHODS } from "@/lib/orders";
 import { AU_STATES } from "@/components/checkout/au-states";
 
@@ -151,6 +152,8 @@ export async function submitCheckout(payload: CheckoutPayload): Promise<Checkout
       researchAck: d.researchAck,
     });
 
+    // Stock went down, so the static product pages need to know.
+    revalidateStorefront();
     const settings = await getSettings();
     await sendOrderConfirmation(order, settings).catch((error) => console.error("[checkout] confirmation email failed", error));
     await sendNewOrderNotification(order, settings).catch((error) => console.error("[checkout] new-order notice failed", error));

@@ -18,9 +18,19 @@ export type LineupItem = {
  * current one; siblings step back 30% smaller and a quarter darker. The ground takes the
  * current compound's label colour. Drag, swipe, arrow keys or a click on a sibling all work.
  */
+/** How far back a vial stands at `d` slots from the centre. */
+function stepStyle(i: number, d: number) {
+  const a = Math.min(Math.abs(d), 3.2);
+  return {
+    transform: `translateY(${(i % 2 ? -1 : 1) * Math.min(a, 1) * 14}px) scale(${Math.pow(0.7, a).toFixed(3)})`,
+    filter: `brightness(${Math.pow(0.8, a).toFixed(3)})`,
+  };
+}
+
 export function HeroLineup({ items, title, aside }: { items: LineupItem[]; title: React.ReactNode; aside: React.ReactNode }) {
   const track = useRef<HTMLDivElement>(null);
-  const [current, setCurrent] = useState(Math.floor(items.length / 2));
+  const start = Math.floor(items.length / 2);
+  const [current, setCurrent] = useState(start);
   const item = items[current];
   const ink = plateInk(item.plate);
 
@@ -28,19 +38,13 @@ export function HeroLineup({ items, title, aside }: { items: LineupItem[]; title
     const el = track.current;
     if (!el) return;
     const mid = el.scrollLeft + el.clientWidth / 2;
+    const slots = [...el.querySelectorAll<HTMLElement>("[data-slot]")];
+    // Read every slot before writing any style, so a frame costs one layout instead of seven.
+    const offsets = slots.map((slot) => (slot.offsetLeft + slot.offsetWidth / 2 - mid) / slot.offsetWidth);
     let best = 0;
-    let bestD = Infinity;
-    el.querySelectorAll<HTMLElement>("[data-slot]").forEach((slot, i) => {
-      const c = slot.offsetLeft + slot.offsetWidth / 2;
-      const d = (c - mid) / slot.offsetWidth;
-      const a = Math.min(Math.abs(d), 3.2);
-      const fig = slot.firstElementChild as HTMLElement;
-      fig.style.transform = `translateY(${(i % 2 ? -1 : 1) * Math.min(a, 1) * 14}px) scale(${Math.pow(0.7, a).toFixed(3)})`;
-      fig.style.filter = `brightness(${Math.pow(0.8, a).toFixed(3)})`;
-      if (Math.abs(d) < bestD) {
-        bestD = Math.abs(d);
-        best = i;
-      }
+    offsets.forEach((d, i) => {
+      Object.assign((slots[i].firstElementChild as HTMLElement).style, stepStyle(i, d));
+      if (Math.abs(d) < Math.abs(offsets[best])) best = i;
     });
     setCurrent((prev) => (prev === best ? prev : best));
   }, []);
@@ -54,8 +58,8 @@ export function HeroLineup({ items, title, aside }: { items: LineupItem[]; title
       raf = requestAnimationFrame(place);
     };
     // Start on the middle compound so siblings stand on both sides.
-    const start = el.querySelectorAll<HTMLElement>("[data-slot]")[Math.floor(items.length / 2)];
-    if (start) el.scrollLeft = start.offsetLeft + start.offsetWidth / 2 - el.clientWidth / 2;
+    const first = el.querySelectorAll<HTMLElement>("[data-slot]")[start];
+    if (first) el.scrollLeft = first.offsetLeft + first.offsetWidth / 2 - el.clientWidth / 2;
     place();
     el.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
@@ -64,7 +68,7 @@ export function HeroLineup({ items, title, aside }: { items: LineupItem[]; title
       window.removeEventListener("resize", onScroll);
       cancelAnimationFrame(raf);
     };
-  }, [place, items.length]);
+  }, [place, start]);
 
   const go = (i: number) => {
     const el = track.current;
@@ -104,11 +108,13 @@ export function HeroLineup({ items, title, aside }: { items: LineupItem[]; title
         onKeyDown={onKey}
       >
         {items.map((it, i) => (
-          <div key={it.slug} data-slot className="flex w-[clamp(11rem,22vw,17rem)] shrink-0 justify-center">
+          <div key={it.slug} data-slot data-start={i === start ? "" : undefined} className="flex w-[clamp(11rem,22vw,17rem)] shrink-0 justify-center">
             <button
               type="button"
               onClick={() => go(i)}
               className="relative block h-[clamp(18rem,44vh,27rem)] w-full origin-bottom transition-[transform,filter] duration-200 ease-out will-change-transform"
+              // The server already stands the vials in their starting line-up, so nothing jumps on hydration.
+              style={stepStyle(i, i - start)}
               aria-label={`Show ${it.name}`}
               aria-pressed={i === current}
               tabIndex={-1}
@@ -117,8 +123,10 @@ export function HeroLineup({ items, title, aside }: { items: LineupItem[]; title
                 src={it.image}
                 alt={`${it.name} research vial`}
                 fill
-                priority={i < 3}
-                sizes="(min-width: 768px) 22vw, 60vw"
+                // The centred vial is the largest paint, so it alone loads eagerly and first.
+                loading={i === start ? "eager" : undefined}
+                fetchPriority={i === start ? "high" : undefined}
+                sizes="(min-width: 768px) 17rem, 11rem"
                 className="pointer-events-none object-contain object-bottom select-none"
                 draggable={false}
               />

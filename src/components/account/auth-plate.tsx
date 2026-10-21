@@ -19,7 +19,7 @@ export function AuthPlate() {
   return (
     <figure className="relative flex h-full min-h-[34rem] flex-col justify-end p-8" style={{ backgroundColor: p.plate, color: ink }}>
       <div className="absolute inset-x-8 top-10 bottom-28">
-        <Image src={p.image} alt={`${p.name} research vial`} fill priority sizes="(min-width: 768px) 40vw, 0px" className="object-contain" />
+        <Image src={p.image} alt={`${p.name} research vial`} fill loading="eager" sizes="(min-width: 768px) 40vw, 0px" className="object-contain" />
       </div>
       <figcaption className="relative">
         <span className="block text-lead font-medium">{p.name}</span>

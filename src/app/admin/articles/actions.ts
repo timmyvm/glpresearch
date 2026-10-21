@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateStorefront } from "@/lib/revalidate";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
@@ -19,11 +20,9 @@ const schema = z.object({
   author: z.string().min(2).max(120),
 });
 
-function revalidateArticles(slug: string) {
+function revalidateArticles() {
   revalidatePath("/admin/articles");
-  revalidatePath("/research");
-  revalidatePath(`/research/${slug}`);
-  revalidatePath("/");
+  revalidateStorefront();
 }
 
 export async function saveArticle(articleId: string | null, _prev: ActionState, form: FormData): Promise<ActionState> {
@@ -56,18 +55,18 @@ export async function saveArticle(articleId: string | null, _prev: ActionState, 
   };
 
   if (articleId) {
-    const before = await db.article.update({ where: { id: articleId }, data, select: { slug: true } });
-    revalidateArticles(before.slug);
+    await db.article.update({ where: { id: articleId }, data });
+    revalidateArticles();
     return { ok: true, message: "Article saved." };
   }
   const created = await db.article.create({ data });
-  revalidateArticles(created.slug);
+  revalidateArticles();
   redirect(`/admin/articles/${created.id}?created=1`);
 }
 
 export async function deleteArticle(articleId: string) {
   await requireAdmin();
-  const a = await db.article.delete({ where: { id: articleId } });
-  revalidateArticles(a.slug);
+  await db.article.delete({ where: { id: articleId } });
+  revalidateArticles();
   redirect("/admin/articles");
 }

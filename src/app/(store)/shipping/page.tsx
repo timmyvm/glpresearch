@@ -3,7 +3,11 @@ import { getSettings } from "@/lib/settings";
 import { formatMoney } from "@/lib/money";
 import { LegalPage } from "@/components/store/legal-page";
 
-export const metadata: Metadata = { title: "Shipping & returns" };
+export const metadata: Metadata = {
+  title: "Shipping & returns",
+  description: "How GLP Research packs and ships research peptides across Australia, dispatch times, tracking, and what to do if an order arrives damaged.",
+  alternates: { canonical: "/shipping" },
+};
 
 export default async function ShippingPage() {
   const s = await getSettings();

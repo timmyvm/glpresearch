@@ -1,8 +1,8 @@
 /**
  * A store page's frame in quiet blocks, no shimmer: the fallback for a (store)/loading.tsx.
  * Not mounted: a (store)/loading.tsx makes streamed pages that call notFound() answer 200, so the
- * store keeps real 404s instead. RevealObserver does handle streamed [data-reveal] nodes, so this can
- * be re-exported from a loading.tsx on any route that never calls notFound().
+ * store keeps real 404s instead. Reveals are pure CSS, so streamed [data-reveal] nodes animate too;
+ * re-export this from a loading.tsx on any route that never calls notFound().
  */
 export function PageSkeleton() {
   return (

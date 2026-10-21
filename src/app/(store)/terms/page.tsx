@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/store/legal-page";
 
-export const metadata: Metadata = { title: "Terms of sale" };
+export const metadata: Metadata = {
+  title: "Terms of sale",
+  description: "The conditions that apply to every order placed with GLP Research: pricing, payment, dispatch, returns and research-use obligations.",
+  alternates: { canonical: "/terms" },
+};
 
 export default function TermsPage() {
   return (

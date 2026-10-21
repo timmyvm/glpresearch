@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateStorefront } from "@/lib/revalidate";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { str, type ActionState } from "@/lib/actions";
@@ -77,6 +78,7 @@ export async function cancelOrder(_prev: ActionState, form: FormData): Promise<A
   });
 
   if (!cancelled) return { error: "This order changed while you were viewing it. Refresh the page to see its status." };
+  revalidateStorefront();
   // Anyone waiting on a sold-out variant hears about the returned stock.
   for (const variantId of new Set(order.items.map((i) => i.variantId).filter((id): id is string => !!id))) {
     await notifyBackInStock(variantId).catch((error) => console.error("[order] back-in-stock notice failed", error));

@@ -46,7 +46,7 @@ export function CoaCard({ batches, count, average }: { batches: CardBatch[]; cou
           <h3 className="text-center text-lead font-medium">Certificate of analysis</h3>
           <LoopVideo
             className="mt-6 aspect-video overflow-clip bg-surface"
-            src="/video/hplc-loop.mp4"
+            src="/video/hplc-loop-960.mp4"
             poster="/video/hplc-loop-poster.webp"
             label="A slow move towards an HPLC chromatogram showing a single sharp purity peak"
           />

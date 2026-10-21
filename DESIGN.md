@@ -85,10 +85,10 @@ Headline rules:
 
 ## Motion (`src/app/globals.css`, `src/components/motion/*`)
 
-- **Easing:** `--ease-out` for UI under 600ms and `--ease-expo` for reveals.
-- **Durations:** press 140ms, hover 180ms, reveal 800ms.
+- **Easing:** `--ease-out` for UI under 600ms and for scroll reveals, `--ease-expo` for the headline line-up.
+- **Durations:** press 140ms, hover 180ms, line-up 900ms. Scroll reveals have no duration: they run over 160px of scrolling.
 - **Load sequence:** the hero h1 lines rise from a mask, then the lead and the action follow. Everything settles within 1.2s.
-- **Reveals:** `[data-reveal]` elements rise 24px with opacity, once, in reading order with 70ms between them. They are hidden only under `@media (scripting: enabled)`, so with scripting off everything shows.
+- **Reveals:** `[data-reveal]` elements rise 24px with opacity as they scroll into view, using CSS scroll-driven animations (`animation-timeline: view()`), with `--i` adding 24px of scroll per step for a reading-order stagger. No JavaScript is involved, so nothing is ever hidden while scripts load. Browsers without scroll-driven animations show everything at rest.
 - **Hero:** the signature move is the drag row of vials, built on native scroll-snap.
 - **One moving picture:** a slow drift on the lab photograph.
 - **Reduced motion:** everything sits inside `prefers-reduced-motion: no-preference`, and the reduced state is simply the finished state.

@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/lib/money";
 import { categoryLabel } from "@/lib/orders";
 import { parseHalfLife, timesNative } from "@/lib/half-life";
-import { formatDate } from "@/lib/utils";
+import { ORG_ID, breadcrumbLd, organizationLd } from "@/lib/seo";
+import { getSettings } from "@/lib/settings";
+import { formatDate, siteUrl } from "@/lib/utils";
+import { JsonLd } from "@/components/seo/json-ld";
 import { Formula } from "@/components/store/formula";
 import { Markdown } from "@/components/store/markdown";
 import { ProductPurchase } from "@/components/store/product-purchase";
@@ -14,20 +18,31 @@ import { SpecimenTile } from "@/components/store/specimen-tile";
 
 type Params = { params: Promise<{ slug: string }> };
 
-async function getProduct(slug: string) {
-  return db.product.findFirst({
+// Shared by generateMetadata and the page, so each render queries once.
+const getProduct = cache(async (slug: string) =>
+  db.product.findFirst({
     where: { slug, active: true },
     include: {
       variants: { where: { active: true }, orderBy: { sortOrder: "asc" } },
       batches: { where: { published: true }, orderBy: { testedAt: "desc" } },
     },
-  });
+  }),
+);
+
+// Every active compound is built ahead of time; new ones are built on their first visit.
+export async function generateStaticParams() {
+  const products = await db.product.findMany({ where: { active: true }, select: { slug: true } });
+  return products.map(({ slug }) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const product = await getProduct((await params).slug);
   if (!product) return {};
-  return { title: `${product.name}, ${product.subtitle.toLowerCase()}`, description: product.shortDescription };
+  return {
+    title: `${product.name}: ${product.subtitle}`,
+    description: product.shortDescription,
+    alternates: { canonical: `/shop/${product.slug}` },
+  };
 }
 
 const nf = new Intl.NumberFormat("en-AU");
@@ -52,20 +67,23 @@ export default async function ProductPage({ params }: Params) {
   const product = await getProduct((await params).slug);
   if (!product) notFound();
 
-  const related = await db.product.findMany({
-    where: { active: true, id: { not: product.id } },
-    orderBy: { sortOrder: "asc" },
-    select: {
-      slug: true,
-      name: true,
-      subtitle: true,
-      image: true,
-      accentColor: true,
-      regulatoryStatus: true,
-      category: true,
-      variants: { where: { active: true }, select: { price: true, stock: true, label: true } },
-    },
-  });
+  const [related, settings] = await Promise.all([
+    db.product.findMany({
+      where: { active: true, id: { not: product.id } },
+      orderBy: { sortOrder: "asc" },
+      select: {
+        slug: true,
+        name: true,
+        subtitle: true,
+        image: true,
+        accentColor: true,
+        regulatoryStatus: true,
+        category: true,
+        variants: { where: { active: true }, select: { price: true, stock: true, label: true } },
+      },
+    }),
+    getSettings(),
+  ]);
   const relatedPicks = [...related.filter((p) => p.category === product.category), ...related.filter((p) => p.category !== product.category)].slice(0, 3);
 
   let references: { label: string; url: string }[] = [];
@@ -94,26 +112,38 @@ export default async function ProductPage({ params }: Params) {
     ["Container", "3 mL borosilicate glass vial, butyl stopper, flip-off crimp seal"],
   ];
 
-  const jsonLd = {
-    "@context": "https://schema.org",
+  const url = siteUrl(`/shop/${product.slug}`);
+  const productLd = {
     "@type": "Product",
+    "@id": `${url}#product`,
     name: `${product.name} (research use only)`,
     description: product.shortDescription,
-    image: product.image,
+    url,
+    image: siteUrl(product.image),
     sku: product.variants[0]?.sku,
+    category: categoryLabel(product.category),
     brand: { "@type": "Brand", name: "GLP Research" },
     offers: product.variants.map((v) => ({
       "@type": "Offer",
+      name: `${product.name} ${v.label}`,
       sku: v.sku,
+      url,
       price: (v.price / 100).toFixed(2),
       priceCurrency: "AUD",
+      itemCondition: "https://schema.org/NewCondition",
       availability: v.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      seller: { "@id": ORG_ID },
     })),
   };
+  const crumbs = breadcrumbLd([
+    { name: "Home", path: "/" },
+    { name: "Catalogue", path: "/shop" },
+    { name: product.name, path: `/shop/${product.slug}` },
+  ]);
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <JsonLd data={[productLd, crumbs, organizationLd({ name: settings.storeName, email: settings.supportEmail })]} />
 
       <div className="frame pt-6 pb-16 md:pb-24">
         <nav aria-label="Breadcrumb" className="mb-6 text-small text-muted">

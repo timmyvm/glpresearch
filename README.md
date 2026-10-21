@@ -59,7 +59,7 @@ node .claude/skills/design-taste-frontend/scripts/inspect.mjs http://localhost:3
 - **Product pages:** a full research monograph covering mechanism, published studies, specifications, sequence, batch certificates, storage and references, plus "Email me when it's back" for sold-out sizes.
 - **Research library (`/research`):** 10 referenced articles, a glossary and a timeline.
 - **Other pages:** compound comparison (`/compare`), certificate lookup by batch number (`/coa`), site search across compounds, articles, FAQs and batches (`/search`), FAQ, About, Contact and policy pages.
-- **Plumbing:** a research-use notice (cookie-based, never covers content), Open Graph images, JSON-LD, sitemap and robots.
+- **Plumbing:** a research-use notice on first visit (pinned to the bottom of the screen, never shifting the page), Open Graph images, sitemap, robots and manifest.
 
 **Customers**
 - **Sign-in:** register, sign in, and password reset, all rate-limited.
@@ -86,6 +86,37 @@ node .claude/skills/design-taste-frontend/scripts/inspect.mjs http://localhost:3
 - **Catalogue:** products and variants, inventory, batch certificates, and **stock alerts** that email waiting customers when stock returns.
 - **Everything else:** customers, coupons, articles (markdown editor), inbox and subscribers, email log, and store settings.
 
+## Speed and SEO
+
+**Static pages.** Every public page is served as static HTML from the CDN and refreshed when its content changes:
+- home, catalogue, product pages, research library, articles, compare, FAQ, about and policies.
+
+Anything that changes what they show calls `revalidateStorefront()` (`src/lib/revalidate.ts`):
+- admin edits to products, stock, batches, articles and settings;
+- new orders, cancellations and expiries.
+
+The pages also refresh hourly as a backstop.
+
+**Browser-side parts.** A few things are read in the browser so pages can stay static:
+- The catalogue and library filters.
+- The research-use notice.
+- The signed-in name in the header. It comes from a readable `glp_who` cookie that holds only a first name. Real sessions stay in the httpOnly cookie and are checked on the server.
+
+Search, certificate lookup, contact, sign-in, cart, checkout, account and admin render per request.
+
+**Motion and media.**
+- Scroll reveals are pure CSS (`animation-timeline: view()`), so no JavaScript runs for them.
+- Images are served as AVIF or WebP, and only each page's main image loads eagerly.
+- Files in `public/` are cached for 30 days.
+
+**SEO.**
+- Every public page has a title, description and canonical URL. Filtered views point at the unfiltered page.
+- Structured data uses an Organization and WebSite (with a site search action) on the home page, plus `ItemList`, `Product` with offers, `Article`, `FAQPage` and `BreadcrumbList`.
+- The sitemap lists only indexable pages, with images.
+- `robots.txt` keeps private pages and search results out.
+
+**Set `NEXT_PUBLIC_SITE_URL`** to your real domain. Canonicals, the sitemap and structured data use it. On Vercel it falls back to the production domain.
+
 ## Emails
 
 Every transactional email is written to the admin **Email log**: welcome, order confirmation, new-order alert, payment report, status updates, back in stock, expiry and password reset. Set `RESEND_API_KEY` and `EMAIL_FROM` to also deliver them through [Resend](https://resend.com).
@@ -100,7 +131,7 @@ The default database is a local SQLite file, which is fine for development but n
 
 1. Create a Postgres database (Supabase, Neon or Vercel Postgres).
 2. In `prisma/schema.prisma`, change `provider = "sqlite"` to `provider = "postgresql"`.
-3. Set `DATABASE_URL`, `AUTH_SECRET`, `NEXT_PUBLIC_SITE_URL` and `CRON_SECRET` in the host's environment.
+3. Set `DATABASE_URL`, `AUTH_SECRET`, `NEXT_PUBLIC_SITE_URL` and `CRON_SECRET` in the host's environment. The build reads the database to pre-render the public pages, so `DATABASE_URL` must be available at build time too.
 4. Run `npm run db:push && npm run db:seed` once against the new database. Seeding wipes existing data.
 5. Deploy (e.g. Vercel). `npm run build` runs `prisma generate` first.
 

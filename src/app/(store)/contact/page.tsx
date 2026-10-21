@@ -8,6 +8,7 @@ import { ContactForm } from "./contact-form";
 export const metadata: Metadata = {
   title: "Contact",
   description: "Questions about an order, a batch certificate or institutional supply? Send GLP Research a message.",
+  alternates: { canonical: "/contact" },
 };
 
 const SHORTCUTS = [

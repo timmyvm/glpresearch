@@ -77,7 +77,8 @@ export function ProductPurchase({
               src={specimenImage(v.image ?? product.image) ?? product.image}
               alt={v.id === selected?.id ? `${product.name} ${v.label} research vial` : ""}
               fill
-              priority={v.id === selected?.id}
+              loading={v.id === selected?.id ? "eager" : undefined}
+              fetchPriority={v.id === selected?.id ? "high" : "low"}
               sizes="(min-width: 1024px) 58vw, 100vw"
               className={cn(
                 "object-contain px-[12%] pt-[5%] pb-[3%] lg:pt-[9%] lg:pb-[6%] transition-[opacity,transform] duration-300 ease-[var(--ease-out)]",

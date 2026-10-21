@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Hanken_Grotesk } from "next/font/google";
 import { siteUrl } from "@/lib/utils";
-import { RevealObserver } from "@/components/motion/reveal-observer";
 import "./globals.css";
 
 const hanken = Hanken_Grotesk({
@@ -11,8 +10,6 @@ const hanken = Hanken_Grotesk({
   display: "swap",
 });
 
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
@@ -21,11 +18,13 @@ export const metadata: Metadata = {
   },
   description:
     "Seven research compounds that act on the GLP-1 receptor, from semaglutide to retatrutide. Every batch independently verified by HPLC and mass spectrometry, with a referenced research library.",
+  applicationName: "GLP Research",
   openGraph: {
     type: "website",
     siteName: "GLP Research",
     locale: "en_AU",
   },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {
@@ -43,7 +42,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           Skip to content
         </a>
         {children}
-        <RevealObserver />
       </body>
     </html>
   );

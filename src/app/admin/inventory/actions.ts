@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateStorefront } from "@/lib/revalidate";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -27,8 +28,7 @@ export async function updateStock(variantId: string, _prev: ActionState, form: F
   revalidatePath("/admin/inventory");
   revalidatePath("/admin/stock-alerts");
   revalidatePath("/admin");
-  revalidatePath(`/shop/${variant.product.slug}`);
-  revalidatePath("/shop");
+  revalidateStorefront();
   return {
     ok: true,
     message: `Saved. ${variant.stock} in stock${emailed ? `, ${emailed} waiting customer${emailed === 1 ? "" : "s"} emailed` : ""}.`,

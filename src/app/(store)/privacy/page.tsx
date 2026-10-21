@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/store/legal-page";
 
-export const metadata: Metadata = { title: "Privacy policy" };
+export const metadata: Metadata = {
+  title: "Privacy policy",
+  description: "What personal information GLP Research collects, why, who it is shared with and the choices you have.",
+  alternates: { canonical: "/privacy" },
+};
 
 export default function PrivacyPage() {
   return (

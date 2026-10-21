@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateStorefront } from "@/lib/revalidate";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
@@ -41,13 +42,10 @@ const productSchema = z.object({
   sortOrder: z.coerce.number().int(),
 });
 
-function revalidateCatalogue(slug?: string) {
+function revalidateCatalogue() {
   revalidatePath("/admin/products");
   revalidatePath("/admin/inventory");
-  revalidatePath("/shop");
-  revalidatePath("/compare");
-  revalidatePath("/", "layout");
-  if (slug) revalidatePath(`/shop/${slug}`);
+  revalidateStorefront();
 }
 
 export async function saveProduct(productId: string | null, _prev: ActionState, form: FormData): Promise<ActionState> {
@@ -129,7 +127,7 @@ export async function saveProduct(productId: string | null, _prev: ActionState, 
     const created = await db.product.create({
       data: { ...productData, variants: { create: variants.map(variantData) } },
     });
-    revalidateCatalogue(created.slug);
+    revalidateCatalogue();
     redirect(`/admin/products/${created.id}?created=1`);
   }
 
@@ -158,8 +156,7 @@ export async function saveProduct(productId: string | null, _prev: ActionState, 
   let emailed = 0;
   for (const ev of reopened) emailed += await notifyBackInStock(ev.id);
 
-  revalidateCatalogue(data.slug);
-  if (existing.slug !== data.slug) revalidatePath(`/shop/${existing.slug}`);
+  revalidateCatalogue();
   revalidatePath(`/admin/products/${productId}`);
   if (emailed) revalidatePath("/admin/stock-alerts");
   return { ok: true, message: `Product saved.${emailed ? ` ${emailed} waiting customer${emailed === 1 ? "" : "s"} emailed that it is back in stock.` : ""}` };
@@ -175,12 +172,12 @@ export async function toggleProductActive(productId: string) {
     for (const v of variants) await notifyBackInStock(v.id);
     revalidatePath("/admin/stock-alerts");
   }
-  revalidateCatalogue(product.slug);
+  revalidateCatalogue();
 }
 
 export async function deleteProduct(productId: string) {
   await requireAdmin();
-  const product = await db.product.delete({ where: { id: productId } });
-  revalidateCatalogue(product.slug);
+  await db.product.delete({ where: { id: productId } });
+  revalidateCatalogue();
   redirect("/admin/products");
 }

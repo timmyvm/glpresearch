@@ -10,6 +10,7 @@ import { TitleLines } from "@/components/store/page-intro";
 export const metadata: Metadata = {
   title: "Lab results and certificates of analysis",
   description: "Look up the independent HPLC purity and mass-spectrometry identity results for any GLP Research batch.",
+  alternates: { canonical: "/coa" },
 };
 
 export default async function CoaPage({ searchParams }: { searchParams: Promise<{ batch?: string; product?: string }> }) {

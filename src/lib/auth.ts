@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { db } from "./db";
 import { SESSION_COOKIE, SESSION_MAX_AGE, signSession, verifySession } from "./session";
+import { HINT_COOKIE, hintValue } from "./session-hint";
 
 export async function hashPassword(password: string) {
   return bcrypt.hash(password, 12);
@@ -28,18 +29,16 @@ export async function startSession(user: {
     name: `${user.firstName} ${user.lastName}`.trim(),
   });
   const jar = await cookies();
-  jar.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: SESSION_MAX_AGE,
-  });
+  const options = { sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/", maxAge: SESSION_MAX_AGE } as const;
+  jar.set(SESSION_COOKIE, token, { ...options, httpOnly: true });
+  // Display-only copy for the static header; see session-hint.ts.
+  jar.set(HINT_COOKIE, hintValue({ name: user.firstName, admin: user.role === "ADMIN" }), options);
 }
 
 export async function endSession() {
   const jar = await cookies();
   jar.delete(SESSION_COOKIE);
+  jar.delete(HINT_COOKIE);
 }
 
 export const getSession = cache(async () => {
