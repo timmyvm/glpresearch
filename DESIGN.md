@@ -1,109 +1,124 @@
-# GLP Research design system
+# GLP Research design system (v2)
 
 The site's art direction, set with the skills in `.claude/skills/` (`design-taste-frontend`, `frontend-design`, `web-design-guidelines`, `vercel-react-best-practices`). Read this before you build or restyle any screen.
 
 ## Direction
 
-**The specimen catalogue** (taste-skill draw, seed 410654917, type slot redrawn).
+**The page is the object** (taste-skill draw, seed 1150358053, sector physical-product, tone technical).
 
-The idea: each compound's vial, with its colour-coded label stripe, is a specimen shown on its own flat colour plate and catalogued like a field guide. Every vial is shot at the same scale and angle and named plainly with its formula, half-life and receptors. The stripe colour is that compound's colour everywhere it appears: its plate, its row and its chart line.
+**The idea:** the certificate of analysis that comes with every GLP Research batch becomes the page itself.
+- The homepage opens on the certificate, printed as a paper card over a dark lab.
+- Every other screen is another piece of the same lab paperwork, built as filled paper shapes with real edges.
+- The footer is the back of the certificate.
 
-The live thing is the **half-life dial** on the homepage. Pick a compound and see how much longer it lasts than native GLP-1's roughly two minutes, for example semaglutide at about 5,040×. The hero line-up is a drag row through the seven vials.
+**The live thing** is on the homepage certificate. Pick one of the seven compounds and the sheet reprints from that compound's latest published batch:
+- batch number, purity and observed mass;
+- an HPLC trace drawn from the purity;
+- the amino-acid sequence, with every residue that differs from native GLP-1 marked in the compound's label colour.
 
-Why the type slot was redrawn: the dealt Clarendon is a heritage bill-poster face. This subject's printed world is the vial label, the data sheet and the journal paper, all set in grotesks, so the type system was redrawn to Hanken Grotesk.
+**The signature move** is the pinned story. On wide screens the certificate holds its place while the lab's photographs pass, shrinking to a stub at the bottom-left. It is pure CSS (`animation-timeline`), with a static fallback.
+
+## The artefact for each screen
+
+| Screen | Paperwork it is built as |
+|---|---|
+| Home | The certificate, the catalogue data sheet, stacked history sheets, the batch register, the research shelf, the dispatch slip |
+| Catalogue `/shop` | A price list or data sheet: specimen plates with tabular rows |
+| Product page | The compound's data sheet: label stripe, specifications set as a sheet, batch certificates with traces, sequence strip |
+| Lab results `/coa` | The certificate itself, printed in full for the batch you look up |
+| Compare | A comparison table on paper |
+| Research library and articles | Journal pages: a contents sheet, then an article set like a printed paper |
+| Cart and checkout | A receipt and order form on slips |
+| Order confirmation and invoice | A receipt torn off along its bottom edge |
+| Account | Folders of an order history |
+| Admin | An app screen (`references/app-screens.md`), with the same palette and type |
 
 ## Tokens (`src/app/globals.css`)
 
 | Role | Value | Notes |
 |---|---|---|
-| `--bg` | `#ffffff` | Ground, 70–90% of every page |
-| `--surface` | `#eef0f3` | One tone step. Panels, inputs and photo grounds; it matches the vial photo backdrop |
-| `--ink` | `#0b1530` | Vial-cap navy. All running text and headlines |
-| `--muted` | `#4a5468` | Secondary text only (7:1 on white) |
-| `--accent` | `#a7ff9c` | Mint. The primary action, plus at most one other mark per screen |
-| `--accent-ink` | `#0b1530` | Text on the accent |
-| `--field-grey` / `--field-mint` / `--field-orange` / `--field-navy` | `#c9ced6` / `#a7ff9c` / `#ff6831` / `#0b1530` | Whole-section grounds, as hard cuts with no fades |
+| `--color-bg` | `#ffffff` | The page ground |
+| `--color-surface` / `--color-surface-2` | `#f4f4f2` / `#e9e8e4` | Tone steps for panels, inputs and tabs |
+| `--color-paper` | `#f4f1ea` | Paper: the certificate, slips and the back of the card |
+| `--color-ink` | `#1f2b4d` | Navy. All running text and headlines |
+| `--color-muted` | `#5d6479` | Secondary text only |
+| `--color-accent` / `--color-accent-ink` | `#f7941d` / `#1f2b4d` | Tangerine. The one action on a screen, plus trial labels on the shelf |
+| `--color-field-black` | `#05070a` | The ground behind the hero, the photo run and the dispatch slip |
+| `--color-field-paper` | `#e3e1dc` | Warm grey ground: the batch register and the footer |
+| `--color-on-black-muted` / `--color-on-navy-muted` | `#a9aebb` / `#b8bed0` | Secondary text on dark grounds |
 
-**Compound plates** (the label stripe colours, stored as `Product.accentColor`):
+The old field names (`field-grey`, `field-mint`, `field-orange`, `field-navy`) still resolve to the new palette, so un-migrated screens stay on palette. New work uses the roles above.
 
-| Compound | Plate | Ink on plate |
-|---|---|---|
-| Semaglutide | `#2dd4bf` | navy |
-| Tirzepatide | `#ff6831` | navy |
-| Retatrutide | `#f59e0b` | navy |
-| Liraglutide | `#38bdf8` | navy |
-| Exenatide | `#10b981` | navy |
-| Survodutide | `#f43f5e` | navy |
-| Mazdutide | `#2563eb` | white |
-
-Use `plateInk(hex)` from `src/lib/plates.ts` to get the ink for any plate colour.
+**Compound label colours** are stored as `Product.accentColor` and come from the vial label stripe. They appear only as a label stripe, a specimen plate, a tab swatch or a marked residue. They are never whole section grounds. Use `plateInk(hex)` from `src/lib/plates.ts` for text on them.
 
 ## Type
 
-One family: **Hanken Grotesk**, weights 400 and 500 only, with no bold anywhere.
+One family: **Bricolage Grotesque**, a variable font loaded with optical sizing (`next/font`, `--font-bricolage`).
+- Display weight is 600, at tracking −0.04em and leading 0.9.
+- Text weights are 400, with 500 for emphasis.
 
 | Step | Size | Use |
 |---|---|---|
-| `text-small` | 13–14px | Captions, legal text, table meta. Never smaller |
+| `text-small` | 13–14px | Captions, credits, meta. Never smaller |
 | `text-body` | 17–19px | Running text, at leading 1.5 and a measure of 62ch or less |
-| `text-lead` | 20–26px | Supporting lines, item names |
-| `text-head` | 32–64px | Section headings, at tracking −0.04em and leading 0.95 |
-| `text-display` | 44–88px | The single h1 on each page, at tracking −0.05em and leading 0.9 |
+| `text-lead` | 20–26px | Supporting lines, facts on a certificate |
+| `text-index` | 28–44px | Panel headings |
+| `text-head` | 36–76px | Section headings |
+| `text-display` | 48–136px | The page's h1 and big figures |
 
 Headline rules:
-- Two lines or fewer at every width. Author the line breaks.
-- Use `text-wrap: balance` on headings and `pretty` on paragraphs.
-- Use tabular numbers for prices and data.
-- Headings are sentence case; buttons and navigation labels are Title Case.
+- Two lines or fewer at every width.
+- Sentence case for headings; Title Case for buttons.
+- Tabular figures for prices, purities and batch numbers.
+- No monospace anywhere, including batch numbers and sequences, which use tabular figures in the text face.
+
+## Stationery (shared components)
+
+- `src/components/store/paper.tsx`:
+  - `Scallops`: a scalloped top edge.
+  - `Slip`: a paper slip with a zigzag bottom edge, from `zigzagBottom()` in `src/lib/edges.ts`.
+  - `SlipRow`: a label, a dot leader and a value.
+- `.leader`: a dot leader made of round 4px dots, from `border-bottom: dotted`.
+- `src/components/store/chromatogram.tsx`: an HPLC trace drawn from a batch's purity and seeded by its batch number. It stretches to its box; give it a height or an aspect ratio.
+- `src/components/store/sequence-strip.tsx` with `parseSequence()` from `src/lib/sequence.ts`: residues compared with native GLP-1.
+- Paper cards may be tilted by 1 to 1.5 degrees and cut off by a section edge (the batch register).
 
 ## Geometry
 
-- **Grid:** one pair of margins (`--margin`, 16–32px) and a 12-column grid, capped at 1760px. Large things run to the margins, and only the measure of running text is constrained.
-- **Corners:** square everywhere, on buttons, tiles, inputs and images. Status pills in app screens are the one rounded exception.
-- **Section spacing:** 128–192px between sections on desktop and 80–112px on a phone. A change of ground colour can stand in for some of the space.
+- **Grid:** one pair of margins (`--margin`) and a 12-column grid, capped at 1760px (`.frame`).
+- **Corners:** square everywhere. The only round shapes are scallops and status pills in app screens.
+- **Section spacing:** 112–160px between sections, and a change of ground colour is a hard cut.
 
-## Never (all of these are checked by `node .claude/skills/design-taste-frontend/scripts/lint.mjs src`)
+## Never (checked by `node .claude/skills/design-taste-frontend/scripts/lint.mjs src`)
 
-- Eyebrow or kicker labels above headings, or tiny uppercase tracked labels.
-- Monospace outside real code. Use tabular numbers in the text face instead.
+- Eyebrow or kicker labels, or tiny uppercase tracked labels.
+- Monospace outside real code.
 - 01/02/03 index numbering.
 - Gradients. The one exception is a neutral scrim behind text on a photo.
-- Shadows on resting elements. Only menus, dialogs and the sticky header may float.
-- Hairline dividers or 1px outlined boxes outside real tables, form fields and `data-ui` app fragments. Separate things with space or a tone step instead.
-- Backdrop blur, glass panels or pill navigation.
+- Shadows on resting elements.
+- Hairline dividers or 1px outlined boxes outside real tables, form fields and `data-ui` fragments. Edges are made by fills and clip-paths instead.
+- Glass, backdrop blur or pill navigation.
 - Violet or indigo.
-- An accent-styled word inside a headline.
-- Icon-topped feature cards, or rows of identical cards.
-- Emoji, decorative blobs, or `transition: all`.
-- More than about two em dashes on a page.
+- An accent-styled word in a headline.
+- Icon-topped cards or rows of identical cards.
+- Emoji or decorative blobs.
 
-## Components
+## Motion
 
-- **Button** (`src/components/ui/button.tsx`): square corners and Title Case labels. `primary` is a mint fill with navy text, `ink` is navy with white text, and `outline` is a navy 2px frame (a control, not a hairline). The press state is `scale(.97)`.
-- **Form fields:** filled with `--surface`, no border, and a focus ring of 2px `--ink` with a 2px offset. Labels sit above the field and errors appear inline under it.
-- **Prices:** tabular numbers, set in the text face.
+- **Scroll reveals:** `[data-reveal]` elements rise 24px with opacity over 160px of scroll (CSS `animation-timeline: view()`), with `--i` adding 24px per step for a stagger. No JavaScript is involved.
+- **The pinned story:** the hero (see Direction).
+- **Reprint:** `.reprint` replays a short rise when a certificate or tab panel changes.
+- **Feedback:** `.press` on every control, and underline colour on links.
+- **Moving pictures:** the hero lab loop (`/video/lab-night.mp4`, plays on wide screens only) and the HPLC loop in the batch register. Both have a Pause control.
+- Everything has a `prefers-reduced-motion` fallback that keeps the content.
 
-## Motion (`src/app/globals.css`, `src/components/motion/*`)
+## Imagery
 
-- **Easing:** `--ease-out` for UI under 600ms and for scroll reveals, `--ease-expo` for the headline line-up.
-- **Durations:** press 140ms, hover 180ms, line-up 900ms. Scroll reveals have no duration: they run over 160px of scrolling.
-- **Load sequence:** the hero h1 lines rise from a mask, then the lead and the action follow. Everything settles within 1.2s.
-- **Reveals:** `[data-reveal]` elements rise 24px with opacity as they scroll into view, using CSS scroll-driven animations (`animation-timeline: view()`), with `--i` adding 24px of scroll per step for a reading-order stagger. No JavaScript is involved, so nothing is ever hidden while scripts load. Browsers without scroll-driven animations show everything at rest.
-- **Hero:** the signature move is the drag row of vials, built on native scroll-snap.
-- **One moving picture:** a slow drift on the lab photograph.
-- **Reduced motion:** everything sits inside `prefers-reduced-motion: no-preference`, and the reduced state is simply the finished state.
-
-## App screens
-
-The admin, account, checkout and order screens are worked in, not read, so they follow `references/app-screens.md` from the taste skill:
-- Quiet 1px borders on tables and panels, small sentence-case labels and status pills are all acceptable.
-- Gradients, glows, icons in tinted squares, rainbow charts and invented numbers are not.
-
-## Accessibility and quality floor (Vercel Web Interface Guidelines)
-
-- Every page has a skip link, visible `:focus-visible`, `aria-label` on icon buttons, and `aria-live` on async messages.
-- Inputs have `autocomplete`, the right `type`/`inputmode`, and `spellCheck={false}` on emails. Placeholders end in "…".
-- Use real `<a>`/`<Link>` for navigation and `<button>` for actions. Destructive actions need a confirmation.
-- Images have dimensions; below-fold images are lazy and the hero has priority.
-- Filters, tabs and pagination live in the URL.
-- Use `Intl` for every date and number.
+- **Lab photography** (generated with Higgsfield, all in one low-key documentary light) lives in `public/images/lab/`: the night lab, autosampler, freezer rack, crimp sealing, packing, freeze-dried cake, vial check and notebook.
+- **Product vials and specimen cut-outs** are in `public/images/products/` and `public/images/specimens/`.
+- **Archival plates** (open licences, credited in the footer through `src/content/credits.ts`) live in `public/images/archive/`:
+  - the 1686 intestines engraving;
+  - Wirsung's 1642 pancreas drawing;
+  - a reticulate Gila monster (exenatide's origin);
+  - an islets of Langerhans micrograph.
+- Never show another company's name or a fake brand in a generated picture. Never let a picture claim more than the business does: orders ship with a packing slip of batch numbers, and certificates are published online.

@@ -6,6 +6,11 @@ const PUBLIC_ASSET_CACHE = "public, max-age=2592000, stale-while-revalidate=6048
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    // The on-disk dev cache served stale CSS after restarts in this project and grew to gigabytes;
+    // dev compiles from scratch instead (production builds keep their cache).
+    turbopackFileSystemCacheForDev: false,
+  },
   turbopack: {
     rules: {
       "*.css": {

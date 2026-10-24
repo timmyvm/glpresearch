@@ -11,7 +11,7 @@ function luminance(hex: string) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-const NAVY = "#0b1530";
+const NAVY = "#1f2b4d";
 const WHITE = "#ffffff";
 
 /** The ink (navy or white) with the better contrast on a plate colour. */

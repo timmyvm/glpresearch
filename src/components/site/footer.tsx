@@ -1,16 +1,18 @@
+import Image from "next/image";
 import Link from "next/link";
+import { ARCHIVE } from "@/content/credits";
 import { getSettings } from "@/lib/settings";
-import { DispatchClock } from "./dispatch-clock";
+import { Scallops } from "@/components/store/paper";
 import { NewsletterForm } from "./newsletter-form";
 
 const LINKS = [
   { href: "/shop", label: "Peptides" },
+  { href: "/coa", label: "Lab results" },
   { href: "/research", label: "Research library" },
   { href: "/compare", label: "Compare compounds" },
-  { href: "/coa", label: "Lab results" },
   { href: "/faq", label: "Questions" },
   { href: "/shipping", label: "Shipping & returns" },
-  { href: "/track", label: "Track an order" },
+  { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -20,70 +22,105 @@ const LEGAL = [
   { href: "/privacy", label: "Privacy" },
 ];
 
-// "A footer of tiles": every cell filled, 8px gaps, the name returning at full width.
+/**
+ * The back of the certificate: a paper card with a scalloped top edge, a short sign-off, the
+ * address block and a stamp, with the printer's imprint along the bottom. The name returns
+ * full width below it.
+ */
 export async function Footer() {
   const settings = await getSettings();
+  const credits = Object.values(ARCHIVE);
+
   return (
-    <footer className="mt-32 px-2 pb-2 lg:mt-48" aria-labelledby="footer-title">
-      <h2 id="footer-title" className="sr-only">
-        About this site
-      </h2>
-      <div className="grid gap-2 md:grid-cols-12">
-        <div className="flex min-h-56 flex-col justify-between gap-8 bg-surface p-6 md:col-span-6 lg:col-span-4">
-          <p className="max-w-[28ch] text-lead text-ink">
-            Seven peptides that act on the <span className="whitespace-nowrap">GLP-1</span> receptor, each batch tested before it is sold.
-          </p>
-          <div className="space-y-3 text-small text-muted">
-            <p className="max-w-[60ch]">
-              For laboratory research use only. Not for human or veterinary use, and not a medicine, food or cosmetic.
-              Content summarises published literature and is not medical advice.
-            </p>
-            <p className="flex flex-wrap gap-x-4 gap-y-1">
+    <footer className="mt-28 overflow-clip bg-field-paper pt-24 md:mt-40 md:pt-32" aria-labelledby="footer-title">
+      <div className="frame md:grid md:grid-cols-12 md:gap-x-[var(--gutter)]">
+        <div className="relative bg-paper md:col-span-10 md:col-start-2">
+          <Scallops />
+
+          <div className="grid gap-12 px-6 pt-8 pb-10 md:grid-cols-2 md:gap-x-16 md:px-14 md:pt-12 md:pb-12">
+            <div>
+              <h2 id="footer-title" className="text-index font-semibold">
+                For the bench
+              </h2>
+              <p className="mt-4 max-w-[38ch] text-body">
+                Seven peptides, one class, every batch tested and its certificate on file. For laboratory research only,
+                never for human or veterinary use.
+              </p>
+              <nav aria-label="Footer" className="mt-8">
+                <ul className="grid grid-cols-2 gap-x-6 gap-y-2 text-body">
+                  {LINKS.map((l) => (
+                    <li key={l.href}>
+                      <Link href={l.href} className="link decoration-transparent hover:decoration-ink">
+                        {l.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </div>
+
+            <div className="flex flex-col">
+              <div className="flex items-start justify-between gap-6">
+                <ul className="space-y-3 text-body sm:text-lead">
+                  <li>
+                    <a href={`mailto:${settings.supportEmail}`} className="link break-all">
+                      {settings.supportEmail}
+                    </a>
+                  </li>
+                  <li>
+                    <Link href="/track" className="link">
+                      Track an order
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/coa" className="link">
+                      Find a batch certificate
+                    </Link>
+                  </li>
+                  <li>Shipping from Sydney, Australia</li>
+                </ul>
+                <div className="w-16 shrink-0 bg-white p-1.5 md:w-[88px]">
+                  <div className="relative aspect-[3/4] bg-field-paper">
+                    <Image src="/images/specimens/semaglutide-10mg.webp" alt="" fill sizes="88px" className="object-contain p-1.5" />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-10 md:mt-auto">
+                <NewsletterForm />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2 px-6 pb-6 text-center text-small text-muted md:px-14">
+            <p className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+              <span>
+                © {new Date().getFullYear()} {settings.storeName}
+              </span>
               {LEGAL.map((l) => (
                 <Link key={l.href} href={l.href} className="link">
                   {l.label}
                 </Link>
               ))}
-              <span>© {new Date().getFullYear()} {settings.storeName}</span>
+            </p>
+            <p>
+              Archival pictures:{" "}
+              {credits.map((c, i) => (
+                <span key={c.src}>
+                  <a href={c.page} className="link" target="_blank" rel="noopener noreferrer">
+                    {c.title}
+                  </a>
+                  , {c.by}, {c.licence}
+                  {i < credits.length - 1 ? "; " : "."}
+                </span>
+              ))}
             </p>
           </div>
         </div>
-        <nav className="bg-field-grey p-6 md:col-span-6 lg:col-span-3" aria-label="Footer">
-          <ul className="grid grid-cols-2 gap-x-4 gap-y-2 lg:grid-cols-1">
-            {LINKS.map((l) => (
-              <li key={l.href}>
-                <Link href={l.href} className="link decoration-transparent hover:decoration-ink">
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <DispatchClock className="md:col-span-6 lg:col-span-2" />
-        <div className="flex min-h-56 flex-col justify-between gap-6 bg-surface p-6 md:col-span-6 lg:col-span-3">
-          <div>
-            <p className="text-small text-muted">Questions, batch certificates, institutional supply</p>
-            <a href={`mailto:${settings.supportEmail}`} className="link mt-1 inline-block text-lead break-all">
-              {settings.supportEmail}
-            </a>
-          </div>
-          <NewsletterForm />
-        </div>
-        <div className="grid min-h-40 place-items-center overflow-hidden bg-ink px-4 md:col-span-8 md:min-h-80">
-          <p className="text-[clamp(2.75rem,9vw,10rem)] leading-none font-medium tracking-[-0.06em] whitespace-nowrap text-on-navy" translate="no" aria-hidden="true">
-            GLP Research
-          </p>
-        </div>
-        <Link
-          href="/shop"
-          className="press group flex min-h-40 flex-col justify-between bg-accent p-6 text-accent-ink hover:bg-accent-strong md:col-span-4 md:min-h-80"
-        >
-          <span className="text-index font-medium">Shop the catalogue</span>
-          <svg className="size-14 self-end transition-transform duration-300 ease-[var(--ease-out)] group-hover:translate-x-1" viewBox="0 0 56 56" fill="none" aria-hidden="true">
-            <path d="M8 28h38M32 14l14 14-14 14" stroke="currentColor" strokeWidth="4" strokeLinecap="square" />
-          </svg>
-        </Link>
       </div>
+
+      <p className="mt-10 text-center text-[16.5vw] leading-[0.78] font-semibold tracking-[-0.06em] whitespace-nowrap text-ink" translate="no" aria-hidden="true">
+        GLP Research
+      </p>
     </footer>
   );
 }

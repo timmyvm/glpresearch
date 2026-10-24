@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { Hanken_Grotesk } from "next/font/google";
+import { Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 
-const hanken = Hanken_Grotesk({ variable: "--font-hanken", subsets: ["latin"], weight: ["400", "500"], display: "swap" });
+const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"], axes: ["opsz"], display: "swap" });
 
 /** Replaces the root layout when it fails, so it brings its own document, styles and font. */
 export default function GlobalError({ error, retry }: { error: unknown; retry: () => void }) {
@@ -13,7 +13,7 @@ export default function GlobalError({ error, retry }: { error: unknown; retry: (
   }, [error]);
 
   return (
-    <html lang="en-AU" className={hanken.variable}>
+    <html lang="en-AU" className={bricolage.variable}>
       <body className="min-h-dvh">
         <title>Something went wrong · GLP Research</title>
         <main className="frame grid min-h-dvh content-center gap-6 py-16 md:grid-cols-12 md:items-end md:gap-x-[var(--gutter)]">

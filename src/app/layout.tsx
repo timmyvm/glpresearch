@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Hanken_Grotesk } from "next/font/google";
+import { Bricolage_Grotesque } from "next/font/google";
 import { siteUrl } from "@/lib/utils";
 import "./globals.css";
 
-const hanken = Hanken_Grotesk({
-  variable: "--font-hanken",
+// Variable font with optical sizing, so large sizes tighten and gain contrast on their own.
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-bricolage",
   subsets: ["latin"],
-  weight: ["400", "500"],
+  axes: ["opsz"],
   display: "swap",
 });
 
@@ -33,7 +34,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en-AU" className={hanken.variable} suppressHydrationWarning>
+    <html lang="en-AU" className={bricolage.variable} suppressHydrationWarning>
       <body className="min-h-dvh">
         <a
           href="#main"

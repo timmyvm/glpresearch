@@ -4,69 +4,74 @@
 /* GLP Research design system. Read DESIGN.md before changing tokens. */
 
 @theme {
-  --font-sans: var(--font-hanken), "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-bricolage), "Helvetica Neue", Arial, sans-serif;
 
-  /* Roles */
+  /* Roles: navy ink on white paper, tangerine for the one action (DESIGN.md) */
   --color-bg: #ffffff;
-  --color-surface: #eef0f3;
-  --color-surface-2: #e2e6ec;
-  --color-ink: #0b1530;
-  --color-muted: #4a5468;
-  --color-accent: #a7ff9c;
-  --color-accent-strong: #8cf57f;
-  --color-accent-ink: #0b1530;
-  --color-danger: #c4320a;
+  --color-surface: #f4f4f2;
+  --color-surface-2: #e9e8e4;
+  --color-ink: #1f2b4d;
+  --color-muted: #5d6479;
+  --color-accent: #f7941d;
+  --color-accent-strong: #e5820b;
+  --color-accent-ink: #1f2b4d;
+  --color-danger: #b42318;
   --color-success: #0e7a4f;
 
-  /* Section fields (hard cuts, never fades) */
-  --color-field-grey: #c9ced6;
-  --color-field-mint: #a7ff9c;
-  --color-field-orange: #ff6831;
-  --color-field-navy: #0b1530;
+  /* Grounds the paper sits on, as hard cuts */
+  --color-field-black: #05070a;
+  --color-field-paper: #e3e1dc;
+  --color-paper: #f4f1ea;
+  --color-on-black-muted: #a9aebb;
+
+  /* Older field names, kept so every screen takes the new palette */
+  --color-field-grey: #e3e1dc;
+  --color-field-mint: #e9e8e4;
+  --color-field-orange: #e3e1dc;
+  --color-field-navy: #1f2b4d;
   --color-on-navy: #ffffff;
-  --color-on-navy-muted: #b9c2d6;
+  --color-on-navy-muted: #b8bed0;
 
   /* Legacy scales kept so un-migrated screens still render; new work uses the roles above. */
-  --color-ink-50: #f3f5fa;
-  --color-ink-100: #e4e9f4;
-  --color-ink-200: #c9d2e8;
-  --color-ink-300: #9eadd2;
-  --color-ink-400: #6c80b4;
-  --color-ink-500: #4a5f96;
-  --color-ink-600: #364879;
-  --color-ink-700: #263662;
-  --color-ink-800: #18244a;
-  --color-ink-900: #0b1530;
-  --color-ink-950: #060c1e;
-  --color-mint-50: #effefb;
-  --color-mint-100: #c8fff4;
-  --color-mint-200: #91feea;
-  --color-mint-300: #52f5dc;
-  --color-mint-400: #2dd4bf;
-  --color-mint-500: #14b8a6;
-  --color-mint-600: #0d9488;
-  --color-mint-700: #0f766e;
-  --color-mint-800: #115e59;
-  --color-mint-900: #134e4a;
+  --color-ink-50: #f4f5f8;
+  --color-ink-100: #e6e8ef;
+  --color-ink-200: #cbd0de;
+  --color-ink-300: #a3abc2;
+  --color-ink-400: #737e9c;
+  --color-ink-500: #525e80;
+  --color-ink-600: #3d4868;
+  --color-ink-700: #2d3858;
+  --color-ink-800: #243050;
+  --color-ink-900: #1f2b4d;
+  --color-ink-950: #121a33;
+  --color-mint-50: #fff6eb;
+  --color-mint-100: #feead2;
+  --color-mint-200: #fdd5a5;
+  --color-mint-300: #fbbb6e;
+  --color-mint-400: #f7941d;
+  --color-mint-500: #e5820b;
+  --color-mint-600: #c26a06;
+  --color-mint-700: #9a5309;
+  --color-mint-800: #7c440e;
+  --color-mint-900: #66390f;
 
-  /* Five type steps */
+  /* Five type steps (Bricolage Grotesque: display 600, text 400/500) */
   --text-small: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
   --text-small--line-height: 1.45;
   --text-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
   --text-body--line-height: 1.5;
-  --text-body--letter-spacing: -0.005em;
   --text-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
-  --text-lead--line-height: 1.3;
-  --text-lead--letter-spacing: -0.015em;
+  --text-lead--line-height: 1.28;
+  --text-lead--letter-spacing: -0.01em;
   --text-index: clamp(1.75rem, 1.2rem + 1.8vw, 2.75rem);
-  --text-index--line-height: 1.12;
+  --text-index--line-height: 1.04;
   --text-index--letter-spacing: -0.03em;
-  --text-head: clamp(2rem, 1.3rem + 3.2vw, 4rem);
-  --text-head--line-height: 0.95;
+  --text-head: clamp(2.25rem, 1.3rem + 3.8vw, 4.75rem);
+  --text-head--line-height: 0.92;
   --text-head--letter-spacing: -0.04em;
-  --text-display: clamp(2.75rem, 1rem + 5vw, 5.5rem);
-  --text-display--line-height: 0.92;
-  --text-display--letter-spacing: -0.05em;
+  --text-display: clamp(3rem, 0.8rem + 7.6vw, 8.5rem);
+  --text-display--line-height: 0.88;
+  --text-display--letter-spacing: -0.045em;
 
   /* Motion */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -112,7 +117,12 @@
   }
 
   h1,
-  h2,
+  h2 {
+    font-weight: 600;
+    text-wrap: balance;
+    hyphens: none;
+  }
+
   h3,
   h4 {
     font-weight: 500;
@@ -233,6 +243,120 @@
   from {
     opacity: 0;
     transform: translateY(24px);
+  }
+}
+
+/* ─── Stationery: the pieces of lab paperwork the pages are built from ── */
+
+/* A dot leader between a label and its value, as on a price list or a dispatch slip. */
+.leader {
+  align-self: center;
+  height: 0;
+  border-bottom: 4px dotted color-mix(in oklab, currentColor 40%, transparent);
+  translate: 0 0.15em;
+}
+
+/* Stacked sheets: each sticks one band lower than the last (home science section). */
+.sheet {
+  top: calc(4rem + var(--n, 0) * 52px);
+}
+
+@media (min-width: 768px) {
+  .sheet {
+    top: calc(4rem + var(--n, 0) * 72px);
+  }
+}
+
+/* A slip whose bottom edge is torn in a zigzag; teeth are 24px wide and 12px deep. */
+.edge-zigzag {
+  --tooth: 24px;
+  --depth: 12px;
+  padding-bottom: calc(var(--depth) + 1.5rem);
+  clip-path: var(--zigzag);
+}
+
+/* Accordion chevron drawn from two 2px strokes; it turns when the question opens. */
+.chevron {
+  width: 0.6em;
+  height: 0.6em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  rotate: 45deg;
+  transition: rotate var(--t-ui) var(--ease-out);
+}
+
+details[open] > summary .chevron {
+  rotate: -135deg;
+}
+
+/* A page whose last section carries its own ground meets the footer with no gap. */
+main:has(.flush-footer) + footer {
+  margin-top: 0;
+}
+
+/* ─── Home hero: the certificate over the lab ───────────────────────
+   On wide, tall screens the stage and the certificate stick while the lab's
+   photographs scroll past; the certificate shrinks to a stub at bottom-left.
+   Everywhere else (and with reduced motion) the parts simply stack. */
+
+.hero-run {
+  --stage-h: calc(100svh - 4rem);
+  --cw: min(78vw, 1080px);
+  --ch: min(calc(var(--stage-h) - 5rem), 760px);
+  view-timeline: --run block;
+}
+
+.cert-title {
+  font-size: clamp(2.5rem, 10.5vw, 3.5rem);
+  line-height: 0.9;
+  letter-spacing: -0.045em;
+}
+
+@media (min-width: 640px) {
+  .cert-title {
+    font-size: clamp(3rem, 5.6vw, 5.25rem);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reprint {
+    animation: reprint 420ms var(--ease-out) both;
+  }
+}
+
+@keyframes reprint {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (min-width: 1024px) and (min-height: 700px) and (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .hero-card {
+      transform-origin: 0 100%;
+      animation: card-to-stub linear both;
+      animation-timeline: --run;
+      animation-range: contain 0% contain 38%;
+    }
+
+    .hero-backdrop {
+      animation: backdrop-out linear both;
+      animation-timeline: --run;
+      animation-range: contain 8% contain 40%;
+    }
+  }
+}
+
+@keyframes card-to-stub {
+  to {
+    transform: translate(calc(var(--margin) - (100vw - var(--cw)) / 2), calc((var(--stage-h) - var(--ch)) / 2 - var(--margin))) scale(0.22);
+  }
+}
+
+@keyframes backdrop-out {
+  to {
+    opacity: 0;
   }
 }
 

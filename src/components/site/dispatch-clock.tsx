@@ -42,3 +42,31 @@ export function DispatchClock({ className }: { className?: string }) {
     </div>
   );
 }
+
+/** One line for the dispatch slip: Sydney time now and what that means for an order paid now. */
+export function DispatchLine({ className }: { className?: string }) {
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    const tick = () => setNow(new Date());
+    const first = setTimeout(tick, 0);
+    const id = setInterval(tick, 30_000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(id);
+    };
+  }, []);
+
+  return (
+    <p className={className} aria-live="polite" suppressHydrationWarning>
+      {now ? (
+        <>
+          It is <span className="tabular whitespace-nowrap">{new Intl.DateTimeFormat("en-AU", { timeZone: TZ, hour: "numeric", minute: "2-digit" }).format(now)}</span> in
+          Sydney. {dispatchState(now)}
+        </>
+      ) : (
+        "Paid before 1 pm Sydney time, ships the same business day."
+      )}
+    </p>
+  );
+}
