@@ -462,15 +462,15 @@ export default async function SearchPage({ searchParams }: Props) {
                             </Link>
                           </p>
                         ) : (
-                          <SlipRow
-                            label={
-                              <Link href={e.href} className="link inline-flex items-baseline gap-2 decoration-transparent hover:decoration-ink">
-                                {e.swatch ? <span className="size-2.5 shrink-0 self-center" style={{ backgroundColor: e.swatch }} aria-hidden="true" /> : null}
-                                {e.label}
-                              </Link>
-                            }
-                            value={<span className="text-small text-muted">{e.locator}</span>}
-                          />
+                          // Last-baseline alignment keeps the leader and locator on the entry's final line when it wraps.
+                          <Link href={e.href} className="group/entry flex items-baseline-last gap-2">
+                            <span className="min-w-0 group-hover/entry:underline group-hover/entry:decoration-[0.06em] group-hover/entry:underline-offset-[0.14em]">
+                              {e.swatch ? <span className="mr-2 inline-block size-2.5" style={{ backgroundColor: e.swatch }} aria-hidden="true" /> : null}
+                              {e.label}
+                            </span>
+                            <span className="min-w-4 flex-1 -translate-y-[0.2em] border-b-4 border-dotted border-ink/25" aria-hidden="true" />
+                            <span className="shrink-0 text-small text-muted">{e.locator}</span>
+                          </Link>
                         )}
                       </li>
                     ))}
