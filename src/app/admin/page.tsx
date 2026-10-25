@@ -177,7 +177,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
                       </Link>
                       <p className="text-small text-muted">
                         {o.shipFirstName} {o.shipLastName}
-                        {o.paymentClaimedAt ? <span className="text-[#92400e]">, says paid {formatDate(o.paymentClaimedAt, { year: undefined, hour: "numeric", minute: "2-digit" })}</span> : null}
+                        {o.paymentClaimedAt ? <span className="text-[#7a3d00]">, says paid {formatDate(o.paymentClaimedAt, { year: undefined, hour: "numeric", minute: "2-digit" })}</span> : null}
                       </p>
                     </td>
                     <td className="hidden px-3 py-2.5 text-muted sm:table-cell">{PAYMENT_METHODS[o.paymentMethod as PaymentMethod]?.label ?? o.paymentMethod}</td>
@@ -213,7 +213,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
                 <p className="text-small text-muted">
                   {expired} order{expired === 1 ? " is" : "s are"} past the payment window. The hourly job cancels {expired === 1 ? "it" : "them"} automatically.
                 </p>
-                <FormSubmit variant="ghost" size="sm" pendingText="Cancelling…" className="h-8 text-danger ring-1 ring-danger/40 ring-inset hover:bg-[#ffedea]">
+                <FormSubmit variant="ghost" size="sm" pendingText="Cancelling…" className="h-8 text-danger ring-1 ring-danger/40 ring-inset hover:bg-[#fbe4e1]">
                   Cancel Expired Now
                 </FormSubmit>
               </div>
@@ -264,9 +264,9 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
         ]}
       />
 
-      <div className="mt-4 grid items-start gap-4 xl:grid-cols-3">
+      <div className="mt-4 grid gap-4 xl:grid-cols-3">
         <div className="xl:col-span-2">
-          <RevenueChart data={[...days.values()]} range={range} makeHref={(r) => (r === 30 ? "/admin" : `/admin?range=${r}`)} />
+          <RevenueChart data={[...days.values()]} range={range} makeHref={(r) => (r === 30 ? "/admin" : `/admin?range=${r}`)} className="h-full" />
         </div>
         <Panel title="Top compounds" description="Paid revenue, last 90 days">
           {topProducts.length === 0 ? (
@@ -276,16 +276,16 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
               {topProducts.map((p, i) => (
                 <li key={p.name}>
                   <div className="flex items-baseline justify-between gap-3">
-                    <span className="flex items-center gap-2">
+                    <span className="flex min-w-0 items-center gap-2">
                       <Swatch color={colour.get(p.name) ?? "#c9ced6"} />
                       {p.name}
+                      <span className="tabular text-small text-muted">{nf.format(p.units)} vials</span>
                     </span>
                     <span className="tabular font-medium">{formatMoney(p.revenue)}</span>
                   </div>
-                  <div className="mt-1 h-0.5 bg-surface">
+                  <div className="mt-1.5 h-0.5 bg-surface">
                     <div className={i === 0 ? "h-full bg-ink" : "h-full bg-muted/50"} style={{ width: `${(p.revenue / topMax) * 100}%` }} />
                   </div>
-                  <p className="tabular mt-1 text-small text-muted">{nf.format(p.units)} vials</p>
                 </li>
               ))}
             </ul>
@@ -293,7 +293,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
         </Panel>
       </div>
 
-      <div className="mt-4 grid items-start gap-4 md:grid-cols-2">
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
         <Panel
           title="Stock"
           description={`${lowStock.length ? `${lowStock.length} variant${lowStock.length === 1 ? "" : "s"} at or below threshold` : "Every variant is above its threshold"}, ${alertsWaiting} back-in-stock request${alertsWaiting === 1 ? "" : "s"} waiting`}
@@ -327,6 +327,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
 
         <Panel
           title="Unread messages"
+          description="From the contact form, newest first"
           action={
             <Link href="/admin/messages" className={textAction}>
               Inbox

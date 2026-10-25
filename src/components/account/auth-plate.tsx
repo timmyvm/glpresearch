@@ -2,28 +2,44 @@
 
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { plateInk } from "@/lib/plates";
 
-// Each auth screen shows one specimen on its own label colour, like a plate in a field guide.
-const PLATES: Record<string, { name: string; image: string; plate: string; note: string }> = {
-  "/login": { name: "Semaglutide", image: "/images/specimens/semaglutide-10mg.webp", plate: "#2DD4BF", note: "Long-acting GLP-1 receptor agonist, 10 mg" },
-  "/register": { name: "Tirzepatide", image: "/images/specimens/tirzepatide-15mg.webp", plate: "#FF6831", note: "Dual GIP and GLP-1 receptor agonist, 15 mg" },
-  "/forgot-password": { name: "Liraglutide", image: "/images/specimens/liraglutide-10mg.webp", plate: "#38BDF8", note: "Once-daily GLP-1 receptor agonist, 10 mg" },
-  "/reset-password": { name: "Retatrutide", image: "/images/specimens/retatrutide-10mg.webp", plate: "#F59E0B", note: "Triple GIP, GLP-1 and glucagon receptor agonist, 10 mg" },
+// Each auth screen shows one photograph from the lab, with a paper caption tipped onto it.
+const PLATES: Record<string, { image: string; alt: string; title: string; note: string }> = {
+  "/login": {
+    image: "/images/lab/checking-vial.webp",
+    alt: "A gloved hand holding a vial up to window light to check the freeze-dried cake",
+    title: "Checked before it ships",
+    note: "Every batch is tested by HPLC and mass spectrometry, and its certificate is on file.",
+  },
+  "/register": {
+    image: "/images/lab/sealing.webp",
+    alt: "Gloved hands crimping an aluminium seal onto a vial beside a balance",
+    title: "Weighed and sealed by hand",
+    note: "An account keeps your orders, payment details and addresses in one place.",
+  },
+  "/forgot-password": {
+    image: "/images/lab/autosampler.webp",
+    alt: "A gloved hand placing a vial into an HPLC autosampler tray",
+    title: "Tested by HPLC",
+    note: "Reset links expire after an hour and work once.",
+  },
+  "/reset-password": {
+    image: "/images/lab/freezer-rack.webp",
+    alt: "Racks of capped vials on frosted shelves inside a laboratory freezer",
+    title: "Held at −20 °C",
+    note: "Choose a password you do not use anywhere else.",
+  },
 };
 
 export function AuthPlate() {
   const pathname = usePathname();
   const p = PLATES[pathname] ?? PLATES["/login"];
-  const ink = plateInk(p.plate);
   return (
-    <figure className="relative flex h-full min-h-[34rem] flex-col justify-end p-8" style={{ backgroundColor: p.plate, color: ink }}>
-      <div className="absolute inset-x-8 top-10 bottom-28">
-        <Image src={p.image} alt={`${p.name} research vial`} fill loading="eager" sizes="(min-width: 768px) 40vw, 0px" className="object-contain" />
-      </div>
-      <figcaption className="relative">
-        <span className="block text-lead font-medium">{p.name}</span>
-        <span className="block text-small">{p.note}. Every batch tested by HPLC and mass spectrometry.</span>
+    <figure className="relative h-full min-h-[36rem] overflow-clip bg-field-black">
+      <Image src={p.image} alt={p.alt} fill loading="eager" sizes="(min-width: 768px) 48vw, 0px" className="object-cover" />
+      <figcaption className="absolute bottom-6 left-6 max-w-[22rem] rotate-[-1deg] bg-paper p-5 text-ink">
+        <span className="block text-lead font-semibold">{p.title}</span>
+        <span className="mt-1 block text-small">{p.note}</span>
       </figcaption>
     </figure>
   );

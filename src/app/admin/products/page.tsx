@@ -100,7 +100,7 @@ export default async function ProductsPage() {
                 <Td className="hidden sm:table-cell">
                   <span
                     className={`inline-flex h-6 items-center rounded-full px-2.5 text-small leading-none font-medium whitespace-nowrap ${
-                      p.active ? "bg-surface text-muted" : "bg-[#fffbeb] text-[#92400e]"
+                      p.active ? "bg-surface text-muted" : "bg-[#fdebd3] text-[#7a3d00]"
                     }`}
                   >
                     {p.active ? "On sale" : "Hidden"}

@@ -120,7 +120,7 @@ function Brand() {
   return (
     <Link href="/admin" className="flex items-center gap-2.5" aria-label="GLP Research admin, overview">
       <span className="grid size-8 place-items-center bg-surface">
-        <Image src="/images/logo-mark.webp" alt="" width={20} height={20} />
+        <Image src="/images/logo-peak.webp" alt="" width={20} height={20} />
       </span>
       <span className="leading-tight">
         <span className="block text-sm font-medium text-ink" translate="no">
@@ -134,7 +134,7 @@ function Brand() {
 
 function Footer({ name, email, signOut }: { name: string; email: string; signOut: () => Promise<void> }) {
   return (
-    <div className="space-y-1 border-t border-ink/10 px-3 py-3">
+    <div className="space-y-1 border-t border-surface-2 px-3 py-3">
       <Link href="/" className="flex h-9 items-center gap-2.5 px-2 text-sm text-muted hover:bg-surface/60 hover:text-ink">
         <ExternalLink className="size-4" aria-hidden="true" /> View store
       </Link>
@@ -186,7 +186,7 @@ export function AdminSidebar({
   return (
     <>
       {/* Desktop: labelled sidebar on the page ground, separated by one rule */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-ink/10 bg-white lg:flex print:hidden">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-surface-2 bg-white lg:flex print:hidden">
         <div className="flex h-16 items-center px-5">
           <Brand />
         </div>
@@ -203,7 +203,7 @@ export function AdminSidebar({
       </div>
       {open ? (
         <div id="admin-menu" className="fixed inset-0 z-50 flex flex-col overscroll-contain bg-white lg:hidden" role="dialog" aria-modal="true" aria-label="Admin menu">
-          <div className="flex h-12 items-center justify-between border-b border-ink/10 px-4">
+          <div className="flex h-12 items-center justify-between border-b border-surface-2 px-4">
             <Brand />
             <button type="button" onClick={() => setOpen(false)} className="press h-10 px-2 text-sm font-medium text-ink">
               Close

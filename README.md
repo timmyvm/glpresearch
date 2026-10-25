@@ -2,7 +2,7 @@
 
 An e-commerce and education site for incretin-class research peptides: GLP-1, dual GIP/GLP-1, glucagon co-agonists and triple agonists. It has a storefront, a referenced research library, customer accounts, checkout and a full admin panel.
 
-Built with **Next.js 16 (App Router)**, **React 19**, **Tailwind CSS 4**, **Prisma** and **TypeScript**. All imagery was generated with Higgsfield: the logo, the product vials and their cut-outs, the lab photography, the article covers and the homepage video loop.
+Built with **Next.js 16 (App Router)**, **React 19**, **Tailwind CSS 4**, **Prisma** and **TypeScript**. Imagery was generated with Higgsfield (the logo, the product vials and their cut-outs, the lab photography, the article covers and the homepage video loop), plus public-domain and openly licensed archival plates credited in the footer and on the About page.
 
 ## Quick start
 
@@ -27,10 +27,11 @@ Seeded logins:
 
 The look is documented in **[DESIGN.md](DESIGN.md)**. Read it before changing any screen.
 
-- **The idea:** each compound is a "specimen". Its vial is shown on its own flat colour plate, taken from the stripe on its label, and catalogued like a field guide.
-- **Type:** one typeface, Hanken Grotesk.
-- **Colour:** navy ink on white, with a mint accent for actions.
-- **Shape and finish:** square corners, and no gradients, shadows or hairline rules on resting elements.
+- **The idea:** the page is the object. The certificate of analysis that comes with every batch becomes the homepage, and every other screen is another piece of the same lab paperwork: data sheets, slips, a receipt, a register.
+- **The live thing:** pick a compound on the homepage certificate and it reprints from that compound's latest batch, with its purity, mass, an HPLC trace and its amino-acid sequence marked against native GLP-1.
+- **Type:** one typeface, Bricolage Grotesque, with optical sizing.
+- **Colour:** navy ink on white and warm paper, with one tangerine accent for actions. Each compound keeps its label colour for its plate and swatches only.
+- **Shape and finish:** square corners, paper edges cut with zigzags and scallops, and no gradients, shadows or hairline rules on resting elements.
 - **App screens:** admin, account and checkout follow app-screen rules: quiet borders, pale status pills and right-aligned tabular figures.
 
 ### Design skills (`.claude/skills/`)
@@ -54,12 +55,12 @@ node .claude/skills/design-taste-frontend/scripts/inspect.mjs http://localhost:3
 ## What's in it
 
 **Storefront**
-- **Homepage:** a hero you can drag through the seven vials, a price list, a half-life explainer that compares each compound with native GLP-1, the latest certificates of analysis, the research library, the fulfilment process and FAQs.
+- **Homepage:** a certificate of analysis that reprints for any of the seven compounds and pins over the lab's photographs as you scroll; the three receptor classes; four stacked history sheets (native GLP-1 to triple agonists) with archival plates; the batch register with certificate lookup; the research shelf; the dispatch slip; and FAQs.
 - **Catalogue (`/shop`):** compounds as specimen tiles, filtered by receptor class.
 - **Product pages:** a full research monograph covering mechanism, published studies, specifications, sequence, batch certificates, storage and references, plus "Email me when it's back" for sold-out sizes.
 - **Research library (`/research`):** 10 referenced articles, a glossary and a timeline.
 - **Other pages:** compound comparison (`/compare`), certificate lookup by batch number (`/coa`), site search across compounds, articles, FAQs and batches (`/search`), FAQ, About, Contact and policy pages.
-- **Plumbing:** a research-use notice on first visit (pinned to the bottom of the screen, never shifting the page), Open Graph images, sitemap, robots and manifest.
+- **Plumbing:** the research-use terms in a strip at the top of every page, Open Graph images, sitemap, robots and manifest.
 
 **Customers**
 - **Sign-in:** register, sign in, and password reset, all rate-limited.
@@ -99,7 +100,7 @@ The pages also refresh hourly as a backstop.
 
 **Browser-side parts.** A few things are read in the browser so pages can stay static:
 - The catalogue and library filters.
-- The research-use notice.
+- The compound tabs on the homepage certificate.
 - The signed-in name in the header. It comes from a readable `glp_who` cookie that holds only a first name. Real sessions stay in the httpOnly cookie and are checked on the server.
 
 Search, certificate lookup, contact, sign-in, cart, checkout, account and admin render per request.
@@ -158,6 +159,6 @@ Compound data and trial results were checked against PubChem/KEGG, FDA labels, P
 
 ## Compliance
 
-The site presents every product as **for laboratory research use only, not for human or veterinary use**. It has a research-use notice, compliance checkboxes at checkout and a research use policy.
+The site presents every product as **for laboratory research use only, not for human or veterinary use**. It states this in a strip at the top of every page, on every product page, in compliance checkboxes at checkout and in a research use policy.
 
 Peptides such as semaglutide and tirzepatide are prescription-only medicines in many countries; in Australia they are Schedule 4 under the TGA. You are responsible for making sure the business, its listings and its payment methods comply with the laws where you operate and sell. Get legal advice before launching.

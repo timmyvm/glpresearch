@@ -19,7 +19,7 @@ export const articles: SeedArticle[] = [
     excerpt:
       "How a 30-amino-acid gut hormone that survives barely two minutes in the bloodstream became the most important target in metabolic research.",
     category: "Fundamentals",
-    coverImage: "/images/incretin-axis.webp",
+    coverImage: "/images/archive/intestines-1686.webp",
     readingMinutes: 9,
     featured: true,
     content: `Glucagon-like peptide-1 (GLP-1) is a peptide hormone released from the gut in response to food. It is the best-known member of a small family of hormones called **incretins**, and in the last two decades it has become the single most studied target in metabolic science. This article explains where GLP-1 comes from, what it does, and why its short life in circulation shaped every compound that followed.
@@ -95,7 +95,7 @@ GLP-1 sits at the intersection of several systems: endocrine pancreas, gut motil
     excerpt:
       "A tour of the GLP-1 receptor: its structure, how peptides bind it, the signalling pathways it switches on, and the assays researchers use to measure all of it.",
     category: "Fundamentals",
-    coverImage: "/images/receptor.webp",
+    coverImage: "/images/archive/pancreas-wirsung-1642.webp",
     readingMinutes: 10,
     content: `GLP-1 receptor agonists share one molecular target, but what happens after a peptide binds that target is surprisingly nuanced. Understanding the receptor is the key to understanding why compounds with similar targets can behave differently.
 
@@ -158,7 +158,7 @@ Two practical points matter for long-acting analogues. First, **albumin in the a
     excerpt:
       "Why researchers moved from molecules that activate one receptor to single peptides that engage two or three, and what each added receptor is thought to contribute.",
     category: "Compounds",
-    coverImage: "/images/peptide-helix.webp",
+    coverImage: "/images/archive/islets.webp",
     readingMinutes: 11,
     featured: true,
     content: `The first generation of incretin-based compounds did one thing: activate the GLP-1 receptor. The newest generation engineers a single peptide to activate two or even three related receptors at once. This article explains the three receptors involved, why combining them is interesting, and how to compare compounds sensibly.
@@ -227,7 +227,7 @@ Use the [comparison tool](/compare) for full structural and regulatory details.`
     excerpt:
       "DPP-4-resistant residues, fatty-acid side chains and albumin binding, the three chemical tricks that turned a fleeting hormone into once-weekly molecules.",
     category: "Compounds",
-    coverImage: "/images/albumin-binding.webp",
+    coverImage: "/images/lab/stopwatch.webp",
     readingMinutes: 9,
     content: `Native GLP-1 survives roughly two minutes in circulation. Semaglutide, built on almost the same sequence, lasts about a week. The difference comes down to a handful of precise chemical changes. Understanding them explains a great deal about how each compound in the class behaves.
 
@@ -296,7 +296,7 @@ Half-life determines how quickly steady-state exposure is reached, how long wash
     excerpt:
       "The key published studies behind each compound: what they measured, what they found, and how to read the headline numbers without being misled.",
     category: "Clinical Research",
-    coverImage: "/images/hero-vials.webp",
+    coverImage: "/images/lab/journals.webp",
     readingMinutes: 12,
     content: `Most of what is known about incretin-class compounds comes from large, randomised clinical trials of regulated pharmaceutical products. This article summarises the landmark body-weight and glycaemic studies for each compound in our catalogue. For cardiovascular, kidney, liver and neurological outcomes, see [Beyond weight loss](/research/beyond-weight-outcome-trials).
 
@@ -367,7 +367,7 @@ Remember: rows in this table come from different trials and cannot be ranked aga
     excerpt:
       "SELECT, FLOW, SUMMIT, ESSENCE and the negative evoke trials: what large outcome studies have and haven't shown for the incretin class.",
     category: "Clinical Research",
-    coverImage: "/images/organs.webp",
+    coverImage: "/images/archive/heart-kirtland-1806.webp",
     readingMinutes: 10,
     content: `Body weight and HbA1c are surrogate measures. The questions that matter most in clinical science are about **hard outcomes**: heart attacks, kidney failure, liver disease, death. Over the past decade, a series of large trials has tested incretin-class products against exactly these endpoints. Some succeeded, some did not, and the failures are as informative as the successes.
 
@@ -415,16 +415,16 @@ These results are a reminder that strong mechanistic rationale and promising ear
 
 ## Summary
 
-| Trial | Compound | Area | Outcome |
+| Trial | Compound | Area | Result |
 |---|---|---|---|
-| LEADER | Liraglutide | CV (T2D) | MACE HR 0.87 ✓ |
-| SELECT | Semaglutide | CV (no T2D) | MACE HR 0.80 ✓ |
+| LEADER | Liraglutide | CV (T2D) | MACE HR 0.87 |
+| SELECT | Semaglutide | CV (no T2D) | MACE HR 0.80 |
 | SURPASS-CVOT | Tirzepatide vs dulaglutide | CV (T2D) | Non-inferior, not superior |
-| SUMMIT | Tirzepatide | HFpEF | HR 0.62 ✓ |
-| FLOW | Semaglutide | Kidney | HR 0.76 ✓ |
-| ESSENCE | Semaglutide | MASH | 62.9% vs 34.3% resolution ✓ |
-| evoke/evoke+ | Oral semaglutide | Alzheimer's | No benefit ✗ |
-| Exenatide-PD3 | Exenatide | Parkinson's | No benefit ✗ |`,
+| SUMMIT | Tirzepatide | HFpEF | HR 0.62 |
+| FLOW | Semaglutide | Kidney | HR 0.76 |
+| ESSENCE | Semaglutide | MASH | 62.9% vs 34.3% resolution |
+| evoke/evoke+ | Oral semaglutide | Alzheimer's | No benefit |
+| Exenatide-PD3 | Exenatide | Parkinson's | No benefit |`,
   },
   {
     slug: "understanding-certificates-of-analysis",
@@ -432,7 +432,7 @@ These results are a reminder that strong mechanistic rationale and promising ear
     excerpt:
       "What RP-HPLC purity actually measures, how mass spectrometry confirms identity, why ‘purity’ isn't the same as ‘peptide content’, and a checklist for evaluating any COA.",
     category: "Lab Practice",
-    coverImage: "/images/hplc-analysis.webp",
+    coverImage: "/images/lab/coa-report.webp",
     readingMinutes: 9,
     content: `A certificate of analysis (COA) is the documentary link between the vial on your bench and the analytical data that justify its use. Knowing what each test does, and doesn't, tell you is essential for interpreting experiments and for comparing suppliers.
 
@@ -514,9 +514,9 @@ This matters for quantitative work: if you prepare a solution by weight and assu
     excerpt:
       "Temperature, moisture, light and freeze–thaw: practical guidance for keeping research peptides stable from delivery to assay.",
     category: "Lab Practice",
-    coverImage: "/images/freezer.webp",
+    coverImage: "/images/lab/cryo-box.webp",
     readingMinutes: 8,
-    content: `Peptides are robust when dry and fragile in solution. Most loss of activity in the laboratory comes not from the original material but from how it is stored, opened and dissolved. This guide covers good practice for in-vitro research use.
+    content: `Peptides are stable when dry and fragile in solution. Most loss of activity in the laboratory comes not from the original material but from how it is stored, opened and dissolved. This guide covers good practice for in-vitro research use.
 
 ## Why peptides are supplied lyophilized
 
@@ -578,7 +578,7 @@ There is no universal answer; it depends on sequence, concentration, solvent and
     excerpt:
       "Six decades of incretin science: the observations, the unexpected discoveries and the people behind one of the most consequential drug classes in modern medicine.",
     category: "Fundamentals",
-    coverImage: "/images/gila-monster.webp",
+    coverImage: "/images/archive/heloderma-print.webp",
     readingMinutes: 8,
     content: `The story of GLP-1 is a story of patient basic science paying off decades later, with a detour through the venom of a desert lizard.
 
@@ -631,7 +631,7 @@ Sixty years after the incretin effect was first described, the field is still ac
     title: "Glossary of incretin research terms",
     excerpt: "Plain-language definitions of the receptors, assays, chemistry and trial terminology used throughout the research library.",
     category: "Reference",
-    coverImage: "/images/lab-bench.webp",
+    coverImage: "/images/archive/chymie-laboratory.webp",
     readingMinutes: 7,
     content: `A quick reference to terms used across the GLP Research library. Terms are grouped by topic.
 

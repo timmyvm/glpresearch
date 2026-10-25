@@ -8,9 +8,9 @@ export const metadata = { title: "Email log" };
 
 const PAGE_SIZE = 50;
 const STATUS: Record<string, { label: string; tone: string }> = {
-  SENT: { label: "Sent", tone: "bg-[#dcfae5] text-[#04250e]" },
+  SENT: { label: "Sent", tone: "bg-[#dcf3e3] text-[#0b4a24]" },
   LOGGED: { label: "Logged", tone: "bg-surface text-muted" },
-  FAILED: { label: "Failed", tone: "bg-[#ffedea] text-[#831c1e]" },
+  FAILED: { label: "Failed", tone: "bg-[#fbe4e1] text-[#8a1c14]" },
 };
 
 export default async function EmailLogPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
@@ -39,7 +39,7 @@ export default async function EmailLogPage({ searchParams }: { searchParams: Pro
         </Notice>
       ) : null}
       <ListFilters label="Search emails" placeholder="Recipient or subject…" count={`${total.toLocaleString("en-AU")} email${total === 1 ? "" : "s"}`} />
-      <div className="border border-ink/10 bg-white">
+      <div className="border border-surface-2 bg-white">
         {emails.length === 0 ? <EmptyState title={q ? "No emails match this search." : "No emails yet."} /> : null}
         <ul>
           {emails.map((e, i) => {

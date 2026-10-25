@@ -14,7 +14,7 @@ export default async function CheckoutPage() {
 
   return (
     <div className="frame pt-10 pb-24 md:pt-16 md:pb-32">
-      <h1 className="mb-10 text-head md:mb-14">Checkout</h1>
+      <h1 className="mb-8 text-index font-semibold md:mb-10">Checkout</h1>
       <CheckoutForm
         user={user ? { email: user.email, firstName: user.firstName, lastName: user.lastName, phone: user.phone, institution: user.institution } : null}
         addresses={addresses}

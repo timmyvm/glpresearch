@@ -30,7 +30,7 @@ export default async function EditBatchPage({ params }: { params: Promise<{ id: 
             action={deleteBatch.bind(null, batch.id)}
             message={`Delete batch ${batch.batchNumber}? Its certificate disappears from the Lab Testing page and product page. This can't be undone.`}
             variant="ghost"
-            className="text-danger hover:bg-[#ffedea]"
+            className="text-danger hover:bg-[#fbe4e1]"
           >
             Delete Batch
           </ConfirmButton>

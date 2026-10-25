@@ -16,8 +16,8 @@ function couponState(c: { active: boolean; startsAt: Date | null; expiresAt: Dat
   if (!c.active) return { label: "Disabled", tone: "bg-surface text-muted" };
   if (c.expiresAt && c.expiresAt < now) return { label: "Expired", tone: "bg-surface text-muted" };
   if (c.startsAt && c.startsAt > now) return { label: "Scheduled", tone: "bg-[#e3f8fd] text-[#0c4a5e]" };
-  if (c.maxUses && c.usedCount >= c.maxUses) return { label: "Used up", tone: "bg-[#fffbeb] text-[#92400e]" };
-  return { label: "Live", tone: "bg-[#dcfae5] text-[#04250e]" };
+  if (c.maxUses && c.usedCount >= c.maxUses) return { label: "Used up", tone: "bg-[#fdebd3] text-[#7a3d00]" };
+  return { label: "Live", tone: "bg-[#dcf3e3] text-[#0b4a24]" };
 }
 
 export default async function CouponsPage({ searchParams }: { searchParams: Promise<{ edit?: string; saved?: string }> }) {
@@ -119,7 +119,7 @@ export default async function CouponsPage({ searchParams }: { searchParams: Prom
                         action={deleteCoupon.bind(null, c.id)}
                         message={`Delete coupon ${c.code}? Past orders keep their discount. This can't be undone.`}
                         variant="ghost"
-                        className="h-8 text-danger hover:bg-[#ffedea]"
+                        className="h-8 text-danger hover:bg-[#fbe4e1]"
                       >
                         Delete
                       </ConfirmButton>

@@ -84,7 +84,7 @@ export default async function AccountOverviewPage() {
               </div>
             </div>
             {latest.status === "PENDING_PAYMENT" ? (
-              <div className="flex flex-wrap items-center justify-between gap-4 bg-surface px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-4 bg-white px-4 py-3">
                 <p className="text-small">
                   {latest.paymentClaimedAt
                     ? "You've told us the payment is on its way. We'll email you once it's matched."
@@ -102,7 +102,7 @@ export default async function AccountOverviewPage() {
         </Card>
       ) : (
         <Card className="px-5 py-8">
-          <h2 className="text-base font-medium">Latest order</h2>
+          <h2 className="text-lead font-semibold">Latest order</h2>
           <p className="mt-1 text-small text-muted">Nothing ordered yet. When you place an order, its progress shows here.</p>
           <ButtonLink href="/shop" className="mt-5">
             Shop Peptides

@@ -12,6 +12,7 @@ import { specimenImage } from "@/lib/plates";
 import { cn } from "@/lib/utils";
 import { Alert } from "@/components/ui/alert";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { Slip, SlipRow } from "@/components/store/paper";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/form";
 import type { SavedAddress } from "@/components/account/address-book";
 import { useFocusFirstError } from "@/components/account/form-helpers";
@@ -80,9 +81,9 @@ function fromAddress(a: SavedAddress) {
 
 function Section({ id, title, aside, children }: { id: string; title: string; aside?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section aria-labelledby={id} className="pt-12 first:pt-0">
+    <section aria-labelledby={id} className="pt-14 first:pt-0">
       <div className="mb-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-        <h2 id={id} className="text-lead font-medium">
+        <h2 id={id} className="text-lead font-semibold">
           {title}
         </h2>
         {aside}
@@ -110,7 +111,7 @@ function ChoiceRow({
     <label
       className={cn(
         "flex cursor-pointer items-start gap-3 p-4 transition-[background-color,box-shadow] duration-150",
-        checked ? "bg-white ring-2 ring-ink ring-inset" : "bg-surface hover:bg-surface-2",
+        checked ? "bg-white ring-2 ring-ink ring-inset" : "bg-white/60 hover:bg-white",
       )}
     >
       <input type="radio" name={name} value={value} checked={checked} onChange={onChange} className="mt-0.5 size-5 shrink-0 accent-ink" />
@@ -135,7 +136,7 @@ function CheckRow({
 }) {
   return (
     <div>
-      <label className={cn("flex cursor-pointer items-start gap-3 p-4 text-small", invalid ? "bg-[#ffedea]" : "bg-surface hover:bg-surface-2")}>
+      <label className={cn("flex cursor-pointer items-start gap-3 p-4 text-small", invalid ? "bg-[#ffedea]" : "bg-white/60 hover:bg-white")}>
         <Checkbox className="mt-0.5" checked={checked} onChange={(e) => onChange(e.target.checked)} aria-invalid={invalid || undefined} />
         <span>{children}</span>
       </label>
@@ -186,26 +187,15 @@ function Summary({
           );
         })}
       </ul>
-      <dl className="tabular mt-6 space-y-2 text-small">
-        <div className="flex justify-between gap-4">
-          <dt className="text-muted">Subtotal</dt>
-          <dd>{formatMoney(subtotal)}</dd>
-        </div>
-        {discount > 0 ? (
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted">Discount{couponCode ? ` (${couponCode})` : ""}</dt>
-            <dd>−{formatMoney(discount)}</dd>
-          </div>
-        ) : null}
-        <div className="flex justify-between gap-4">
-          <dt className="text-muted">Shipping, {shippingLabel.toLowerCase()}</dt>
-          <dd>{shipping === 0 ? "Free" : formatMoney(shipping)}</dd>
-        </div>
-        <div className="flex items-baseline justify-between gap-4 pt-3 text-body">
-          <dt className="font-medium">Total (AUD)</dt>
-          <dd className="text-lead font-medium">{formatMoney(total)}</dd>
-        </div>
-      </dl>
+      <div className="mt-6 space-y-2 text-body">
+        <SlipRow label="Subtotal" value={formatMoney(subtotal)} />
+        {discount > 0 ? <SlipRow label={`Discount${couponCode ? ` (${couponCode})` : ""}`} value={`−${formatMoney(discount)}`} /> : null}
+        <SlipRow label={`Shipping, ${shippingLabel.toLowerCase()}`} value={shipping === 0 ? "Free" : formatMoney(shipping)} />
+      </div>
+      <p className="-mx-[var(--slip-pad)] mt-5 flex h-12 items-center justify-between gap-3 bg-ink px-[var(--slip-pad)] text-white">
+        <span className="font-medium">Total (AUD)</span>
+        <span className="tabular text-lead font-semibold">{formatMoney(total)}</span>
+      </p>
     </>
   );
 }
@@ -445,7 +435,7 @@ export function CheckoutForm({
 
   return (
     <form ref={formRef} onSubmit={placeOrder} noValidate className="grid gap-10 lg:grid-cols-12 lg:gap-8">
-      <details className="bg-surface lg:hidden">
+      <details className="bg-paper lg:hidden" style={{ "--slip-pad": "1rem" } as React.CSSProperties}>
         <summary className="flex cursor-pointer items-center justify-between gap-4 p-4 font-medium">
           <span>Order summary</span>
           <span className="tabular">{formatMoney(total)}</span>
@@ -453,7 +443,7 @@ export function CheckoutForm({
         <div className="px-4 pb-5">{summary}</div>
       </details>
 
-      <div className="min-w-0 lg:col-span-7">
+      <div className="on-paper min-w-0 bg-paper px-5 py-8 sm:px-8 md:px-12 md:py-12 lg:col-span-7">
         {problems.length > 0 ? (
           <Alert tone="warning" title="Some items in your cart need attention" className="mb-10">
             <ul className="list-inside list-disc">
@@ -635,7 +625,7 @@ export function CheckoutForm({
                     aria-describedby={couponError ? "coupon-error" : undefined}
                     className="uppercase"
                   />
-                  <Button variant="outline" size="md" className="h-12" onClick={applyCoupon} disabled={couponPending || !couponInput.trim()}>
+                  <Button variant="ink" size="md" className="h-12" onClick={applyCoupon} disabled={couponPending || !couponInput.trim()}>
                     {couponPending ? "Checking…" : "Apply"}
                   </Button>
                 </div>
@@ -680,7 +670,7 @@ export function CheckoutForm({
             {formError ? <Alert tone="error">{formError}</Alert> : null}
           </div>
 
-          <Button type="submit" size="lg" className="mt-6 w-full" disabled={placing || blocked} aria-busy={placing}>
+          <Button type="submit" variant="accent" size="lg" className="mt-6 w-full" disabled={placing || blocked} aria-busy={placing}>
             <span className="tabular">{placing ? "Placing order…" : `Place Order · ${formatMoney(total)}`}</span>
           </Button>
           <p className="mt-3 text-small text-muted">Prices and stock are confirmed the moment you place the order. Nothing is charged automatically.</p>
@@ -688,17 +678,17 @@ export function CheckoutForm({
       </div>
 
       <aside aria-labelledby="summary-title" className="hidden lg:sticky lg:top-24 lg:col-span-4 lg:col-start-9 lg:block lg:self-start">
-        <div className="bg-surface p-6">
+        <Slip className="px-[var(--slip-pad)] pt-7" style={{ "--slip-pad": "1.75rem" } as React.CSSProperties}>
           <div className="mb-6 flex items-baseline justify-between gap-4">
-            <h2 id="summary-title" className="text-lead font-medium">
-              Summary
+            <h2 id="summary-title" className="text-lead font-semibold">
+              Order summary
             </h2>
             <Link href="/cart" className="link text-small">
               Edit cart
             </Link>
           </div>
           {summary}
-        </div>
+        </Slip>
       </aside>
     </form>
   );

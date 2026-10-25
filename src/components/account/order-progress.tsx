@@ -26,7 +26,7 @@ export function OrderProgress({
   if (status === "CANCELLED" || status === "REFUNDED") {
     const event = [...events].reverse().find((e) => e.status === status);
     return (
-      <div className={cn("bg-surface px-5 py-4", className)}>
+      <div className={cn("bg-paper px-5 py-4", className)}>
         <p className="font-medium">This order was {ORDER_STATUS_LABEL[status as OrderStatus].toLowerCase()}.</p>
         {event ? <p className="text-small text-muted">{formatDateTime(event.createdAt)}</p> : null}
       </div>

@@ -40,11 +40,14 @@ export function Certificate({ compounds }: { compounds: CertCompound[] }) {
 
   return (
     <article className="hero-card flex flex-col bg-paper p-5 text-ink sm:p-7 lg:h-[var(--ch)] lg:p-8" aria-labelledby="hero-title">
-      <h1 id="hero-title" className="cert-title flex flex-wrap gap-x-[0.28em] font-semibold sm:justify-between sm:gap-x-6">
+      <h1 id="hero-title" className="cert-title flex flex-wrap gap-x-[0.28em] font-semibold sm:gap-x-6 lg:justify-between">
         <span>GLP-1</span> <span>research</span> <span>peptides</span>
       </h1>
+      <p className="mt-4 max-w-[48ch] text-lead lg:mt-5">
+        Seven research compounds that act on the GLP-1 receptor, each batch tested before it ships.
+      </p>
 
-      <div role="tablist" aria-label="Show the certificate for" className="mt-5 flex flex-wrap gap-1.5 lg:mt-6">
+      <div role="tablist" aria-label="Show the certificate for" className="mt-6 flex flex-wrap gap-1.5">
         {compounds.map((x, i) => (
           <button
             key={x.slug}
@@ -73,9 +76,9 @@ export function Certificate({ compounds }: { compounds: CertCompound[] }) {
         ))}
       </div>
 
-      <div id="cert-sheet" role="tabpanel" aria-labelledby={`cert-tab-${c.slug}`} key={c.slug} className="reprint mt-6 flex min-h-0 flex-1 flex-col lg:mt-7">
+      <div id="cert-sheet" role="tabpanel" aria-labelledby={`cert-tab-${c.slug}`} key={c.slug} className="reprint mt-6 flex min-h-0 flex-1 flex-col">
         <div className="grid min-h-0 flex-1 gap-6 sm:grid-cols-12 sm:gap-x-6">
-          <div className="sm:col-span-7 lg:col-span-4">
+          <div className="sm:col-span-7 sm:flex sm:flex-col lg:col-span-4 lg:block">
             <p className="text-lead font-medium" aria-live="polite">
               {c.name}
               {c.batch ? (
@@ -100,9 +103,7 @@ export function Certificate({ compounds }: { compounds: CertCompound[] }) {
                 </div>
               ) : null}
             </dl>
-            <p className="mt-5 max-w-[32ch] text-body">
-              Seven research compounds that act on the GLP-1 receptor, each batch tested before it ships.
-            </p>
+            <Chromatogram purity={c.batch?.purity ?? 99.5} seed={c.batch?.number ?? c.slug} className="mt-6 hidden min-h-32 flex-1 sm:flex lg:hidden" />
           </div>
 
           <Chromatogram
@@ -122,7 +123,7 @@ export function Certificate({ compounds }: { compounds: CertCompound[] }) {
           </figure>
         </div>
 
-        <Chromatogram purity={c.batch?.purity ?? 99.5} seed={c.batch?.number ?? c.slug} className="mt-6 aspect-[16/7] lg:hidden" />
+        <Chromatogram purity={c.batch?.purity ?? 99.5} seed={c.batch?.number ?? c.slug} className="mt-6 aspect-[16/7] sm:hidden" />
 
         <div className="mt-6">
           <p className="text-small text-muted">

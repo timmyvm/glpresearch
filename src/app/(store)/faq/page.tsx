@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { JsonLd } from "@/components/seo/json-ld";
 import Image from "next/image";
 import Link from "next/link";
-import { cn, slugify } from "@/lib/utils";
+import { slugify } from "@/lib/utils";
+import { ButtonLink } from "@/components/ui/button";
 import { PageIntro, TitleLines } from "@/components/store/page-intro";
+import { Slip, SlipRow } from "@/components/store/paper";
 import { FAQS } from "./faqs";
 
 export const metadata: Metadata = {
@@ -12,11 +14,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "/faq" },
 };
 
-const PICTURES: Record<string, { src: string; alt: string; position?: string }> = {
-  "Products & quality": { src: "/images/hplc-analysis.webp", alt: "An analyst holds a vial beside an HPLC chromatogram with one sharp peak" },
-  "Storage & handling": { src: "/images/freezer.webp", alt: "Research vials in racks inside a laboratory freezer" },
-  "Ordering & payment": { src: "/images/hero-vials.webp", alt: "Five labelled GLP Research vials on a laboratory bench", position: "object-[75%_50%]" },
-  Shipping: { src: "/images/packaging.webp", alt: "An insulated shipping box with three vials, a cold pack and a certificate" },
+const PICTURES: Record<string, { src: string; alt: string }> = {
+  "Products & quality": { src: "/images/lab/coa-report.webp", alt: "A gloved hand pointing a pen at the peak on a printed HPLC report" },
+  "Storage & handling": { src: "/images/lab/cryo-box.webp", alt: "Gloved hands lifting a box of vials out of a frosted freezer" },
+  "Ordering & payment": { src: "/images/lab/notebook.webp", alt: "A lab notebook beside a rack of vials and a printed chromatogram" },
+  Shipping: { src: "/images/lab/packing.webp", alt: "Vials packed in foam with a cold pack and a packing slip" },
 };
 
 export default function FaqPage() {
@@ -45,40 +47,32 @@ export default function FaqPage() {
         </nav>
       </PageIntro>
 
-      <div className="space-y-20 pt-16 md:space-y-28 md:pt-24">
+      <div className="space-y-24 pt-16 md:space-y-36 md:pt-24">
         {FAQS.map((g, gi) => (
-          <section key={g.title} id={slugify(g.title)} className="frame grid gap-6 lg:grid-cols-12 lg:gap-x-[var(--gutter)]" aria-labelledby={`${slugify(g.title)}-title`}>
+          <section key={g.title} id={slugify(g.title)} className="frame grid gap-8 lg:grid-cols-12 lg:gap-x-[var(--gutter)]" aria-labelledby={`${slugify(g.title)}-title`}>
             <div className="lg:col-span-4">
               <div className="lg:sticky lg:top-24">
-                <h2 id={`${slugify(g.title)}-title`} className="text-index font-medium" data-reveal>
+                <h2 id={`${slugify(g.title)}-title`} className="text-head font-semibold" data-reveal>
                   {g.title}
                 </h2>
+                <p className="mt-3 text-body text-muted" data-reveal style={{ "--i": 1 } as React.CSSProperties}>
+                  {g.items.length} questions
+                </p>
                 {PICTURES[g.title] ? (
-                  <div className="relative mt-6 aspect-[16/9] overflow-clip bg-surface lg:aspect-[4/3]" data-reveal style={{ "--i": 1 } as React.CSSProperties}>
-                    <Image
-                      src={PICTURES[g.title].src}
-                      alt={PICTURES[g.title].alt}
-                      fill
-                      sizes="(min-width: 1024px) 30vw, 100vw"
-                      className={cn("object-cover", gi % 2 === 0 && "drift", PICTURES[g.title].position)}
-                    />
+                  <div className="relative mt-6 aspect-[16/9] overflow-clip bg-surface lg:aspect-[4/3]" data-reveal style={{ "--i": 2 } as React.CSSProperties}>
+                    <Image src={PICTURES[g.title].src} alt={PICTURES[g.title].alt} fill sizes="(min-width: 1024px) 30vw, 100vw" className="object-cover" />
                   </div>
                 ) : null}
               </div>
             </div>
-            <div className="space-y-2 lg:col-span-8">
+            <div className="space-y-1.5 lg:col-span-7 lg:col-start-6">
               {g.items.map((f, i) => (
-                <details key={f.q} className="group bg-surface open:bg-field-grey" open={gi === 0 && i === 0} data-reveal style={{ "--i": i % 4 } as React.CSSProperties}>
-                  <summary className="flex cursor-pointer list-none items-start justify-between gap-6 p-5 text-lead font-medium md:px-6 [&::-webkit-details-marker]:hidden">
+                <details key={f.q} className="group bg-surface transition-colors duration-200 open:bg-paper" open={gi === 0 && i === 0} data-reveal style={{ "--i": i % 4 } as React.CSSProperties}>
+                  <summary className="flex cursor-pointer list-none items-start justify-between gap-6 p-5 text-lead font-medium md:px-7 md:py-6 [&::-webkit-details-marker]:hidden">
                     <span>{f.q}</span>
-                    <span className="mt-1 shrink-0 text-body font-normal text-muted group-open:hidden" aria-hidden="true">
-                      Open
-                    </span>
-                    <span className="mt-1 hidden shrink-0 text-body font-normal group-open:inline" aria-hidden="true">
-                      Close
-                    </span>
+                    <span className="chevron mt-[0.45em] shrink-0" aria-hidden="true" />
                   </summary>
-                  <p className="max-w-[62ch] px-5 pb-6 md:px-6">{f.a}</p>
+                  <p className="max-w-[62ch] px-5 pb-6 text-body md:px-7 md:pb-7">{f.a}</p>
                 </details>
               ))}
             </div>
@@ -86,24 +80,33 @@ export default function FaqPage() {
         ))}
       </div>
 
-      <section className="frame pt-28 md:pt-40" aria-labelledby="ask-title">
-        <div className="grid gap-6 bg-field-navy p-8 text-on-navy md:grid-cols-12 md:gap-x-[var(--gutter)] md:p-12">
-          <h2 id="ask-title" className="text-index font-medium md:col-span-6">
-            Still have a question?
-          </h2>
+      <section className="flush-footer mt-28 bg-field-black py-24 text-white md:mt-40 md:py-32" aria-labelledby="ask-title">
+        <div className="frame grid gap-12 md:grid-cols-12 md:gap-x-[var(--gutter)]">
           <div className="md:col-span-6">
-            <p className="max-w-[44ch] text-on-navy-muted">
+            <h2 id="ask-title" className="text-head font-semibold">
+              Still have a question?
+            </h2>
+            <p className="mt-6 max-w-[40ch] text-lead text-on-black-muted">
               Ask about a batch, an order or institutional supply. We don&apos;t answer questions about human use or dosing.
             </p>
-            <div className="mt-6 flex flex-wrap items-center gap-6">
-              <Link href="/contact" className="press inline-flex h-14 items-center bg-accent px-7 font-medium text-accent-ink hover:bg-accent-strong">
+            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
+              <ButtonLink href="/contact" variant="accent" size="lg">
                 Contact Us
-              </Link>
-              <Link href="/research" className="link">
+              </ButtonLink>
+              <Link href="/research" className="link text-body font-medium">
                 Browse the research library
               </Link>
             </div>
           </div>
+          <Slip className="w-full max-w-[28rem] px-6 pt-7 md:col-span-5 md:col-start-8 md:px-8">
+            <h3 className="text-body font-semibold">When you write to us</h3>
+            <div className="mt-3 space-y-1.5 text-body">
+              <SlipRow label="Reply" value="1 business day" />
+              <SlipRow label="Hours" value="9 am to 5 pm" />
+              <SlipRow label="Time zone" value="Sydney" />
+              <SlipRow label="Order questions" value="quote the number" />
+            </div>
+          </Slip>
         </div>
       </section>
     </>

@@ -25,7 +25,7 @@ const EVENT_LABEL: Record<string, string> = { NOTE: "Note", EMAIL: "Email", PAYM
 const PAYMENT_STATUS: Record<string, { label: string; className: string }> = {
   PAID: { label: "Paid", className: "text-success" },
   REFUNDED: { label: "Refunded", className: "text-danger" },
-  UNPAID: { label: "Not paid", className: "text-[#92400e]" },
+  UNPAID: { label: "Not paid", className: "text-[#7a3d00]" },
 };
 
 export default async function AdminOrderPage({ params }: { params: Promise<{ id: string }> }) {
@@ -147,7 +147,7 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ id:
                 </li>
               ))}
             </ul>
-            <dl className="tabular border-t border-ink/10 px-5 py-4 text-sm">
+            <dl className="tabular border-t border-surface-2 px-5 py-4 text-sm">
               <div className="ml-auto max-w-xs space-y-1.5">
                 <div className="flex justify-between">
                   <dt className="text-muted">Subtotal</dt>
@@ -163,7 +163,7 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ id:
                   <dt className="text-muted">Shipping</dt>
                   <dd>{order.shipping ? formatMoney(order.shipping) : "Free"}</dd>
                 </div>
-                <div className="flex justify-between border-t border-ink/10 pt-2 text-base font-medium">
+                <div className="flex justify-between border-t border-surface-2 pt-2 text-base font-medium">
                   <dt>Total</dt>
                   <dd>{formatMoney(order.total)}</dd>
                 </div>
@@ -179,7 +179,7 @@ export default async function AdminOrderPage({ params }: { params: Promise<{ id:
 
           <Panel title="Timeline" description="Status changes, payments, notes and emails, newest first.">
             <NoteForm action={addOrderNote.bind(null, order.id)} />
-            <ol className="mt-6 border-l border-ink/10 pl-5">
+            <ol className="mt-6 border-l border-surface-2 pl-5">
               {order.events.map((e, i) => (
                 <li key={e.id} className={cn("relative", i > 0 && "mt-5")}>
                   <span

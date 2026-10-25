@@ -1,7 +1,9 @@
+import Image from "next/image";
 import { formatMoney } from "@/lib/money";
 import { PAYMENT_METHODS, SHIPPING_METHODS, statusLabel, type PaymentMethod, type ShippingMethod } from "@/lib/orders";
 import type { StoreSettings } from "@/lib/settings";
 import { formatDate } from "@/lib/utils";
+import { SlipRow } from "@/components/store/paper";
 import { ShippingAddress } from "./order-details";
 import { PrintButton } from "./print-button";
 
@@ -53,23 +55,26 @@ export function Invoice({ order, settings, backHref }: { order: InvoiceOrder; se
         <PrintButton />
       </div>
 
-      <article className="mx-auto max-w-4xl bg-white text-ink" aria-labelledby="invoice-title">
+      <article className="mx-auto max-w-4xl bg-paper px-6 py-8 text-ink sm:px-10 sm:py-12 print:bg-transparent print:p-0" aria-labelledby="invoice-title">
         <header className="flex flex-wrap items-start justify-between gap-6 pb-8">
-          <div>
-            <p className="text-lead font-medium" translate="no">
-              {settings.storeName}
-            </p>
-            <p className="text-small text-muted">{settings.supportEmail}</p>
+          <div className="flex items-center gap-3">
+            <Image src="/images/logo-peak.webp" alt="" width={36} height={36} />
+            <div>
+              <p className="text-lead font-semibold" translate="no">
+                {settings.storeName}
+              </p>
+              <p className="text-small text-muted">{settings.supportEmail}</p>
+            </div>
           </div>
           <div className="text-right">
-            <h1 id="invoice-title" className="text-index font-medium">
+            <h1 id="invoice-title" className="text-head font-semibold">
               {paid ? "Receipt" : "Invoice"}
             </h1>
-            <p className="tabular text-small">Order {order.number}</p>
+            <p className="tabular mt-1 text-body">Order {order.number}</p>
           </div>
         </header>
 
-        <dl className="tabular grid gap-4 bg-surface p-5 text-small sm:grid-cols-4">
+        <dl className="tabular grid gap-4 bg-white p-5 text-small sm:grid-cols-4 print:p-0">
           <div>
             <dt className="text-muted">Date issued</dt>
             <dd className="font-medium">{formatDate(order.createdAt)}</dd>
@@ -127,26 +132,15 @@ export function Invoice({ order, settings, backHref }: { order: InvoiceOrder; se
           </tbody>
         </table>
 
-        <dl className="tabular mt-6 ml-auto max-w-xs space-y-2 text-small">
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted">Subtotal</dt>
-            <dd>{formatMoney(order.subtotal)}</dd>
-          </div>
-          {order.discount > 0 ? (
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted">Discount{order.couponCode ? ` (${order.couponCode})` : ""}</dt>
-              <dd>−{formatMoney(order.discount)}</dd>
-            </div>
-          ) : null}
-          <div className="flex justify-between gap-4">
-            <dt className="text-muted">Shipping{shipping ? `, ${shipping.label.toLowerCase()}` : ""}</dt>
-            <dd>{order.shipping ? formatMoney(order.shipping) : "Free"}</dd>
-          </div>
-          <div data-ui className="flex justify-between gap-4 border-t border-ink pt-2 text-body font-medium">
-            <dt>Total (AUD)</dt>
-            <dd>{formatMoney(order.total)}</dd>
-          </div>
-        </dl>
+        <div className="mt-6 ml-auto max-w-sm space-y-2 text-body">
+          <SlipRow label="Subtotal" value={formatMoney(order.subtotal)} />
+          {order.discount > 0 ? <SlipRow label={`Discount${order.couponCode ? ` (${order.couponCode})` : ""}`} value={`−${formatMoney(order.discount)}`} /> : null}
+          <SlipRow label={`Shipping${shipping ? `, ${shipping.label.toLowerCase()}` : ""}`} value={order.shipping ? formatMoney(order.shipping) : "Free"} />
+          <p className="mt-4 flex h-12 items-center justify-between gap-4 bg-ink px-4 font-medium text-white print:h-auto print:bg-transparent print:px-0 print:pt-2 print:text-ink">
+            <span>Total (AUD)</span>
+            <span className="tabular text-lead font-semibold">{formatMoney(order.total)}</span>
+          </p>
+        </div>
 
         <p className="mt-12 text-small text-muted">
           {paid ? "Payment received with thanks." : `Please pay using ${order.number} as the payment reference.`} All products are

@@ -32,7 +32,7 @@ export function SettingsSection({
   return (
     <section aria-labelledby={id} data-ui className="grid gap-x-10 gap-y-4 border-t border-ink/10 py-8 first:border-t-0 first:pt-2 lg:grid-cols-[16rem_minmax(0,1fr)]">
       <div>
-        <h2 id={id} className={tone === "danger" ? "text-base font-medium text-danger" : "text-base font-medium"}>
+        <h2 id={id} className={tone === "danger" ? "text-lead font-semibold text-danger" : "text-lead font-semibold"}>
           {title}
         </h2>
         <div className="mt-1 max-w-[42ch] text-small text-muted">{description}</div>

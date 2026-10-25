@@ -49,7 +49,7 @@ export function Panel({
   bodyClassName?: string;
 }) {
   return (
-    <section className={cn("border border-ink/10 bg-white", className)}>
+    <section className={cn("border border-surface-2 bg-white", className)}>
       {title ? (
         <div className="flex items-start justify-between gap-4 px-5 pt-4 pb-3">
           <div className="min-w-0">
@@ -66,7 +66,7 @@ export function Panel({
 
 export function TableWrap({ children, className, minWidth = 720 }: { children: React.ReactNode; className?: string; minWidth?: number }) {
   return (
-    <div className={cn("min-w-0 border border-ink/10 bg-white", className)}>
+    <div className={cn("min-w-0 border border-surface-2 bg-white", className)}>
       <div className="relative overflow-x-auto overscroll-x-contain">
         <table className="w-full text-left text-sm" style={{ minWidth }}>
           {children}
@@ -170,7 +170,7 @@ export type Stat = {
 export function StatStrip({ stats, className }: { stats: Stat[]; className?: string }) {
   const cols = { 2: "sm:grid-cols-2", 3: "sm:grid-cols-3", 4: "sm:grid-cols-4", 5: "sm:grid-cols-5", 6: "sm:grid-cols-6" }[stats.length] ?? "sm:grid-cols-4";
   return (
-    <div className={cn("grid grid-cols-2 border border-ink/10 bg-white", cols, className)}>
+    <div className={cn("grid grid-cols-2 border border-surface-2 bg-white", cols, className)}>
       {stats.map((s, i) => {
         const inner = (
           <>
@@ -184,8 +184,8 @@ export function StatStrip({ stats, className }: { stats: Stat[]; className?: str
         const cell = cn(
           "block min-w-0 px-5 py-4",
           // dividers: left rule on every cell but the first in a row, top rule from the second row on phones
-          i % 2 === 1 ? "border-l border-ink/10" : "",
-          i >= 2 ? "border-t border-ink/10 sm:border-t-0" : "",
+          i % 2 === 1 ? "border-l border-surface-2" : "",
+          i >= 2 ? "border-t border-surface-2 sm:border-t-0" : "",
           i > 0 ? "sm:border-l" : "sm:border-l-0",
           stats.length % 2 === 1 && i === stats.length - 1 ? "col-span-2 border-l-0 sm:col-span-1 sm:border-l" : "",
         );
@@ -223,15 +223,15 @@ export function Swatch({ color, className }: { color: string; className?: string
 
 /** A quiet notice (one per screen at most), e.g. a queue that needs attention. */
 export function Notice({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("border border-[#fde68a] bg-[#fffbeb] px-4 py-2.5 text-sm text-[#92400e]", className)}>{children}</div>;
+  return <div className={cn("border border-[#f6cf9f] bg-[#fdebd3] px-4 py-2.5 text-sm text-[#7a3d00]", className)}>{children}</div>;
 }
 
 /** Inline text action in ink, for a row that needs doing. */
 export const textAction = "font-medium text-ink underline decoration-ink/30 underline-offset-[0.2em] hover:decoration-ink";
 
 const STOCK_TONE = {
-  out: "bg-[#ffedea] text-[#831c1e]",
-  low: "bg-[#fffbeb] text-[#92400e]",
+  out: "bg-[#fbe4e1] text-[#8a1c14]",
+  low: "bg-[#fdebd3] text-[#7a3d00]",
   ok: "bg-surface text-muted",
   hidden: "bg-surface text-muted",
 } as const;
@@ -255,6 +255,6 @@ export function StockPill({ stock, threshold, hidden, className }: { stock: numb
 /** One account pill: suspended beats admin. */
 export function AccountPill({ role, status }: { role: string; status: string }) {
   const [label, tone] =
-    status === "SUSPENDED" ? ["Suspended", "bg-[#ffedea] text-[#831c1e]"] : role === "ADMIN" ? ["Admin", "bg-[#e4e9f4] text-ink"] : ["Active", "bg-surface text-muted"];
+    status === "SUSPENDED" ? ["Suspended", "bg-[#fbe4e1] text-[#8a1c14]"] : role === "ADMIN" ? ["Admin", "bg-[#e3e7f1] text-ink"] : ["Active", "bg-surface text-muted"];
   return <span className={cn("inline-flex h-6 items-center rounded-full px-2.5 text-small leading-none font-medium whitespace-nowrap", tone)}>{label}</span>;
 }

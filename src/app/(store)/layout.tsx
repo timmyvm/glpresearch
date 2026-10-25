@@ -1,7 +1,6 @@
 import { Header } from "@/components/site/header";
 import { Footer } from "@/components/site/footer";
 import { CartDrawer } from "@/components/site/cart-drawer";
-import { AgeGate } from "@/components/site/age-gate";
 import { getSettings } from "@/lib/settings";
 
 // Public pages are static. Admin edits, orders and stock changes refresh them at once
@@ -17,7 +16,6 @@ export default async function StoreLayout({ children }: { children: React.ReactN
         {children}
       </main>
       <Footer />
-      <AgeGate />
       <CartDrawer freeShippingThreshold={settings.freeShippingThreshold} />
     </div>
   );

@@ -17,7 +17,7 @@ function Section({ title, description, children }: { title: string; description:
         <h2 className="text-base font-medium text-ink">{title}</h2>
         <div className="mt-1 text-sm text-muted">{description}</div>
       </div>
-      <div className="border border-ink/10 bg-white p-5">{children}</div>
+      <div className="border border-surface-2 bg-white p-5">{children}</div>
     </section>
   );
 }

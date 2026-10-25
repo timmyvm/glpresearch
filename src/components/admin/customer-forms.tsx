@@ -39,7 +39,7 @@ export function QuickAction({
       <FormSubmit
         size="sm"
         variant={variant === "danger" ? "ghost" : variant}
-        className={`w-full ${variant === "outline" ? "ring-1 ring-ink/25" : variant === "danger" ? "text-danger ring-1 ring-danger/40 ring-inset hover:bg-[#ffedea]" : ""}`}
+        className={`w-full ${variant === "outline" ? "ring-1 ring-ink/25" : variant === "danger" ? "text-danger ring-1 ring-danger/40 ring-inset hover:bg-[#fbe4e1]" : ""}`}
         pendingText="Working…"
       >
         {label}

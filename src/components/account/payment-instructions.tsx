@@ -2,6 +2,7 @@ import { formatMoney } from "@/lib/money";
 import { PAYMENT_METHODS, type PaymentMethod } from "@/lib/orders";
 import type { StoreSettings } from "@/lib/settings";
 import { cn } from "@/lib/utils";
+import { Slip } from "@/components/store/paper";
 import { CopyButton } from "./copy-button";
 
 const PAY_TITLE: Record<PaymentMethod, string> = {
@@ -43,11 +44,11 @@ export function PaymentInstructions({
   const deadlineText = new Intl.DateTimeFormat("en-AU", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit" }).format(deadline);
 
   return (
-    <section className={cn("bg-field-mint text-ink", className)} aria-labelledby="pay-title">
-      <div className="grid items-start gap-8 p-6 md:grid-cols-2 md:p-8">
+    <Slip as="section" teeth={28} className={cn("text-ink", className)} aria-labelledby="pay-title">
+      <div className="grid items-start gap-8 px-6 pt-6 md:grid-cols-2 md:px-8 md:pt-8">
         <div className="flex flex-col justify-between gap-6">
           <div>
-            <h2 id="pay-title" className="text-lead font-medium">
+            <h2 id="pay-title" className="text-index font-semibold">
               {order.paymentClaimedAt ? "We're checking your payment" : PAY_TITLE[method]}
             </h2>
             <p className="mt-2 max-w-[46ch] text-small">
@@ -58,7 +59,7 @@ export function PaymentInstructions({
           </div>
           <div>
             <p className="text-small">Amount due</p>
-            <p className="tabular text-index font-medium">{total}</p>
+            <p className="tabular text-head font-semibold">{total}</p>
             <p className="mt-2 text-small">
               Pay by {deadlineText}. After {settings.paymentWindowHours} hours unpaid orders are cancelled and the stock released.
             </p>
@@ -93,6 +94,6 @@ export function PaymentInstructions({
           <Row label="Reference" value={order.number} />
         </dl>
       </div>
-    </section>
+    </Slip>
   );
 }

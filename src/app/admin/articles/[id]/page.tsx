@@ -40,7 +40,7 @@ export default async function EditArticlePage({
               action={deleteArticle.bind(null, article.id)}
               message={`Delete “${article.title}”? It disappears from the research library. This can't be undone.`}
               variant="ghost"
-              className="text-danger hover:bg-[#ffedea]"
+              className="text-danger hover:bg-[#fbe4e1]"
             >
               Delete Article
             </ConfirmButton>

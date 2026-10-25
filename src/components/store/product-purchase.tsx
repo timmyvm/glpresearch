@@ -8,6 +8,7 @@ import { formatMoney } from "@/lib/money";
 import { plateInk, specimenImage } from "@/lib/plates";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Slip } from "./paper";
 import { StockAlertForm } from "./stock-alert-form";
 
 type Variant = {
@@ -21,8 +22,9 @@ type Variant = {
 };
 
 /**
- * The product's specimen plate and its purchase panel. Choosing a vial size swaps the cut-out
- * on the plate; a sold-out size offers a back-in-stock email instead of Add to Cart.
+ * The top of the data sheet: the compound's specimen plate and its order slip. Choosing a vial
+ * size swaps the cut-out on the plate; a sold-out size offers a back-in-stock email instead of
+ * Add to Cart.
  */
 export function ProductPurchase({
   product,
@@ -93,17 +95,19 @@ export function ProductPurchase({
       </div>
 
       <div className="lg:col-span-5 lg:col-start-8 lg:row-start-2">
-        <div className="bg-surface p-5 md:p-6 lg:mt-8">
-          <div className="flex items-baseline gap-3">
-            <p className="tabular text-head">{formatMoney(selected?.price ?? 0)}</p>
+        <Slip as="section" aria-label="Order" className="px-5 pt-5 md:px-7 md:pt-7 lg:mt-8">
+          <div className="flex items-baseline justify-between gap-3">
+            <p className="tabular text-head font-semibold">{formatMoney(selected?.price ?? 0)}</p>
             {selected?.compareAtPrice && selected.compareAtPrice > selected.price ? (
               <p className="tabular text-body text-muted line-through">{formatMoney(selected.compareAtPrice)}</p>
-            ) : null}
+            ) : (
+              <p className="text-small text-muted">per {selected?.label} vial</p>
+            )}
           </div>
 
           <fieldset className="mt-6">
             <legend className="text-small font-medium">Vial size</legend>
-            <div className="mt-2 grid grid-cols-3 gap-2">
+            <div className="mt-2 space-y-1.5">
               {variants.map((v) => {
                 const active = v.id === selected?.id;
                 return (
@@ -116,12 +120,14 @@ export function ProductPurchase({
                     }}
                     aria-pressed={active}
                     className={cn(
-                      "press px-3 py-3 text-left",
-                      active ? "bg-ink text-on-navy" : "bg-white text-ink hover:bg-surface-2",
+                      "press flex h-12 w-full items-center gap-3 px-4 text-left text-body",
+                      active ? "bg-ink text-white" : "bg-white text-ink hover:bg-surface-2",
                     )}
                   >
-                    <span className="block font-medium">{v.label}</span>
-                    <span className={cn("tabular block text-small", active ? "text-on-navy-muted" : "text-muted")}>
+                    <span className={cn("size-3 shrink-0", active ? "bg-accent" : "bg-ink/15")} aria-hidden="true" />
+                    <span className="font-medium">{v.label}</span>
+                    <span className="leader min-w-4 flex-1" aria-hidden="true" />
+                    <span className={cn("tabular", v.stock > 0 ? "" : active ? "text-on-navy-muted" : "text-muted")}>
                       {v.stock > 0 ? formatMoney(v.price) : "Sold out"}
                     </span>
                   </button>
@@ -130,7 +136,7 @@ export function ProductPurchase({
             </div>
           </fieldset>
 
-          <div className="mt-6">
+          <div className="mt-5">
             {soldOut ? (
               <StockAlertForm key={selected?.id} variantId={selected!.id} label={selected!.label} />
             ) : (
@@ -173,7 +179,7 @@ export function ProductPurchase({
                 ? `Only ${selected!.stock} vials left. Ships within one business day of payment.`
                 : "In stock. Ships within one business day of payment."}
           </p>
-        </div>
+        </Slip>
 
         {footer}
       </div>

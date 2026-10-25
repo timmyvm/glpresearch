@@ -7,6 +7,7 @@ import { getSettings } from "@/lib/settings";
 import { formatDateTime } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
+import { Slip } from "@/components/store/paper";
 import { OrderProgress } from "@/components/account/order-progress";
 import { OrderTimeline } from "@/components/account/order-timeline";
 import { PaymentInstructions } from "@/components/account/payment-instructions";
@@ -54,7 +55,7 @@ export default async function OrderConfirmationPage({
   return (
     <div className="frame pt-10 pb-24 md:pt-16 md:pb-32">
       <header className="max-w-[60ch]">
-        <h1 className="text-head">{justPlaced ? `Thank you, ${order.shipFirstName}` : `Order ${order.number}`}</h1>
+        <h1 className="text-head font-semibold">{justPlaced ? `Thank you, ${order.shipFirstName}` : `Order ${order.number}`}</h1>
         <p className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-muted">
           {justPlaced ? (
             <span>
@@ -97,7 +98,7 @@ export default async function OrderConfirmationPage({
 
       {pending ? (
         <section aria-labelledby="next-title" className="mt-16">
-          <h2 id="next-title" className="text-lead font-medium">
+          <h2 id="next-title" className="text-index font-semibold">
             What happens next
           </h2>
           <ul className="mt-6 grid gap-x-8 gap-y-5 sm:grid-cols-3">
@@ -113,20 +114,20 @@ export default async function OrderConfirmationPage({
 
       <div className="mt-16 grid gap-14 lg:grid-cols-12 lg:gap-8">
         <section aria-labelledby="items-title" className="lg:col-span-7">
-          <h2 id="items-title" className="text-lead font-medium">
-            Items
+          <h2 id="items-title" className="text-index font-semibold">
+            Receipt
           </h2>
-          <div className="mt-6">
+          <Slip className="mt-6 px-[var(--slip-pad)] pt-6" style={{ "--slip-pad": "1.5rem" } as React.CSSProperties}>
             <OrderItems items={order.items} />
-          </div>
-          <div className="mt-8 bg-surface p-5">
-            <OrderTotals order={order} />
-          </div>
+            <div className="mt-8">
+              <OrderTotals order={order} />
+            </div>
+          </Slip>
         </section>
 
         <aside className="space-y-12 lg:col-span-4 lg:col-start-9">
           <section aria-labelledby="updates-title">
-            <h2 id="updates-title" className="text-lead font-medium">
+            <h2 id="updates-title" className="text-index font-semibold">
               Updates
             </h2>
             <div className="mt-6">
@@ -151,7 +152,7 @@ export default async function OrderConfirmationPage({
       </div>
 
       <section aria-labelledby="delivery-title" className="mt-16">
-        <h2 id="delivery-title" className="text-lead font-medium">
+        <h2 id="delivery-title" className="text-index font-semibold">
           Delivery and payment
         </h2>
         <div className="mt-6">

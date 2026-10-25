@@ -20,7 +20,7 @@ export function PageTitle({
   return (
     <div className={cn("flex flex-wrap items-end justify-between gap-x-6 gap-y-4", className)}>
       <div className="min-w-0">
-        <h1 className="text-2xl font-medium tracking-[-0.02em]">{title}</h1>
+        <h1 className="text-index font-semibold">{title}</h1>
         {children ? <p className="mt-1 text-small text-muted">{children}</p> : null}
       </div>
       {action ? <div className="flex flex-wrap gap-2">{action}</div> : null}
@@ -32,7 +32,7 @@ export function PageTitle({
 export function PanelTitle({ id, title, action }: { id?: string; title: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4 px-5 pt-4 pb-3">
-      <h2 id={id} className="text-base font-medium">
+      <h2 id={id} className="text-lead font-semibold">
         {title}
       </h2>
       {action}
@@ -48,13 +48,13 @@ export function ItemThumbs({ items, className }: { items: { id: string; image: s
       {shown.map((item) => {
         const img = specimenImage(item.image) ?? item.image;
         return (
-          <div key={item.id} className="relative h-12 w-10 shrink-0 bg-surface">
+          <div key={item.id} className="relative h-12 w-10 shrink-0 bg-white">
             {img ? <Image src={img} alt={item.productName} fill sizes="40px" className="object-contain p-0.5" /> : null}
           </div>
         );
       })}
       {items.length > shown.length ? (
-        <span className="grid h-12 w-10 place-items-center bg-surface text-small text-muted tabular">+{items.length - shown.length}</span>
+        <span className="grid h-12 w-10 place-items-center bg-white text-small text-muted tabular">+{items.length - shown.length}</span>
       ) : null}
     </div>
   );
@@ -91,7 +91,7 @@ export function OrderRow({ order }: { order: OrderSummary }) {
     <li data-ui className="border-t border-ink/[0.06] first:border-t-0">
       <Link
         href={`/account/orders/${order.number}`}
-        className={cn("grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 px-5 py-3.5 transition-colors duration-150 hover:bg-surface/60", ORDER_COLS)}
+        className={cn("grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 px-5 py-3.5 transition-colors duration-150 hover:bg-white/70", ORDER_COLS)}
       >
         <span className="min-w-0">
           <span className="tabular block font-medium">{order.number}</span>

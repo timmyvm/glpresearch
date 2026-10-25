@@ -7,6 +7,7 @@ import { Minus, Plus, X } from "lucide-react";
 import { cartSubtotal, useCart } from "@/lib/cart";
 import { formatMoney } from "@/lib/money";
 import { ButtonLink } from "@/components/ui/button";
+import { SlipRow } from "@/components/store/paper";
 import { specimenImage } from "@/lib/plates";
 
 export function CartDrawer({ freeShippingThreshold }: { freeShippingThreshold: number }) {
@@ -36,9 +37,9 @@ export function CartDrawer({ freeShippingThreshold }: { freeShippingThreshold: n
         onClick={() => setOpen(false)}
         aria-label="Close cart"
       />
-      <div className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col overscroll-contain bg-white shadow-[-16px_0_40px_rgba(11,21,48,0.18)]" /* taste-skill-ignore: the drawer is a real overlay */>
+      <div className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col overscroll-contain bg-paper shadow-[-16px_0_40px_rgba(31,43,77,0.2)]" /* taste-skill-ignore: the drawer is a real overlay */>
         <div className="flex items-center justify-between px-6 py-5">
-          <h2 className="text-lead font-medium">Cart</h2>
+          <h2 className="text-lead font-semibold">Cart</h2>
           <button
             type="button"
             onClick={() => setOpen(false)}
@@ -53,14 +54,14 @@ export function CartDrawer({ freeShippingThreshold }: { freeShippingThreshold: n
           <div className="flex flex-1 flex-col justify-center gap-5 px-6 pb-10">
             <p className="text-lead">Nothing in your cart yet.</p>
             <p className="text-muted">Seven compounds, each on its own page with batch results and the published research.</p>
-            <ButtonLink href="/shop" onClick={() => setOpen(false)} className="self-start">
+            <ButtonLink href="/shop" variant="ink" onClick={() => setOpen(false)} className="self-start">
               Browse Peptides
             </ButtonLink>
           </div>
         ) : (
           <>
             {freeShippingThreshold > 0 ? (
-              <div className="bg-surface px-6 py-3">
+              <div className="bg-white px-6 py-3">
                 <p className="text-small text-ink">
                   {remaining > 0 ? (
                     <>
@@ -81,7 +82,7 @@ export function CartDrawer({ freeShippingThreshold }: { freeShippingThreshold: n
                   <Link
                     href={`/shop/${item.productSlug}`}
                     onClick={() => setOpen(false)}
-                    className="relative h-24 w-20 shrink-0 overflow-hidden bg-surface"
+                    className="relative h-24 w-20 shrink-0 overflow-hidden bg-white"
                   >
                     <Image src={specimenImage(item.image) ?? item.image} alt={`${item.productName} ${item.variantLabel}`} fill sizes="80px" className="object-contain p-1.5" />
                   </Link>
@@ -94,7 +95,7 @@ export function CartDrawer({ freeShippingThreshold }: { freeShippingThreshold: n
                       <p className="tabular font-medium">{formatMoney(item.price * item.quantity)}</p>
                     </div>
                     <div className="mt-auto flex items-center justify-between pt-2">
-                      <div className="inline-flex items-center bg-surface">
+                      <div className="inline-flex items-center bg-white">
                         <button
                           type="button"
                           className="press grid size-9 place-items-center text-ink hover:bg-surface-2"
@@ -125,17 +126,17 @@ export function CartDrawer({ freeShippingThreshold }: { freeShippingThreshold: n
                 </li>
               ))}
             </ul>
-            <div className="space-y-4 bg-surface px-6 py-6">
-              <div className="flex items-baseline justify-between">
-                <span>Subtotal</span>
-                <span className="tabular text-lead font-medium">{formatMoney(subtotal)}</span>
-              </div>
-              <p className="text-small text-muted">Shipping and discount codes are applied at checkout.</p>
+            <div className="space-y-4 px-6 pt-2 pb-6">
+              <p className="-mx-6 flex h-12 items-center justify-between gap-3 bg-ink px-6 text-white">
+                <span className="font-medium">Subtotal</span>
+                <span className="tabular text-lead font-semibold">{formatMoney(subtotal)}</span>
+              </p>
+              <SlipRow className="text-small" label="Shipping and discount codes" value="at checkout" />
               <div className="grid grid-cols-2 gap-2">
-                <ButtonLink href="/cart" variant="outline" onClick={() => setOpen(false)}>
+                <ButtonLink href="/cart" variant="light" onClick={() => setOpen(false)}>
                   View Cart
                 </ButtonLink>
-                <ButtonLink href="/checkout" variant="primary" onClick={() => setOpen(false)}>
+                <ButtonLink href="/checkout" variant="accent" onClick={() => setOpen(false)}>
                   Checkout
                 </ButtonLink>
               </div>

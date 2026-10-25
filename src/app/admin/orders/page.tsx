@@ -82,7 +82,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
               className="flex flex-col items-end empty:hidden"
             >
               {expiredCount ? (
-                <FormSubmit variant="ghost" size="sm" pendingText="Cancelling…" className="text-danger ring-1 ring-danger/40 ring-inset hover:bg-[#ffedea]">
+                <FormSubmit variant="ghost" size="sm" pendingText="Cancelling…" className="text-danger ring-1 ring-danger/40 ring-inset hover:bg-[#fbe4e1]">
                   Cancel Expired Orders ({expiredCount})
                 </FormSubmit>
               ) : null}
@@ -130,7 +130,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
               <Td className="hidden sm:table-cell">
                 <StatusBadge status={o.status} />
                 {o.status === "PENDING_PAYMENT" && o.paymentClaimedAt ? (
-                  <p className="mt-1 text-small whitespace-nowrap text-[#92400e]">Says paid {formatDate(o.paymentClaimedAt, { year: undefined })}</p>
+                  <p className="mt-1 text-small whitespace-nowrap text-[#7a3d00]">Says paid {formatDate(o.paymentClaimedAt, { year: undefined })}</p>
                 ) : null}
               </Td>
               <Td className="hidden text-muted md:table-cell">{PAYMENT_METHODS[o.paymentMethod as PaymentMethod]?.label ?? o.paymentMethod}</Td>
@@ -141,7 +141,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
                 {/* Phone: the status moves under the total, so each order is two lines. */}
                 <span className="mt-1 block sm:hidden">
                   <StatusBadge status={o.status} />
-                  {o.status === "PENDING_PAYMENT" && o.paymentClaimedAt ? <span className="mt-1 block text-small font-normal text-[#92400e]">Says paid</span> : null}
+                  {o.status === "PENDING_PAYMENT" && o.paymentClaimedAt ? <span className="mt-1 block text-small font-normal text-[#7a3d00]">Says paid</span> : null}
                 </span>
               </Td>
             </tr>

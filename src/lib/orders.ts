@@ -20,15 +20,15 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   REFUNDED: "Refunded",
 };
 
-/** Tailwind classes for status pills. */
+/** Tailwind classes for status pills: pale tints of the palette, each at 7:1 or better. */
 export const ORDER_STATUS_TONE: Record<OrderStatus, string> = {
-  PENDING_PAYMENT: "bg-[#fffbeb] text-[#92400e]",
-  PAID: "bg-[#e4e9f4] text-[#0b1530]",
-  PROCESSING: "bg-[#c9d2e8] text-[#0b1530]",
-  SHIPPED: "bg-[#e3f8fd] text-[#0c4a5e]",
-  DELIVERED: "bg-[#dcfae5] text-[#04250e]",
-  CANCELLED: "bg-surface text-muted",
-  REFUNDED: "bg-[#ffedea] text-[#831c1e]",
+  PENDING_PAYMENT: "bg-[#fdebd3] text-[#7a3d00]",
+  PAID: "bg-[#e3e7f1] text-[#1f2b4d]",
+  PROCESSING: "bg-[#e3e1dc] text-[#1f2b4d]",
+  SHIPPED: "bg-[#dcf0f2] text-[#0b4650]",
+  DELIVERED: "bg-[#dcf3e3] text-[#0b4a24]",
+  CANCELLED: "bg-surface-2 text-muted",
+  REFUNDED: "bg-[#fbe4e1] text-[#8a1c14]",
 };
 
 /** The happy-path order lifecycle shown as a progress tracker. */

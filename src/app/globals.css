@@ -21,7 +21,7 @@
   /* Grounds the paper sits on, as hard cuts */
   --color-field-black: #05070a;
   --color-field-paper: #e3e1dc;
-  --color-paper: #f4f1ea;
+  --color-paper: #edebe7;
   --color-on-black-muted: #a9aebb;
 
   /* Older field names, kept so every screen takes the new palette */
@@ -200,9 +200,10 @@
     }
   }
 
-  /* Long-form research content */
+  /* Articles and policies, set like a printed paper: headings in the display weight, quotations
+     on a paper slip, and real tables keeping their row rules. */
   .prose-research {
-    @apply prose max-w-none text-body text-ink prose-headings:scroll-mt-28 prose-headings:font-medium prose-headings:text-ink prose-h2:mt-16 prose-h2:mb-5 prose-h2:text-[clamp(1.75rem,1.3rem+1.6vw,2.5rem)] prose-h2:leading-[1.05] prose-h2:tracking-[-0.03em] prose-h3:mt-10 prose-h3:text-lead prose-h3:tracking-[-0.015em] prose-p:leading-relaxed prose-p:text-ink prose-a:font-medium prose-a:text-ink prose-a:underline prose-a:decoration-[0.07em] prose-a:underline-offset-[0.2em] prose-blockquote:border-l-4 prose-blockquote:border-accent prose-blockquote:bg-surface prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:font-normal prose-blockquote:not-italic prose-blockquote:text-ink prose-strong:font-medium prose-strong:text-ink prose-code:bg-surface prose-code:px-1.5 prose-code:py-0.5 prose-code:text-[0.85em] prose-code:font-normal prose-code:text-ink prose-code:before:content-none prose-code:after:content-none prose-li:text-ink prose-li:marker:text-muted prose-img:rounded-none; /* taste-skill-ignore: the 4px quote bar is a graphic element, not a hairline */
+    @apply prose max-w-none text-body text-ink prose-headings:scroll-mt-28 prose-headings:text-ink prose-h2:mt-20 prose-h2:mb-5 prose-h2:text-[clamp(1.75rem,1.25rem+1.8vw,2.75rem)] prose-h2:leading-[1.02] prose-h2:font-semibold prose-h2:tracking-[-0.035em] prose-h3:mt-12 prose-h3:mb-3 prose-h3:text-lead prose-h3:font-semibold prose-h3:tracking-[-0.015em] prose-p:leading-[1.62] prose-p:text-ink prose-a:font-medium prose-a:text-ink prose-a:underline prose-a:decoration-[0.07em] prose-a:underline-offset-[0.2em] prose-blockquote:border-0 prose-blockquote:bg-paper prose-blockquote:px-7 prose-blockquote:py-5 prose-blockquote:text-lead prose-blockquote:font-normal prose-blockquote:not-italic prose-blockquote:text-ink prose-strong:font-semibold prose-strong:text-ink prose-code:bg-surface prose-code:px-1.5 prose-code:py-0.5 prose-code:text-[0.85em] prose-code:font-normal prose-code:text-ink prose-code:before:content-none prose-code:after:content-none prose-ul:pl-5 prose-ol:pl-5 prose-li:my-1.5 prose-li:text-ink prose-li:marker:text-ink prose-img:rounded-none;
   }
 }
 
@@ -264,6 +265,35 @@
 @media (min-width: 768px) {
   .sheet {
     top: calc(4rem + var(--n, 0) * 72px);
+  }
+}
+
+.sheet-grid {
+  grid-template-areas: "title" "pic" "body";
+}
+
+@media (min-width: 768px) {
+  .sheet-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas: "title pic" "body pic";
+  }
+}
+
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .sheet-fade > * {
+      animation: sheet-recede linear both;
+      animation-timeline: var(--next);
+      animation-range: entry -25% entry 5%;
+    }
+  }
+}
+
+@keyframes sheet-recede {
+  to {
+    opacity: 0;
+    transform: translateY(-1.5rem);
   }
 }
 
@@ -405,24 +435,17 @@ main:has(.flush-footer) + footer {
   transform: scale(0.97);
 }
 
-/* Native drag row: scroll-snap, no library */
-.drag-row {
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  overscroll-behavior-x: contain;
+
+/* ─── Forms on paper (checkout order form, account and auth sheets) ───
+   Filled fields take white on a paper ground; hover, focus and invalid keep their states. */
+.on-paper :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  background-color: var(--color-bg);
 }
 
-.drag-row::-webkit-scrollbar {
-  display: none;
+.on-paper :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):hover:not(:focus) {
+  background-color: var(--color-surface);
 }
 
-.drag-row > * {
-  scroll-snap-align: center;
-}
-
-/* Opens the row on this item before any script runs; elsewhere a script scrolls there. */
-.drag-row > [data-start] {
-  scroll-initial-target: nearest;
+.on-paper :is(input, select, textarea)[aria-invalid="true"] {
+  background-color: #ffedea;
 }

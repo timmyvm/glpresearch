@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { db } from "@/lib/db";
 import { splitTitle } from "@/components/store/article-title";
-import { OG, OG_SIZE, OgWordmark, ogFonts, ogPicture } from "@/components/store/og";
+import { OG, OG_SIZE, OgSheet, OgWordmark, ogFonts, ogPicture } from "@/components/store/og";
 
 export const alt = "A GLP Research library article";
 export const size = OG_SIZE;
@@ -16,9 +16,9 @@ export async function generateStaticParams() {
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const [article, fonts, logo] = await Promise.all([
-    db.article.findFirst({ where: { slug, published: true }, select: { title: true, category: true, readingMinutes: true } }),
+    db.article.findFirst({ where: { slug, published: true }, select: { title: true, category: true, readingMinutes: true, author: true } }),
     ogFonts(),
-    ogPicture("logo-mark"),
+    ogPicture("logo-peak"),
   ]);
   const { head, rest } = splitTitle(article?.title ?? "The research library");
   // Long titles step down so they hold to three lines.
@@ -26,20 +26,20 @@ export default async function Image({ params }: { params: Promise<{ slug: string
 
   return new ImageResponse(
     (
-      <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: "100%", height: "100%", background: OG.navy, color: OG.onNavy, fontFamily: "Hanken Grotesk", padding: 64 }}>
+      <OgSheet ground={OG.black}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <OgWordmark logo={logo} color={OG.onNavy} />
-          <div style={{ fontSize: 28, color: OG.onNavyMuted }}>Research library</div>
+          <OgWordmark logo={logo} color={OG.ink} />
+          <div style={{ fontSize: 26, color: OG.muted }}>Research library</div>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", maxWidth: 1000 }}>
-          <div style={{ fontSize: titleSize, fontWeight: 500, lineHeight: 1.04, letterSpacing: -1.5 }}>{head}</div>
-          {rest ? <div style={{ marginTop: 24, fontSize: 40, lineHeight: 1.2, color: OG.onNavyMuted }}>{rest}</div> : null}
+        <div style={{ display: "flex", flexDirection: "column", marginTop: "auto", maxWidth: 960 }}>
+          <div style={{ fontSize: titleSize, fontWeight: 600, lineHeight: 0.95, letterSpacing: -2.5 }}>{head}</div>
+          {rest ? <div style={{ marginTop: 22, fontSize: 36, lineHeight: 1.2, color: OG.ink }}>{rest}</div> : null}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 18, fontSize: 28, color: OG.onNavyMuted }}>
-          <div style={{ width: 20, height: 20, background: OG.mint }} />
-          <div>{article ? `${article.category}, ${article.readingMinutes} minute read` : "GLP Research"}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 34, fontSize: 24, color: OG.muted }}>
+          <div style={{ width: 16, height: 16, background: OG.accent }} />
+          <div>{article ? `${article.category}, ${article.readingMinutes} minute read, ${article.author}` : "GLP Research"}</div>
         </div>
-      </div>
+      </OgSheet>
     ),
     { ...size, fonts },
   );

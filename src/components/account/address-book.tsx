@@ -34,7 +34,7 @@ function AddressForm({ address, onDone }: { address?: SavedAddress; onDone: () =
   const fe = state.fieldErrors ?? {};
   return (
     <Card aria-labelledby="address-form-title" className="p-5">
-      <h2 id="address-form-title" className="text-base font-medium">
+      <h2 id="address-form-title" className="text-lead font-semibold">
         {address ? `Edit ${address.label || "address"}` : "New address"}
       </h2>
       <form ref={ref} onSubmit={onSubmit} className="mt-5 space-y-4" noValidate>
@@ -180,7 +180,7 @@ export function AddressBook({ addresses }: { addresses: SavedAddress[] }) {
 
       <Card aria-labelledby="saved-title">
         <div className="flex items-center justify-between gap-4 px-5 pt-4 pb-3">
-          <h2 id="saved-title" className="text-base font-medium">
+          <h2 id="saved-title" className="text-lead font-semibold">
             Saved addresses <span className="tabular text-muted">{addresses.length}</span>
           </h2>
           {editing === null ? (

@@ -16,7 +16,7 @@ const KIND_COLOUR: Record<string, string> = {
 export function ResearchShelf({ spines, articleCount }: { spines: Spine[]; articleCount: number }) {
   return (
     <section className="frame py-28 md:py-40" aria-labelledby="shelf-title">
-      <div className="flex flex-col gap-3 md:flex-row md:items-baseline md:justify-between" data-reveal>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-baseline lg:justify-between" data-reveal>
         <h2 id="shelf-title" className="text-head font-semibold">
           The research shelf
         </h2>

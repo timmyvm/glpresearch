@@ -22,18 +22,18 @@ export function ClassShowcase({ classes }: { classes: ShowcaseClass[] }) {
   const c = classes[active];
 
   return (
-    <section className="frame grid gap-8 py-28 md:min-h-[88svh] md:grid-cols-2 md:items-center md:gap-x-[var(--gutter)] md:py-40" aria-labelledby="classes-title">
-      <div className="relative aspect-square overflow-clip bg-field-paper" data-reveal>
+    <section className="frame grid gap-8 py-28 md:gap-12 md:py-40 lg:min-h-[88svh] lg:grid-cols-2 lg:items-center lg:gap-x-[var(--gutter)]" aria-labelledby="classes-title">
+      <div className="relative aspect-square overflow-clip bg-field-paper md:aspect-[16/10] lg:aspect-square" data-reveal>
         <div key={c.key} className="reprint absolute inset-0 flex items-end justify-center gap-[2%] px-[8%] pb-[9%]">
           {c.compounds.map((x) => (
             <div key={x.slug} className="relative h-[82%] w-[31%] max-w-[15rem]">
-              <Image src={x.image} alt={`${x.name} research vial`} fill sizes="(min-width: 768px) 16vw, 30vw" className="object-contain object-bottom" />
+              <Image src={x.image} alt={`${x.name} research vial`} fill sizes="(min-width: 1024px) 16vw, 30vw" className="object-contain object-bottom" />
             </div>
           ))}
         </div>
       </div>
 
-      <div className="flex flex-col gap-10 md:h-full md:justify-between md:py-[4%]" data-reveal style={{ "--i": 1 } as React.CSSProperties}>
+      <div className="flex flex-col gap-10 lg:h-full lg:justify-between lg:py-[4%]" data-reveal style={{ "--i": 1 } as React.CSSProperties}>
         <div>
           <h2 id="classes-title" className="text-index font-semibold">
             Seven compounds, three classes
@@ -68,15 +68,15 @@ export function ClassShowcase({ classes }: { classes: ShowcaseClass[] }) {
                   <span className="size-3 shrink-0 translate-y-0.5" style={{ backgroundColor: x.plate }} aria-hidden="true" />
                   <span className="font-medium group-hover:underline">{x.name}</span>
                   <span className="leader min-w-6 flex-1" aria-hidden="true" />
-                  <span className="text-muted">{x.sizes}</span>
-                  <span className="tabular w-28 text-right">from {formatMoney(x.from)}</span>
+                  <span className="hidden whitespace-nowrap text-muted sm:inline">{x.sizes}</span>
+                  <span className="tabular shrink-0 text-right whitespace-nowrap sm:w-28">from {formatMoney(x.from)}</span>
                 </Link>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-2 min-[420px]:grid-cols-2">
           <Link href={`/shop?category=${c.key}`} className="press flex h-[72px] items-center bg-ink px-5 text-body font-medium text-white hover:bg-ink-800 max-sm:h-[60px] max-sm:px-4">
             {c.compounds.length === 1 ? `Shop ${c.compounds[0].name}` : `Shop These ${c.compounds.length === 3 ? "Three" : c.compounds.length}`}
           </Link>

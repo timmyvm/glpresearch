@@ -115,9 +115,9 @@ export default async function AccountOrderPage({ params }: { params: Promise<{ n
       <div className="grid gap-6 xl:grid-cols-3">
         <Card aria-labelledby="items-title" className="flex flex-col xl:col-span-2">
           <PanelTitle id="items-title" title="Items" />
-          <div className="flex flex-1 flex-col gap-6 px-5 pb-5">
+          <div className="flex flex-1 flex-col gap-6 px-5">
             <OrderItems items={order.items} productSlugs={slugs} />
-            <div className="mt-auto bg-surface p-4">
+            <div className="mt-auto pt-2" style={{ "--slip-pad": "1.25rem" } as React.CSSProperties}>
               <OrderTotals order={order} />
             </div>
           </div>
@@ -140,7 +140,7 @@ export default async function AccountOrderPage({ params }: { params: Promise<{ n
           <div className="px-5 pb-5">
             <OrderShippingInfo order={order} />
             {order.customerNote ? (
-              <p className="mt-6 bg-surface px-4 py-3 text-small">
+              <p className="mt-6 bg-white px-4 py-3 text-small">
                 <span className="text-muted">Your note: </span>
                 {order.customerNote}
               </p>

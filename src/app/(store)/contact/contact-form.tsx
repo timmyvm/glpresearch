@@ -7,6 +7,9 @@ import { Alert } from "@/components/ui/alert";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { SubmitButton } from "@/components/ui/submit-button";
 
+// The form sits on a paper panel, so its fields are white rather than the usual surface.
+const onPaper = "bg-white hover:bg-surface";
+
 const SUBJECTS = ["Order enquiry", "Payment", "Shipping and delivery", "Certificate request", "Product information", "Bulk or institutional pricing", "Something else"];
 
 export function ContactForm({ defaultOrder }: { defaultOrder?: string }) {
@@ -29,13 +32,13 @@ export function ContactForm({ defaultOrder }: { defaultOrder?: string }) {
         </Alert>
       ) : null}
       <Field label="Name" htmlFor="name" error={e.name}>
-        <Input id="name" name="name" autoComplete="name" required aria-invalid={e.name ? true : undefined} />
+        <Input className={onPaper} id="name" name="name" autoComplete="name" required aria-invalid={e.name ? true : undefined} />
       </Field>
       <Field label="Email" htmlFor="email" error={e.email}>
-        <Input id="email" name="email" type="email" autoComplete="email" spellCheck={false} required aria-invalid={e.email ? true : undefined} />
+        <Input className={onPaper} id="email" name="email" type="email" autoComplete="email" spellCheck={false} required aria-invalid={e.email ? true : undefined} />
       </Field>
       <Field label="Subject" htmlFor="subject" error={e.subject}>
-        <Select id="subject" name="subject" defaultValue={defaultOrder ? "Order enquiry" : ""} required aria-invalid={e.subject ? true : undefined}>
+        <Select className={onPaper} id="subject" name="subject" defaultValue={defaultOrder ? "Order enquiry" : ""} required aria-invalid={e.subject ? true : undefined}>
           <option value="" disabled>
             Choose a subject…
           </option>
@@ -45,10 +48,10 @@ export function ContactForm({ defaultOrder }: { defaultOrder?: string }) {
         </Select>
       </Field>
       <Field label="Order number (optional)" htmlFor="orderNumber" error={e.orderNumber}>
-        <Input id="orderNumber" name="orderNumber" autoComplete="off" spellCheck={false} placeholder="GLP-10250…" defaultValue={defaultOrder} />
+        <Input className={onPaper} id="orderNumber" name="orderNumber" autoComplete="off" spellCheck={false} placeholder="GLP-10250…" defaultValue={defaultOrder} />
       </Field>
       <Field label="Message" htmlFor="message" error={e.message} className="sm:col-span-2">
-        <Textarea id="message" name="message" rows={7} required aria-invalid={e.message ? true : undefined} />
+        <Textarea className={onPaper} id="message" name="message" rows={7} required aria-invalid={e.message ? true : undefined} />
       </Field>
       <div className="sm:col-span-2">
         <SubmitButton pendingText="Sending…" size="lg">

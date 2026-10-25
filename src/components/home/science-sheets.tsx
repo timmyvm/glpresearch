@@ -54,26 +54,29 @@ export function ScienceSheets() {
         </p>
       </div>
 
-      <ol className="mt-12 md:mt-16">
+      {/* On wide screens each sheet's text recedes as the next sheet slides over it, leaving its title band. */}
+      <ol className="mt-12 [timeline-scope:--sheet-1,--sheet-2,--sheet-3] md:mt-16">
         {SHEETS.map((s, i) => (
           <li
             key={s.name}
-            className={cn("sheet sticky", s.ground)}
-            style={{ "--n": i } as React.CSSProperties}
+            className={cn("sheet md:sticky", s.ground)}
+            style={{ "--n": i, viewTimelineName: i ? `--sheet-${i}` : undefined } as React.CSSProperties}
           >
-            <div className="frame grid min-h-[70svh] gap-6 pb-8 md:min-h-[calc(86svh-4rem)] md:grid-cols-12 md:gap-x-[var(--gutter)] md:pb-0">
-              <div className="flex flex-col md:col-span-6 md:pb-12">
-                <h3 className="flex h-[52px] items-center text-lead font-semibold md:h-[72px] md:text-index">{s.name}</h3>
-                <p className="mt-6 text-display font-semibold md:mt-auto">
-                  <span className="tabular">{s.figure.split(" ")[0]}</span> {s.figure.split(" ").slice(1).join(" ")}
-                </p>
+            {/* Each sheet is one tab shorter than the last, so the stack lets go all at once. */}
+            <div className="sheet-grid frame grid gap-x-[var(--gutter)] pt-4 pb-12 md:h-[calc(86svh_-_4rem_-_var(--n)_*_72px)] md:pt-0 md:pb-0">
+              <h3 className="flex h-[52px] items-center text-lead font-semibold [grid-area:title] md:h-[72px] md:text-index">{s.name}</h3>
+              <div className="relative aspect-[4/3] [grid-area:pic] md:mt-[72px] md:aspect-auto">
+                <Image src={s.picture.src} alt={s.picture.alt} fill sizes="(min-width: 768px) 50vw, 100vw" className={s.picture.fit} />
+              </div>
+              <div
+                className={cn("flex flex-col [grid-area:body] md:pb-12", i < SHEETS.length - 1 && "sheet-fade")}
+                style={i < SHEETS.length - 1 ? ({ "--next": `--sheet-${i + 1}` } as React.CSSProperties) : undefined}
+              >
+                <p className="tabular mt-6 text-display font-semibold md:mt-auto">{s.figure}</p>
                 <p className="mt-6 max-w-[40ch] text-body md:text-lead">{s.text}</p>
                 <Link href={s.link.href} className="link mt-5 self-start text-body font-medium">
                   {s.link.label}
                 </Link>
-              </div>
-              <div className="relative order-first aspect-[4/3] md:order-none md:col-span-6 md:mt-[72px] md:aspect-auto">
-                <Image src={s.picture.src} alt={s.picture.alt} fill sizes="(min-width: 768px) 50vw, 100vw" className={s.picture.fit} />
               </div>
             </div>
           </li>

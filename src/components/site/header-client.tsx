@@ -54,14 +54,14 @@ export function HeaderClient() {
     <header className="sticky top-0 z-40 bg-bg">
       <div className="frame flex h-16 items-center gap-8">
         <Logo />
-        <nav className="hidden items-center gap-7 md:flex" aria-label="Main">
+        <nav className="hidden items-center gap-7 lg:flex" aria-label="Main">
           {NAV.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               aria-current={isActive(item.href) ? "page" : undefined}
               className={cn(
-                "link text-small decoration-transparent",
+                "link whitespace-nowrap text-small decoration-transparent",
                 isActive(item.href) ? "text-ink decoration-ink" : "text-muted hover:text-ink",
               )}
             >
@@ -70,10 +70,10 @@ export function HeaderClient() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-5">
-          <Link href="/search" className="link hidden text-small text-muted decoration-transparent hover:text-ink sm:inline" aria-current={isActive("/search") ? "page" : undefined}>
+          <Link href="/search" className="link hidden whitespace-nowrap text-small text-muted decoration-transparent hover:text-ink sm:inline" aria-current={isActive("/search") ? "page" : undefined}>
             Search
           </Link>
-          <Link href={account.href} className="link hidden text-small text-muted decoration-transparent hover:text-ink sm:inline">
+          <Link href={account.href} className="link hidden whitespace-nowrap text-small text-muted decoration-transparent hover:text-ink sm:inline">
             {user && !user.admin && user.name ? user.name : account.label}
           </Link>
           <button
@@ -86,7 +86,7 @@ export function HeaderClient() {
           </button>
           <button
             type="button"
-            className="press -mr-2 h-10 px-2 text-small font-medium text-ink md:hidden"
+            className="press -mr-2 h-10 px-2 text-small font-medium text-ink lg:hidden"
             onClick={() => setOpen(true)}
             aria-expanded={open}
             aria-controls="site-menu"
@@ -97,7 +97,7 @@ export function HeaderClient() {
       </div>
 
       {open ? (
-        <div id="site-menu" className="fixed inset-0 z-50 flex flex-col overscroll-contain bg-ink text-on-navy md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+        <div id="site-menu" className="fixed inset-0 z-50 flex flex-col overscroll-contain bg-ink text-on-navy lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <div className="frame flex h-16 items-center justify-between">
             <Logo tone="light" />
             <button type="button" className="press h-10 px-2 text-small font-medium" onClick={() => setOpen(false)}>

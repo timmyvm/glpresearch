@@ -66,7 +66,7 @@ export default async function EditProductPage({
               action={deleteProduct.bind(null, product.id)}
               message={`Delete ${product.name}? This removes its ${product.variants.length} variants and ${product._count.batches} batch certificates. Past orders keep their line items. This can't be undone.`}
               variant="ghost"
-              className="text-danger hover:bg-[#ffedea]"
+              className="text-danger hover:bg-[#fbe4e1]"
             >
               Delete Product
             </ConfirmButton>

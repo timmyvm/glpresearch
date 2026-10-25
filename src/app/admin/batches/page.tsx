@@ -94,7 +94,7 @@ export default async function BatchesPage({ searchParams }: { searchParams: Prom
                     {b.variantLabel ? <span className="text-muted">{b.variantLabel}</span> : null}
                   </span>
                 </Td>
-                <Td className={`tabular text-right font-medium ${b.purity < 98 ? "text-danger" : b.purity < 99 ? "text-[#92400e]" : ""}`}>{b.purity.toFixed(2)}%</Td>
+                <Td className={`tabular text-right font-medium ${b.purity < 98 ? "text-danger" : b.purity < 99 ? "text-[#7a3d00]" : ""}`}>{b.purity.toFixed(2)}%</Td>
                 <Td className="hidden max-w-xs truncate text-muted 2xl:table-cell">{b.massSpec ?? "–"}</Td>
                 <Td className="tabular hidden text-right whitespace-nowrap text-muted lg:table-cell">{formatDate(b.testedAt)}</Td>
                 <Td className={`tabular hidden text-right whitespace-nowrap lg:table-cell ${expired ? "text-danger" : "text-muted"}`}>
@@ -111,7 +111,7 @@ export default async function BatchesPage({ searchParams }: { searchParams: Prom
                 </Td>
                 <Td className="text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <span className={cn(pill, "hidden sm:inline-flex", b.published ? "bg-surface text-muted" : "bg-[#fffbeb] text-[#92400e]")}>{b.published ? "Published" : "Hidden"}</span>
+                    <span className={cn(pill, "hidden sm:inline-flex", b.published ? "bg-surface text-muted" : "bg-[#fdebd3] text-[#7a3d00]")}>{b.published ? "Published" : "Hidden"}</span>
                     <ConfirmButton
                       action={toggleBatchPublished.bind(null, b.id)}
                       message={b.published ? `Hide batch ${b.batchNumber} from the Lab Testing page?` : ""}

@@ -28,7 +28,7 @@ export function AccountNav() {
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={cn(item, active ? "bg-surface font-medium text-ink" : "text-muted hover:bg-surface hover:text-ink")}
+                className={cn(item, active ? "bg-paper font-medium text-ink" : "text-muted hover:bg-surface hover:text-ink")}
               >
                 <Icon className="size-4" strokeWidth={1.75} aria-hidden="true" />
                 {label}

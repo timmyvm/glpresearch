@@ -42,7 +42,7 @@ export function Markdown({ children, className }: { children: string; className?
           table: ({ children }) => (
             <div className="not-prose my-8 overflow-x-auto [&+h2]:mt-24">
               {/* A real table keeps its row rules. taste-skill-ignore */}
-              <table className="tabular w-full text-left text-small [&_td]:border-t [&_td]:border-ink/10 [&_td]:py-3 [&_td]:pr-4 [&_td]:align-top [&_th]:pr-4 [&_th]:pb-3 [&_th]:font-medium [&_th]:text-muted">{/* taste-skill-ignore */}
+              <table className="tabular w-full text-left text-body [&_td]:border-t [&_td]:border-ink/15 [&_td]:py-3 [&_td]:pr-5 [&_td]:align-top [&_th]:pr-5 [&_th]:pb-3 [&_th]:font-semibold">{/* taste-skill-ignore */}
                 {children}
               </table>
             </div>

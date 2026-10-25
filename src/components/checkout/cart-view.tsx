@@ -9,6 +9,7 @@ import { plateInk, specimenImage } from "@/lib/plates";
 import { cn } from "@/lib/utils";
 import { Alert } from "@/components/ui/alert";
 import { ButtonLink } from "@/components/ui/button";
+import { Slip, SlipRow } from "@/components/store/paper";
 import { useCartSync } from "./use-cart-sync";
 
 export function QuantityStepper({
@@ -22,7 +23,7 @@ export function QuantityStepper({
   max?: number;
   label: string;
 }) {
-  const step = "grid size-11 place-items-center text-ink transition-colors duration-150 hover:bg-surface-2 disabled:opacity-40";
+  const step = "press grid size-11 place-items-center text-ink transition-colors duration-150 hover:bg-surface-2 disabled:opacity-40";
   return (
     <div className="inline-flex items-center bg-surface" role="group" aria-label={`Quantity of ${label}`}>
       <button type="button" className={step} onClick={() => onChange(value - 1)} aria-label={value <= 1 ? `Remove ${label}` : "Decrease quantity"}>
@@ -69,7 +70,7 @@ export function CartView({ freeShippingThreshold }: { freeShippingThreshold: num
     return (
       <div className="max-w-xl">
         <p className="text-lead font-medium">Nothing in your cart yet.</p>
-        <p className="mt-2 text-muted">Every compound ships with the certificate of analysis for its batch, and orders over the free-shipping line go tracked at no cost.</p>
+        <p className="mt-2 text-muted">Every vial carries a batch number whose certificate of analysis is on file, and orders over the free-shipping line go tracked at no cost.</p>
         <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
           <ButtonLink href="/shop" variant="ink">
             Shop Peptides
@@ -155,30 +156,22 @@ export function CartView({ freeShippingThreshold }: { freeShippingThreshold: num
       </section>
 
       <aside aria-labelledby="summary-title" className="lg:sticky lg:top-24 lg:col-span-4 lg:col-start-9 lg:self-start">
-        <div className="bg-surface p-6">
-          <h2 id="summary-title" className="text-lead font-medium">
+        <Slip className="px-6 pt-6 md:px-7 md:pt-7">
+          <h2 id="summary-title" className="text-lead font-semibold">
             Summary
           </h2>
-          <dl className="tabular mt-5 space-y-2 text-small">
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted">
-                Subtotal, {count} {count === 1 ? "vial" : "vials"}
-              </dt>
-              <dd>{formatMoney(subtotal)}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted">Shipping</dt>
-              <dd className="text-muted">{remaining === 0 && freeShippingThreshold > 0 ? "Free standard" : "Chosen at checkout"}</dd>
-            </div>
-            <div className="flex items-baseline justify-between gap-4 pt-3 text-body">
-              <dt className="font-medium">{remaining === 0 && freeShippingThreshold > 0 ? "Total" : "Total before shipping"}</dt>
-              <dd className="text-lead font-medium">{formatMoney(subtotal)}</dd>
-            </div>
-          </dl>
+          <div className="mt-5 space-y-2 text-body">
+            <SlipRow label={`Subtotal, ${count} ${count === 1 ? "vial" : "vials"}`} value={formatMoney(subtotal)} />
+            <SlipRow label="Shipping" value={remaining === 0 && freeShippingThreshold > 0 ? "Free standard" : "At checkout"} />
+          </div>
+          <p className="-mx-6 mt-5 flex h-12 items-center justify-between gap-3 bg-ink px-6 text-white md:-mx-7 md:px-7">
+            <span className="font-medium">{remaining === 0 && freeShippingThreshold > 0 ? "Total" : "Total before shipping"}</span>
+            <span className="tabular text-lead font-semibold">{formatMoney(subtotal)}</span>
+          </p>
 
           {freeShippingThreshold > 0 ? (
-            <div className="mt-6">
-              <div className="h-1 bg-white" aria-hidden="true">
+            <div className="mt-5">
+              <div className="h-1.5 bg-white" aria-hidden="true">
                 <div className="h-full bg-ink" style={{ width: `${progress}%` }} />
               </div>
               <p className="mt-2 text-small text-muted">
@@ -195,6 +188,7 @@ export function CartView({ freeShippingThreshold }: { freeShippingThreshold: num
 
           <ButtonLink
             href="/checkout"
+            variant="accent"
             size="lg"
             className={cn("mt-6 w-full", blocked && "pointer-events-none opacity-50")}
             aria-disabled={blocked || undefined}
@@ -205,7 +199,7 @@ export function CartView({ freeShippingThreshold }: { freeShippingThreshold: num
           <p className="mt-4 text-small text-muted">
             Discount codes go in at checkout. Every compound is sold for laboratory research use only.
           </p>
-        </div>
+        </Slip>
       </aside>
     </div>
   );

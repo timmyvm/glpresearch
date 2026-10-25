@@ -29,10 +29,10 @@ export default async function PackingSlipPage({ params }: { params: Promise<{ id
         />
       </div>
 
-      <article className="mx-auto max-w-3xl border border-ink/10 bg-white p-6 text-ink sm:p-10 print:max-w-none print:border-0 print:p-0">
+      <article className="mx-auto max-w-3xl border border-surface-2 bg-white p-6 text-ink sm:p-10 print:max-w-none print:border-0 print:p-0">
         <header className="flex items-start justify-between gap-6 border-b border-ink/15 pb-6">
           <div className="flex items-center gap-3">
-            <Image src="/images/logo-mark.webp" alt="" width={36} height={36} />
+            <Image src="/images/logo-peak.webp" alt="" width={36} height={36} />
             <div>
               <p className="text-base font-medium">{settings.storeName}</p>
               <p className="text-small text-muted">{settings.supportEmail}</p>

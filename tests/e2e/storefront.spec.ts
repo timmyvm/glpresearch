@@ -44,23 +44,26 @@ test("unknown pages return 404", async ({ page }) => {
   expect(res?.status()).toBe(404);
 });
 
-test("research-use notice shows for new visitors and stays dismissed", async ({ browser, baseURL }) => {
+test("every page states the research-use terms in the top strip", async ({ browser, baseURL }) => {
   const context = await browser.newContext();
   const page = await context.newPage();
-  await page.goto(baseURL!);
-  const notice = page.getByRole("region", { name: "Research use notice" });
-  await expect(notice).toBeVisible();
-  await notice.getByRole("button", { name: "I Confirm" }).click();
-  await expect(notice).toBeHidden();
-  await page.reload();
-  await expect(page.getByRole("region", { name: "Research use notice" })).toHaveCount(0);
+  for (const path of ["/", "/shop", "/research"]) {
+    await page.goto(new URL(path, baseURL).toString());
+    await expect(page.getByText("For laboratory research only, not for human or veterinary use.")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Research use policy" }).first()).toHaveAttribute("href", "/disclaimer");
+  }
   await context.close();
 });
 
-test("half-life dial compares a compound with native GLP-1", async ({ page }) => {
+test("the homepage certificate reprints for the chosen compound", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Semaglutide", exact: true }).click();
-  await expect(page.getByText(/times as long as native GLP-1/)).toBeVisible();
+  const sheet = page.locator("#cert-sheet");
+  await expect(sheet).toContainText("Semaglutide, batch SEM-");
+  await page.getByRole("tab", { name: "Tirzepatide" }).click();
+  await expect(page.getByRole("tab", { name: "Tirzepatide" })).toHaveAttribute("aria-selected", "true");
+  await expect(sheet).toContainText("Tirzepatide, batch TIR-");
+  await expect(sheet.getByRole("list", { name: "Amino-acid sequence" }).getByRole("listitem")).toHaveCount(39);
+  await expect(page.getByRole("link", { name: "Shop Tirzepatide" })).toHaveAttribute("href", "/shop/tirzepatide");
 });
 
 test("certificate lookup finds a published batch", async ({ page }) => {

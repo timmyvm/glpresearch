@@ -61,7 +61,7 @@ export default async function ArticlesPage() {
               <Td>
                 <span
                   className={`inline-flex h-6 items-center rounded-full px-2.5 text-small leading-none font-medium whitespace-nowrap ${
-                    a.published ? "bg-surface text-muted" : "bg-[#fffbeb] text-[#92400e]"
+                    a.published ? "bg-surface text-muted" : "bg-[#fdebd3] text-[#7a3d00]"
                   }`}
                 >
                   {a.published ? "Published" : "Draft"}

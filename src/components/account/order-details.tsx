@@ -4,6 +4,7 @@ import { formatMoney } from "@/lib/money";
 import { PAYMENT_METHODS, SHIPPING_METHODS, type PaymentMethod, type ShippingMethod } from "@/lib/orders";
 import { specimenImage } from "@/lib/plates";
 import { cn } from "@/lib/utils";
+import { SlipRow } from "@/components/store/paper";
 
 type Item = {
   id: string;
@@ -24,7 +25,7 @@ export function OrderItems({ items, productSlugs = {} }: { items: Item[]; produc
         const img = specimenImage(item.image) ?? item.image;
         return (
           <li key={item.id} className="flex gap-4">
-            <div className="relative h-20 w-16 shrink-0 bg-surface">
+            <div className="relative h-20 w-16 shrink-0 bg-white">
               {img ? <Image src={img} alt={`${item.productName} ${item.variantLabel}`} fill sizes="64px" className="object-contain p-1" /> : null}
             </div>
             <div className="flex min-w-0 flex-1 justify-between gap-4">
@@ -58,27 +59,19 @@ export function OrderTotals({
   order: { subtotal: number; discount: number; shipping: number; total: number; couponCode: string | null; shippingMethod: string };
 }) {
   const shipping = SHIPPING_METHODS[order.shippingMethod as ShippingMethod];
+  // Receipt rows with dot leaders; the total is an inverted bar across the slip (set --slip-pad on the slip).
   return (
-    <dl className="tabular space-y-2 text-small">
-      <div className="flex justify-between gap-4">
-        <dt className="text-muted">Subtotal</dt>
-        <dd>{formatMoney(order.subtotal)}</dd>
+    <div>
+      <div className="space-y-2 text-body">
+        <SlipRow label="Subtotal" value={formatMoney(order.subtotal)} />
+        {order.discount > 0 ? <SlipRow label={`Discount${order.couponCode ? ` (${order.couponCode})` : ""}`} value={`−${formatMoney(order.discount)}`} /> : null}
+        <SlipRow label={`Shipping${shipping ? `, ${shipping.label.toLowerCase()}` : ""}`} value={order.shipping ? formatMoney(order.shipping) : "Free"} />
       </div>
-      {order.discount > 0 ? (
-        <div className="flex justify-between gap-4">
-          <dt className="text-muted">Discount{order.couponCode ? ` (${order.couponCode})` : ""}</dt>
-          <dd>−{formatMoney(order.discount)}</dd>
-        </div>
-      ) : null}
-      <div className="flex justify-between gap-4">
-        <dt className="text-muted">Shipping{shipping ? `, ${shipping.label.toLowerCase()}` : ""}</dt>
-        <dd>{order.shipping ? formatMoney(order.shipping) : "Free"}</dd>
-      </div>
-      <div className="flex items-baseline justify-between gap-4 pt-2 text-body">
-        <dt className="font-medium">Total</dt>
-        <dd className="text-lead font-medium">{formatMoney(order.total)}</dd>
-      </div>
-    </dl>
+      <p className="-mx-[var(--slip-pad,0px)] mt-5 flex h-12 items-center justify-between gap-3 bg-ink px-[var(--slip-pad,1rem)] text-white">
+        <span className="font-medium">Total</span>
+        <span className="tabular text-lead font-semibold">{formatMoney(order.total)}</span>
+      </p>
+    </div>
   );
 }
 
@@ -159,7 +152,7 @@ export function OrderShippingInfo({ order }: { order: ShippingOrder }) {
         <p>{shipping?.label ?? order.shippingMethod}</p>
         {shipping ? <p className="text-small text-muted">{shipping.eta} after dispatch</p> : null}
         {order.trackingNumber ? (
-          <div className="mt-3 bg-surface px-4 py-3">
+          <div className="mt-3 bg-paper px-4 py-3">
             <p className="text-small text-muted">{order.carrier ?? "Tracking number"}</p>
             <p className="tabular font-medium break-all">{order.trackingNumber}</p>
             {url ? (

@@ -39,7 +39,7 @@ The site's art direction, set with the skills in `.claude/skills/` (`design-tast
 |---|---|---|
 | `--color-bg` | `#ffffff` | The page ground |
 | `--color-surface` / `--color-surface-2` | `#f4f4f2` / `#e9e8e4` | Tone steps for panels, inputs and tabs |
-| `--color-paper` | `#f4f1ea` | Paper: the certificate, slips and the back of the card |
+| `--color-paper` | `#edebe7` | Paper: the certificate, slips and the back of the card |
 | `--color-ink` | `#1f2b4d` | Navy. All running text and headlines |
 | `--color-muted` | `#5d6479` | Secondary text only |
 | `--color-accent` / `--color-accent-ink` | `#f7941d` / `#1f2b4d` | Tangerine. The one action on a screen, plus trial labels on the shelf |

@@ -6,7 +6,8 @@ import { cache } from "react";
 import { db } from "@/lib/db";
 import { ORG_ID, breadcrumbLd, organizationLd } from "@/lib/seo";
 import { getSettings } from "@/lib/settings";
-import { cn, formatDate, siteUrl } from "@/lib/utils";
+import { formatDate, siteUrl } from "@/lib/utils";
+import { pictureCaption } from "@/content/credits";
 import { JsonLd } from "@/components/seo/json-ld";
 import { splitTitle } from "@/components/store/article-title";
 import { Markdown, extractHeadings } from "@/components/store/markdown";
@@ -59,12 +60,23 @@ export default async function ArticlePage({ params }: Params) {
     db.product.findMany({
       where: { active: true },
       orderBy: { sortOrder: "asc" },
-      select: { slug: true, name: true, subtitle: true, accentColor: true },
+      select: { slug: true, name: true, subtitle: true, accentColor: true, references: true },
     }),
     getSettings(),
   ]);
   const lower = article.content.toLowerCase();
   const mentioned = products.filter((p) => lower.includes(p.name.toLowerCase())).slice(0, 5);
+  // The primary papers on the compounds this article discusses, as its reference list.
+  const papers = mentioned.flatMap((p) => {
+    try {
+      const refs: { label: string; url: string }[] = p.references ? JSON.parse(p.references) : [];
+      return refs.slice(0, 3).map((r) => ({ ...r, compound: p.name }));
+    } catch {
+      return [];
+    }
+  });
+  const caption = pictureCaption(article.coverImage);
+  const published = formatDate(article.publishedAt, { day: "numeric", month: "long", year: "numeric" });
 
   const url = siteUrl(`/research/${article.slug}`);
   const articleLd = {
@@ -93,48 +105,54 @@ export default async function ArticlePage({ params }: Params) {
     <article>
       <JsonLd data={[articleLd, crumbs, organizationLd({ name: settings.storeName, email: settings.supportEmail })]} />
 
-      <header className="frame grid gap-6 pt-8 md:grid-cols-12 md:gap-x-[var(--gutter)] md:pt-14">
-        <nav aria-label="Breadcrumb" className="text-small text-muted md:col-span-12">
-          <Link href="/research" className="link">
-            Research library
-          </Link>{" "}
-          <span aria-hidden="true">/</span>{" "}
-          <Link href={`/research?category=${encodeURIComponent(article.category)}`} className="link">
-            {article.category}
-          </Link>
-        </nav>
-        {/* A long title without a "?" or ":" to split on takes the full width. */}
-        <h1 className={cn("lines text-head", head.length > 40 ? "md:col-span-12" : "md:col-span-8")}>
-          <span className="line">
-            <span data-line>{head}</span>
-          </span>
-        </h1>
-        <div className="md:col-span-8" data-load style={{ "--d": "280ms" } as React.CSSProperties}>
-          {rest ? <p className="max-w-[40ch] text-lead font-medium">{rest}</p> : null}
-          <p className="mt-3 max-w-[50ch] text-lead text-muted">{article.excerpt}</p>
-          <p className="mt-6 text-small text-muted">
-            {article.author}, {formatDate(article.publishedAt, { day: "numeric", month: "long", year: "numeric" })}, {article.readingMinutes} minute read
-          </p>
+      <header className="bg-paper">
+        <div className="frame grid gap-10 pt-8 pb-14 md:grid-cols-12 md:gap-x-[var(--gutter)] md:pt-12 md:pb-20">
+          <div className="flex flex-col md:col-span-7">
+            <nav aria-label="Breadcrumb" className="text-body text-muted">
+              <Link href="/research" className="link">
+                Research library
+              </Link>{" "}
+              <span aria-hidden="true">/</span>{" "}
+              <Link href={`/research?category=${encodeURIComponent(article.category)}`} className="link">
+                {article.category}
+              </Link>
+            </nav>
+            <h1 className="mt-8 max-w-[18ch] text-head font-semibold md:mt-12">{head}</h1>
+            {rest ? (
+              <p className="mt-5 max-w-[34ch] text-lead font-medium" data-load style={{ "--d": "200ms" } as React.CSSProperties}>
+                {rest}
+              </p>
+            ) : null}
+            <p className="mt-6 text-body text-muted" data-load style={{ "--d": "260ms" } as React.CSSProperties}>
+              {article.author}, {published}, {article.readingMinutes} minute read
+            </p>
+            <section className="mt-10 bg-white p-6 md:mt-auto md:p-8" aria-labelledby="abstract-title" data-load style={{ "--d": "320ms" } as React.CSSProperties}>
+              <h2 id="abstract-title" className="text-body font-semibold">
+                Abstract
+              </h2>
+              <p className="mt-2 max-w-[60ch] text-lead">{article.excerpt}</p>
+            </section>
+          </div>
+          {article.coverImage ? (
+            <figure className="md:col-span-5" data-load style={{ "--d": "380ms" } as React.CSSProperties}>
+              <div className="relative aspect-[4/3] overflow-clip bg-surface-2 md:aspect-[4/5]">
+                <Image src={article.coverImage} alt={caption ?? ""} fill preload sizes="(min-width: 768px) 40vw, 100vw" className="object-cover" />
+              </div>
+              {caption ? <figcaption className="mt-3 text-small text-muted">{caption}</figcaption> : null}
+            </figure>
+          ) : null}
         </div>
       </header>
-
-      {article.coverImage ? (
-        <div className="frame mt-10 md:mt-14">
-          <div className="relative aspect-[4/3] overflow-clip bg-ink sm:aspect-[21/9]" data-load style={{ "--d": "450ms" } as React.CSSProperties}>
-            <Image src={article.coverImage} alt="" fill preload sizes="(min-width: 1760px) 1760px, 100vw" className="object-cover" />
-          </div>
-        </div>
-      ) : null}
 
       <div className="frame grid gap-12 pt-14 md:pt-20 lg:grid-cols-12 lg:gap-x-[var(--gutter)]">
         <nav className="hidden lg:col-span-3 lg:block" aria-label="In this article">
           {headings.length > 1 ? (
-            <div className="sticky top-24" data-reveal>
-              <p className="text-small text-muted">In this article</p>
-              <ol className="mt-3 space-y-2">
+            <div className="sticky top-24">
+              <p className="text-body font-semibold">In this article</p>
+              <ol className="mt-4 space-y-2.5">
                 {headings.map((h) => (
                   <li key={h.id}>
-                    <a href={`#${h.id}`} className="link text-small decoration-transparent hover:decoration-ink">
+                    <a href={`#${h.id}`} className="link text-body text-muted decoration-transparent hover:text-ink hover:decoration-ink">
                       {h.text}
                     </a>
                   </li>
@@ -146,7 +164,27 @@ export default async function ArticlePage({ params }: Params) {
 
         <div className="min-w-0 lg:col-span-6">
           <Markdown className="max-w-[68ch]">{article.content}</Markdown>
-          <p className="mt-14 max-w-[62ch] text-muted" data-reveal>
+
+          {papers.length ? (
+            <section className="mt-20 bg-paper p-6 md:p-8" aria-labelledby="papers-title" data-reveal>
+              <h2 id="papers-title" className="text-index font-semibold">
+                Primary papers
+              </h2>
+              <p className="mt-2 max-w-[56ch] text-body text-muted">The trials and discovery papers behind the compounds discussed here.</p>
+              <ol className="mt-6 space-y-4">
+                {papers.map((r) => (
+                  <li key={r.url} className="max-w-[64ch] text-body">
+                    <a href={r.url} target="_blank" rel="noopener noreferrer" className="link">
+                      {r.label}
+                    </a>
+                    <span className="block text-small text-muted">{r.compound}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ) : null}
+
+          <p className="mt-14 max-w-[62ch] text-body text-muted" data-reveal>
             This article summarises published scientific literature for research and education. It is not medical advice.
             Products sold by GLP Research are for laboratory research only and are not for human or veterinary use.
           </p>
@@ -155,14 +193,14 @@ export default async function ArticlePage({ params }: Params) {
         <aside className="space-y-10 lg:col-span-3">
           {mentioned.length ? (
             <section aria-labelledby="mentioned-title" className="lg:sticky lg:top-24">
-              <h2 id="mentioned-title" className="text-small text-muted">
+              <h2 id="mentioned-title" className="text-body font-semibold">
                 Compounds in this article
               </h2>
-              <ul className="mt-3 space-y-1">
+              <ul className="mt-4 space-y-1.5">
                 {mentioned.map((p, i) => (
                   <li key={p.slug} data-reveal style={{ "--i": i } as React.CSSProperties}>
-                    <Link href={`/shop/${p.slug}`} className="group flex items-start gap-3 py-2">
-                      <span className="mt-1.5 size-3 shrink-0" style={{ backgroundColor: p.accentColor }} aria-hidden="true" />
+                    <Link href={`/shop/${p.slug}`} className="group flex items-stretch gap-3 bg-surface p-3 transition-colors duration-200 hover:bg-surface-2">
+                      <span className="w-1.5 shrink-0" style={{ backgroundColor: p.accentColor }} aria-hidden="true" />
                       <span className="min-w-0">
                         <span className="block font-medium group-hover:underline">{p.name}</span>
                         <span className="block text-small text-muted">{p.subtitle}</span>
@@ -177,28 +215,30 @@ export default async function ArticlePage({ params }: Params) {
       </div>
 
       {others.length ? (
-        <section className="frame pt-28 md:pt-40" aria-labelledby="next-title">
-          <h2 id="next-title" className="text-index font-medium" data-reveal>
-            Keep reading
-          </h2>
-          <ul className="mt-8 grid gap-x-3 gap-y-10 md:grid-cols-3">
-            {others.map((o, i) => {
-              const t = splitTitle(o.title);
-              return (
-                <li key={o.slug} data-reveal style={{ "--i": i } as React.CSSProperties}>
-                  <Link href={`/research/${o.slug}`} className="group block">
-                    <div className="relative aspect-[3/2] overflow-clip bg-ink">
-                      {o.coverImage ? <Image src={o.coverImage} alt="" fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover transition-transform duration-700 ease-[var(--ease-out)] group-hover:scale-[1.02]" /> : null}
-                    </div>
-                    <p className="mt-3 text-lead font-medium group-hover:underline group-hover:decoration-[0.07em] group-hover:underline-offset-[0.2em]">{t.head}</p>
-                    <p className="mt-1 text-small text-muted">
-                      {o.category}, {o.readingMinutes} min
-                    </p>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+        <section className="flush-footer mt-28 bg-field-paper pt-20 md:mt-40 md:pt-28" aria-labelledby="next-title">
+          <div className="frame">
+            <h2 id="next-title" className="text-head font-semibold" data-reveal>
+              Keep reading
+            </h2>
+            <ul className="mt-10 grid gap-x-3 gap-y-10 md:grid-cols-3">
+              {others.map((o, i) => {
+                const t = splitTitle(o.title);
+                return (
+                  <li key={o.slug} data-reveal style={{ "--i": i } as React.CSSProperties}>
+                    <Link href={`/research/${o.slug}`} className="group block bg-paper p-3 pb-5">
+                      <span className="relative block aspect-[3/2] overflow-clip bg-surface-2">
+                        {o.coverImage ? <Image src={o.coverImage} alt="" fill sizes="(min-width: 768px) 33vw, 100vw" className="object-cover transition-transform duration-700 ease-[var(--ease-out)] group-hover:scale-[1.02]" /> : null}
+                      </span>
+                      <span className="mt-4 block px-1 text-lead font-medium group-hover:underline group-hover:decoration-[0.07em] group-hover:underline-offset-[0.2em]">{t.head}</span>
+                      <span className="mt-1 block px-1 text-small text-muted">
+                        {o.category}, {o.readingMinutes} min
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </section>
       ) : null}
     </article>

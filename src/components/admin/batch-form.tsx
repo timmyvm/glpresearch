@@ -32,7 +32,7 @@ export function BatchForm({
   defaultProductId?: string;
 }) {
   return (
-    <ActionForm action={action} className="max-w-3xl border border-ink/10 bg-white p-5">
+    <ActionForm action={action} className="max-w-3xl border border-surface-2 bg-white p-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Product" htmlFor="productId">
           <Select id="productId" name="productId" defaultValue={initial?.productId ?? defaultProductId ?? products[0]?.id}>

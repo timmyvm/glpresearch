@@ -20,9 +20,9 @@ const FILTERS = [
 ];
 
 const STATUS: Record<string, { label: string; tone: string }> = {
-  NEW: { label: "Unread", tone: "bg-[#e4e9f4] text-ink" },
+  NEW: { label: "Unread", tone: "bg-[#e3e7f1] text-ink" },
   READ: { label: "Read", tone: "bg-surface text-muted" },
-  REPLIED: { label: "Replied", tone: "bg-[#dcfae5] text-[#04250e]" },
+  REPLIED: { label: "Replied", tone: "bg-[#dcf3e3] text-[#0b4a24]" },
   ARCHIVED: { label: "Archived", tone: "bg-surface text-muted" },
 };
 
@@ -93,7 +93,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
                       action={deleteSubscriber.bind(null, s.id)}
                       message={`Remove ${s.email} from the newsletter list?`}
                       variant="ghost"
-                      className="h-8 text-danger hover:bg-[#ffedea]"
+                      className="h-8 text-danger hover:bg-[#fbe4e1]"
                     >
                       Remove
                     </ConfirmButton>
@@ -148,7 +148,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
         ))}
       </nav>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
-        <section aria-label="Messages" className={cn("border border-ink/10 bg-white", selected && "hidden lg:block")}>
+        <section aria-label="Messages" className={cn("border border-surface-2 bg-white", selected && "hidden lg:block")}>
           {messages.length === 0 ? <EmptyState title="No messages here." description="Try another status." /> : null}
           <ul className="max-h-[70vh] overflow-y-auto overscroll-contain">
             {messages.map((m, i) => (
@@ -173,7 +173,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
           </ul>
         </section>
 
-        <section aria-label="Message" className={cn("min-h-80 border border-ink/10 bg-white", !selected && "hidden lg:block")}>
+        <section aria-label="Message" className={cn("min-h-80 border border-surface-2 bg-white", !selected && "hidden lg:block")}>
           {selected ? (
             <div className="flex h-full flex-col">
               <div className="border-b border-ink/[0.07] px-5 py-4 sm:px-6">
@@ -237,7 +237,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
                     action={deleteMessage.bind(null, selected.id)}
                     message={`Delete the message from ${selected.name} permanently? Archive it instead to keep a record.`}
                     variant="ghost"
-                    className="text-danger hover:bg-[#ffedea]"
+                    className="text-danger hover:bg-[#fbe4e1]"
                   >
                     Delete
                   </ConfirmButton>
