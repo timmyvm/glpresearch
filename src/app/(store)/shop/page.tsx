@@ -85,11 +85,11 @@ export default async function ShopPage() {
           </figure>
         </div>
 
-        <ol className="space-y-2 md:col-span-6 md:col-start-7 md:pt-3">
+        <ol className="self-start bg-surface px-6 md:col-span-6 md:col-start-7 md:mt-3 md:px-8 [&>li+li]:border-t-4 [&>li+li]:border-dotted [&>li+li]:border-ink/20">
           {(Object.keys(CLASS_NOTES) as ProductCategory[]).map((key, i) => {
             const members = products.filter((p) => p.category === key);
             return (
-              <li key={key} className="bg-surface p-6 md:p-8" data-reveal style={{ "--i": i } as React.CSSProperties}>
+              <li key={key} className="py-10" data-reveal style={{ "--i": i } as React.CSSProperties}>
                 <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
                   <h3 className="text-index font-semibold">{CLASS_NOTES[key].title}</h3>
                   <Link href={`/shop?category=${key}`} className="link text-body font-medium">

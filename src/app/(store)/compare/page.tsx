@@ -50,9 +50,14 @@ const NOTES = [
   "A filled square means the compound activates that receptor in published assays. It does not say how strongly: tirzepatide, for one, favours the GIP receptor over GLP-1.",
   "Elimination half-life reported in human studies. Native GLP-1 is cleared in about two minutes, cut by the enzyme DPP-4 and filtered by the kidneys.",
   "The share of native GLP-1's 31 positions where the compound carries the same residue. Exenatide comes from Gila monster venom, which is why it shares the least.",
-  "Development status as given in the regulatory documents each data sheet cites. It changes as trials report.",
+  "Development status as given in the regulatory documents each data sheet cites, in full under the table. It changes as trials report.",
   "From the newest certificate we have published for the compound; every batch is in the register.",
 ];
+
+/** "Approved (Ozempic, …) for …" → "Approved"; "Investigational, Phase 3 (TRIUMPH) …" → "Investigational, Phase 3". */
+function shortStatus(status: string | null) {
+  return status?.split(/\s\(|;|\.\s|\sfor\s/)[0].replace(/\.$/, "") ?? "Not published";
+}
 
 function Note({ n }: { n: number }) {
   return (
@@ -169,8 +174,7 @@ export default async function ComparePage() {
               <Note n={4} />
             </>
           ),
-          small: true,
-          render: (p) => p.regulatoryStatus ?? "Not published",
+          render: (p) => shortStatus(p.regulatoryStatus),
         },
       ],
     },
@@ -282,7 +286,21 @@ export default async function ComparePage() {
                 </tbody>
               ))}
             </table>
-            <div className="mt-10 border-t-4 border-dotted border-ink/20 pt-6">{notes}</div>
+            <div className="mt-12 grid grid-cols-[12rem_1fr] gap-x-4">
+              <h3 className="text-lead font-semibold">Where each stands</h3>
+              <dl className="grid grid-cols-2 gap-x-10 gap-y-5 text-body">
+                {products.map((p) => (
+                  <div key={p.id}>
+                    <dt className="flex items-center gap-2 font-semibold">
+                      <span className="size-2.5 shrink-0" style={{ backgroundColor: p.accentColor }} aria-hidden="true" />
+                      {p.name}
+                    </dt>
+                    <dd className="mt-1 max-w-[56ch]">{p.regulatoryStatus ?? "Not published"}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+            <div className="mt-12 border-t-4 border-dotted border-ink/20 pt-6">{notes}</div>
           </div>
         </div>
 

@@ -27,7 +27,7 @@ export async function setCustomerStatus(userId: string, _prev: ActionState, form
   if (userId === admin.id && status === "SUSPENDED") return { error: "You can't suspend your own account." };
   await db.user.update({ where: { id: userId }, data: { status } });
   revalidateCustomer(userId);
-  return { ok: true, message: status === "SUSPENDED" ? "Account suspended — they can no longer sign in." : "Account reactivated." };
+  return { ok: true, message: status === "SUSPENDED" ? "Account suspended. They can no longer sign in." : "Account reactivated." };
 }
 
 export async function setCustomerRole(userId: string, _prev: ActionState, form: FormData): Promise<ActionState> {

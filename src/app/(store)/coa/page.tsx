@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { LAB_PICTURES } from "@/content/credits";
 import { db } from "@/lib/db";
 import { plateInk, specimenImage } from "@/lib/plates";
 import { identityWithNative, parseSequence } from "@/lib/sequence";
@@ -94,13 +95,13 @@ export default async function CoaPage({ searchParams }: { searchParams: Promise<
               </Button>
             </div>
           </form>
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 md:col-span-4 md:col-start-9">
-            <div>
-              <dt className="text-small text-muted">Published batches</dt>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 md:col-span-5 md:col-start-8 lg:col-span-4 lg:col-start-9">
+            <div className="flex flex-col-reverse">
+              <dt className="text-body">published batches</dt>
               <dd className="tabular text-index font-semibold">{batches.length}</dd>
             </div>
-            <div>
-              <dt className="text-small text-muted">Average purity</dt>
+            <div className="flex flex-col-reverse">
+              <dt className="text-body">average purity</dt>
               <dd className="tabular text-index font-semibold">{average ? `${average.toFixed(2)}%` : "None yet"}</dd>
             </div>
           </dl>
@@ -132,6 +133,31 @@ export default async function CoaPage({ searchParams }: { searchParams: Promise<
             </>
           ) : null}
         </div>
+      </section>
+
+      <section className="frame pt-20 md:pt-28 print:hidden" aria-labelledby="path-title">
+        <h2 id="path-title" className="text-head font-semibold" data-reveal>
+          From vial to certificate
+        </h2>
+        <ol className="mt-10 grid gap-x-[var(--gutter)] gap-y-10 md:grid-cols-3">
+          {[
+            { src: "/images/lab/sealing.webp", text: "A batch is sealed under one number. That number is printed on every vial and on your packing slip." },
+            { src: "/images/lab/autosampler.webp", text: "Vials from the batch go to an independent laboratory for HPLC purity and mass spectrometry." },
+            { src: "/images/lab/coa-report.webp", text: "The laboratory's result is published here, in full, before the batch is sold." },
+          ].map((step, i) => (
+            <li key={step.src} data-reveal style={{ "--i": i } as React.CSSProperties}>
+              <figure>
+                <div className={cn("relative aspect-[4/5] overflow-clip bg-field-black", i === 1 && "md:mt-12")}>
+                  <Image src={step.src} alt={LAB_PICTURES[step.src] ?? ""} fill sizes="(min-width: 768px) 30vw, 100vw" className="object-cover" />
+                </div>
+                <figcaption className="mt-4 grid grid-cols-[1.75rem_1fr] text-body">
+                  <span className="tabular font-semibold">{i + 1}</span>
+                  <span className="max-w-[36ch]">{step.text}</span>
+                </figcaption>
+              </figure>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <section id="register" className="frame scroll-mt-24 pt-20 md:pt-28 print:hidden" aria-labelledby="all-title">
@@ -172,12 +198,12 @@ export default async function CoaPage({ searchParams }: { searchParams: Promise<
             {product ? `, ${products.find((p) => p.slug === product)?.name ?? ""}` : ", newest first"}
           </p>
           <div className="mt-3 overflow-x-auto">
-            <table className="tabular w-full min-w-[30rem] text-left text-body">
+            <table className="tabular w-full text-left text-body">
               <caption className="sr-only">Published batch results</caption>
               <thead className="text-small text-muted">
                 <tr>
                   <th scope="col" className="pr-4 pb-3 font-medium">Batch</th>
-                  <th scope="col" className="px-3 pb-3 font-medium">Compound</th>
+                  <th scope="col" className="hidden px-3 pb-3 font-medium sm:table-cell">Compound</th>
                   <th scope="col" className="hidden px-3 pb-3 font-medium md:table-cell">Size</th>
                   <th scope="col" className="px-3 pb-3 text-right font-medium">Purity</th>
                   <th scope="col" className="hidden px-3 pb-3 font-medium sm:table-cell">Identity</th>
@@ -188,11 +214,15 @@ export default async function CoaPage({ searchParams }: { searchParams: Promise<
                 {batches.map((b) => (
                   <tr key={b.id} className={cn("border-t-2 border-ink/10", shown?.batchNumber === b.batchNumber && "bg-white")}>{/* taste-skill-ignore: real table rows */}
                     <td className="py-3.5 pr-4">
-                      <Link href={`/coa?batch=${encodeURIComponent(b.batchNumber)}`} className="link font-medium" translate="no">
+                      <Link href={`/coa?batch=${encodeURIComponent(b.batchNumber)}`} className="link font-medium whitespace-nowrap" translate="no">
                         {b.batchNumber}
                       </Link>
+                      <span className="mt-0.5 flex items-center gap-2 text-small text-muted sm:hidden">
+                        <span className="size-2.5 shrink-0" style={{ backgroundColor: b.product.accentColor }} aria-hidden="true" />
+                        {b.product.name}
+                      </span>
                     </td>
-                    <td className="px-3 py-3.5">
+                    <td className="hidden px-3 py-3.5 sm:table-cell">
                       <span className="inline-flex items-center gap-2.5">
                         <span className="size-3 shrink-0" style={{ backgroundColor: b.product.accentColor }} aria-hidden="true" />
                         {b.product.name}
@@ -213,7 +243,7 @@ export default async function CoaPage({ searchParams }: { searchParams: Promise<
       <section className="frame grid items-center gap-10 pt-28 md:grid-cols-12 md:gap-x-[var(--gutter)] md:pt-40 print:hidden" aria-labelledby="reading-title">
         <div className="grid grid-cols-2 gap-1.5 md:col-span-6" data-reveal>
           <div className="relative aspect-[3/4] overflow-clip">
-            <Image src="/images/lab/autosampler.webp" alt="A gloved hand placing a vial into an HPLC autosampler tray" fill sizes="(min-width: 768px) 25vw, 50vw" className="object-cover" />
+            <Image src="/images/lab/checking-vial.webp" alt={LAB_PICTURES["/images/lab/checking-vial.webp"]} fill sizes="(min-width: 768px) 25vw, 50vw" className="object-cover" />
           </div>
           <div className="relative mt-16 aspect-[3/4] overflow-clip">
             <Image src="/images/lab/notebook.webp" alt="A lab notebook beside a rack of vials and a printed chromatogram with one sharp peak" fill sizes="(min-width: 768px) 25vw, 50vw" className="object-cover" />

@@ -304,7 +304,7 @@ export default async function SearchPage({ searchParams }: Props) {
             {productHits.length ? (
               <ResultGroup id="compounds" title="Compounds" count={productHits.length}>
                 {productHits.map((p) => (
-                  <li key={p.slug} className="group relative grid grid-cols-[3.5rem_1fr] gap-4 py-5 sm:grid-cols-[4.5rem_1fr] sm:gap-5">
+                  <li key={p.slug} className="group relative grid grid-cols-[3.5rem_1fr] gap-4 py-5 sm:grid-cols-[4.5rem_1fr] sm:gap-5" data-reveal>
                     <span className="relative block aspect-[4/5] self-start" style={{ backgroundColor: p.accentColor }}>
                       <Image src={specimenImage(p.image) ?? p.image} alt="" fill sizes="4.5rem" className="object-contain px-[12%] pt-[10%] pb-[4%]" />
                     </span>
@@ -340,7 +340,7 @@ export default async function SearchPage({ searchParams }: Props) {
                 {articleHits.map((a) => {
                   const t = splitTitle(a.title);
                   return (
-                    <li key={a.slug} className="group relative py-5">
+                    <li key={a.slug} className="group relative py-5" data-reveal>
                       <SlipRow
                         className="text-lead"
                         label={
@@ -370,7 +370,7 @@ export default async function SearchPage({ searchParams }: Props) {
             {questionHits.length ? (
               <ResultGroup id="questions" title="Questions" count={questionHits.length}>
                 {questionHits.map((f) => (
-                  <li key={f.q} className="group relative py-5">
+                  <li key={f.q} className="group relative py-5" data-reveal>
                     <SlipRow
                       className="text-lead"
                       label={
@@ -449,7 +449,7 @@ export default async function SearchPage({ searchParams }: Props) {
             </nav>
             <div className="mt-10 gap-x-12 md:columns-2 lg:columns-3">
               {index.map(([letter, entries]) => (
-                <section key={letter} id={`index-${letter}`} className="scroll-mt-24 break-inside-avoid pb-8" aria-labelledby={`index-${letter}-title`}>
+                <section key={letter} id={`index-${letter}`} className="scroll-mt-24 break-inside-avoid pb-8" aria-labelledby={`index-${letter}-title`} data-reveal>
                   <h3 id={`index-${letter}-title`} className="text-index font-semibold">
                     {letter}
                   </h3>

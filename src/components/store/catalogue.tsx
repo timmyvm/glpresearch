@@ -106,15 +106,15 @@ function Entry({ p, index }: { p: CatalogueProduct; index: number }) {
       </div>
 
       <div className="min-w-0 md:col-span-5">
-        <h3 className="text-index font-semibold">
+        <h2 className="text-index font-semibold">
           <Link href={`/shop/${p.slug}`} className="after:absolute after:inset-0 group-hover:underline group-hover:decoration-[0.06em] group-hover:underline-offset-[0.14em]">
             {p.name}
           </Link>
-        </h3>
+        </h2>
         <p className="mt-1 text-body font-medium">{p.subtitle}</p>
+        {p.halfLife ? <p className="text-small text-muted">Half-life {p.halfLife.replace(/^~/, "about ").replace(/\s*\(.*\)$/, "")}</p> : null}
         <ReceptorMarks targets={p.receptorTargets} className="mt-4" />
         <p className="mt-4 hidden max-w-[52ch] text-body sm:block">{p.shortDescription}</p>
-        {p.halfLife ? <p className="mt-3 text-small text-muted">Half-life {p.halfLife.replace(/^~/, "about ").replace(/\s*\(.*\)$/, "")}</p> : null}
       </div>
 
       <div className="col-span-2 sm:col-span-1 sm:col-start-2 md:col-span-5 md:col-start-auto">
@@ -127,8 +127,8 @@ function Entry({ p, index }: { p: CatalogueProduct; index: number }) {
         </ul>
         {p.batch ? (
           <div className="mt-5 grid grid-cols-[1fr_7rem] items-end gap-4">
-            <p className="text-small text-muted">
-              Latest batch <span className="tabular text-ink">{p.batch.batchNumber}</span>, <span className="tabular text-ink">{p.batch.purity.toFixed(2)}%</span> by HPLC
+            <p className="tabular text-small text-muted">
+              Latest batch {p.batch.batchNumber}, {p.batch.purity.toFixed(2)}% purity by HPLC
             </p>
             <Chromatogram purity={p.batch.purity} seed={p.batch.batchNumber} className="h-14 text-ink [&>div:last-child]:hidden [&_span]:hidden" label={`HPLC trace for batch ${p.batch.batchNumber}`} />
           </div>

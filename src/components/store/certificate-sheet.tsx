@@ -46,16 +46,16 @@ export function CertificateSheet({ batch, product, actions }: { batch: SheetBatc
     <article className="bg-paper px-5 pt-6 pb-8 text-ink md:px-12 md:pt-10 md:pb-12" aria-labelledby="certificate-title">
       <header className="flex flex-col gap-4 bg-ink px-5 py-4 text-white md:-mx-12 md:-mt-10 md:flex-row md:items-baseline md:justify-between md:px-12 md:py-5 -mx-5 -mt-6">
         <p className="text-lead font-semibold">GLP Research, certificate of analysis</p>
-        <p className="text-small text-on-navy-muted">
+        <p className="text-lead text-on-navy-muted">
           Issued {formatDate(batch.testedAt, { day: "numeric", month: "long", year: "numeric" })}
         </p>
       </header>
 
       <div className="mt-8 grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
         <div>
-          <p className="text-small text-muted">Batch</p>
           <h2 id="certificate-title" className="tabular text-head font-semibold" translate="no">
             <span className="sr-only">Certificate of analysis for </span>
+            <span className="block text-small font-normal text-muted">Batch</span>
             {batch.batchNumber}
           </h2>
           <p className="mt-3 flex items-center gap-3 text-lead">
@@ -144,14 +144,14 @@ export function CertificateSheet({ batch, product, actions }: { batch: SheetBatc
 
       {product.residues.length ? (
         <div className="mt-10">
-          <p className="text-small text-muted">Sequence. Marked residues differ from native GLP-1; underlined residues carry a side chain.</p>
+          <p className="text-body">Sequence. Marked residues differ from native GLP-1; underlined residues carry a side chain.</p>
           <SequenceStrip residues={product.residues} plate={product.plate} ink={product.plateInk} className="mt-2" />
         </div>
       ) : null}
 
       <footer className="mt-10 flex flex-col gap-4 border-t-4 border-dotted border-ink/20 pt-6 md:flex-row md:items-center md:justify-between">
-        <p className="max-w-[60ch] text-small text-muted">
-          Verify this certificate at <span className="tabular break-all text-ink">{siteUrl(`/coa?batch=${batch.batchNumber}`).replace(/^https?:\/\//, "")}</span>. Purity is the main peak&apos;s share of the HPLC trace; the trace shown is drawn from that figure.
+        <p className="max-w-[60ch] text-body">
+          Verify this certificate at <span className="tabular break-all font-medium">{siteUrl(`/coa?batch=${batch.batchNumber}`).replace(/^https?:\/\//, "")}</span>. Purity is the main peak&apos;s share of the HPLC trace; the trace shown is drawn from that figure.
         </p>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           {batch.coaUrl ? (

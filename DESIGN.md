@@ -119,6 +119,9 @@ Headline rules:
 - **Archival plates** (open licences, credited in the footer through `src/content/credits.ts`) live in `public/images/archive/`:
   - the 1686 intestines engraving;
   - Wirsung's 1642 pancreas drawing;
-  - a reticulate Gila monster (exenatide's origin);
-  - an islets of Langerhans micrograph.
+  - a reticulate Gila monster (exenatide's origin) and a hand-coloured Heloderma print;
+  - an islets of Langerhans micrograph;
+  - Kirtland's 1806 engraving of the heart;
+  - the "Chymie" laboratory engraving.
+- Article covers use these plates or the lab photographs, and every picture's caption comes from `pictureCaption()` in `src/content/credits.ts`.
 - Never show another company's name or a fake brand in a generated picture. Never let a picture claim more than the business does: orders ship with a packing slip of batch numbers, and certificates are published online.

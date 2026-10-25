@@ -190,7 +190,7 @@ export default async function ProductPage({ params }: Params) {
                 </span>
               </h1>
               <p className="mt-4 text-lead font-medium" data-load style={{ "--d": "260ms" } as React.CSSProperties}>
-                {product.subtitle}
+                {product.subtitle}, for laboratory research
               </p>
               <ReceptorMarks targets={product.receptorTargets} className="mt-4" />
               {/* Phones get the facts that decide a purchase first; the summary moves below the order slip. */}
@@ -257,11 +257,8 @@ export default async function ProductPage({ params }: Params) {
 
           {latest ? (
             <article className="bg-white p-6 md:rotate-[0.8deg] md:p-10 lg:col-span-7 lg:col-start-6" aria-labelledby="latest-title" data-reveal style={{ "--i": 1 } as React.CSSProperties}>
-              <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-                <p className="text-small text-muted">GLP Research, certificate of analysis</p>
-                <p className="text-small text-muted">Current batch</p>
-              </div>
-              <div className="mt-5 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
+              <p className="-mx-6 -mt-6 bg-ink px-6 py-3.5 text-lead font-semibold text-white md:-mx-10 md:-mt-10 md:px-10">Certificate of analysis, current batch</p>
+              <div className="mt-7 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
                 <div>
                   <h3 id="latest-title" className="tabular text-index font-semibold" translate="no">
                     {latest.batchNumber}

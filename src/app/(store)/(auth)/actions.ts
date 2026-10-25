@@ -52,7 +52,7 @@ export async function register(_prev: ActionState, form: FormData): Promise<Acti
 
   const existing = await db.user.findUnique({ where: { email: data.email } });
   if (existing) {
-    return { error: "An account with this email already exists.", fieldErrors: { email: ["Already registered — try signing in"] } };
+    return { error: "An account with this email already exists.", fieldErrors: { email: ["Already registered. Try signing in."] } };
   }
 
   const user = await db.user.create({
