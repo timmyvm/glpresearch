@@ -197,6 +197,8 @@ export default async function SearchPage({ searchParams }: Props) {
   ].filter((g) => g.count > 0);
 
   const index = !searching || !total ? buildIndex(products, articles) : null;
+  // The exact batch is printed as its certificate; the table lists the other matches.
+  const listed = batches.filter((b) => b !== exact);
 
   return (
     <>
@@ -261,7 +263,7 @@ export default async function SearchPage({ searchParams }: Props) {
       </div>
 
       {exact ? (
-        <section className="frame pt-10" aria-label="Batch found">
+        <section id={listed.length ? undefined : "batches"} className="frame scroll-mt-24 pt-10" aria-label="Batch found">
           <Slip as="article" className="pb-10">
             <div className="flex flex-col gap-1 bg-ink px-5 py-3.5 text-white sm:flex-row sm:items-baseline sm:justify-between md:px-10">
               <p className="font-semibold">Certificate of analysis</p>
@@ -296,7 +298,7 @@ export default async function SearchPage({ searchParams }: Props) {
         </section>
       ) : null}
 
-      {searching && total ? (
+      {searching && total - (exact && !listed.length ? 1 : 0) ? (
         <div className="frame pt-10">
           <div className="bg-paper px-5 pt-2 pb-10 md:px-12 md:pb-14">
             {productHits.length ? (
@@ -386,10 +388,10 @@ export default async function SearchPage({ searchParams }: Props) {
               </ResultGroup>
             ) : null}
 
-            {batches.length ? (
+            {listed.length ? (
               <section id="batches" className="grid scroll-mt-24 gap-4 pt-10 lg:grid-cols-12 lg:gap-x-[var(--gutter)]" aria-labelledby="batches-title">
                 <h2 id="batches-title" className="text-index font-semibold lg:col-span-3">
-                  Batches <span className="tabular text-muted">{batches.length}</span>
+                  Batches <span className="tabular text-muted">{listed.length}</span>
                 </h2>
                 <div className="overflow-x-auto lg:col-span-9">
                   <table className="tabular w-full text-left">
@@ -403,10 +405,10 @@ export default async function SearchPage({ searchParams }: Props) {
                       </tr>
                     </thead>
                     <tbody>
-                      {batches.map((b) => (
+                      {listed.map((b) => (
                         <tr key={b.id} className="border-t-2 border-ink/10">{/* taste-skill-ignore: real table rows */}
                           <td className="py-3.5 pr-4">
-                            <Link href={`/coa?batch=${encodeURIComponent(b.batchNumber)}`} className="link font-medium" translate="no">
+                            <Link href={`/coa?batch=${encodeURIComponent(b.batchNumber)}`} className="link font-medium whitespace-nowrap" translate="no">
                               {b.batchNumber}
                             </Link>
                           </td>
